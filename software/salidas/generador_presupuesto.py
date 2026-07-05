@@ -18,6 +18,12 @@ MAPA_PRECIOS = {
     "H-09": "tapacanto_2",
     "H-10": "regaton",
     "H-11": "escuadra_25",
+    "H-12": "barral_juego",
+    "H-13": "bisagra_35",
+    "H-14": "riel_corredizo_juego",
+    "H-15": "tirador",
+    "H-16": "rinconera",
+    "H-17": "herraje_excentrico",
 }
 
 AREA_PLACA_M2 = 2.6 * 1.83  # placa comercial 2600×1830 (M-10)

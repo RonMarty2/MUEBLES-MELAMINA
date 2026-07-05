@@ -62,6 +62,14 @@ receta de `ropero` es un campo desconocido: ese tipo usa `cajones`).
   "pasacables": {
     "cantidad": 2,
     "diametro": 60
+  },
+  "elevacion_monitor": {
+    "incluir": false,
+    "ancho": 800,
+    "profundidad": 250
+  },
+  "uniones": {
+    "tipo": "confirmat"
   }
 }
 ```
@@ -71,7 +79,7 @@ receta de `ropero` es un campo desconocido: ese tipo usa `cajones`).
 | Campo | Tipo | Obligatorio | Defecto | Límites (los aplica el validador citando la regla) |
 |---|---|---|---|---|
 | `version` | string | Sí | — | Debe ser `"1.0"` |
-| `tipo_mueble` | string | Sí | — | Hoy solo `"escritorio_gamer"` |
+| `tipo_mueble` | string | Sí | — | `"escritorio_gamer"` o `"ropero"` (ver 11) |
 | `nombre` | string | No | `"Mueble sin nombre"` | Libre; se usa en archivos y títulos |
 | `dimensiones.ancho` | entero | No | 1600 | 900–2400 (R-15: debe caber en placa) |
 | `dimensiones.profundidad` | entero | No | 700 | 500–900; ≥600 recomendado gamer (M-02) |
@@ -87,6 +95,10 @@ receta de `ropero` es un campo desconocido: ese tipo usa `cajones`).
 | `soporte_cpu.ancho` | entero | No | 250 | 200–350 (M-05: gabinetes ATX) |
 | `pasacables.cantidad` | entero | No | 2 | 0–4 |
 | `pasacables.diametro` | entero | No | 60 | 60 u 80 (medidas comerciales de grommet, H-06) |
+| `elevacion_monitor.incluir` | bool | No | false | — (D-014) |
+| `elevacion_monitor.ancho` | entero | No | 800 | 500–1200; debe dejar 200 mm de margen a la tapa (M-25) |
+| `elevacion_monitor.profundidad` | entero | No | 250 | 200–350 (M-25) |
+| `uniones.tipo` | string | No | `"confirmat"` | `"confirmat"` o `"excentrica"` (R-26/D-013) — común a ambos tipos de mueble |
 
 **Defecto de `tapa.tipo` (regla R-04):** si el vano libre de la tapa supera 800 mm — que en
 un escritorio gamer típico siempre pasa — el defecto es `"doble_18"`. Si el usuario fuerza

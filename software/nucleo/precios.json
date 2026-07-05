@@ -12,6 +12,12 @@
   "tapacanto_2": { "precio": 2.5, "unidad_venta": "metro" },
   "regaton": { "precio": 1.5, "unidad_venta": "unidad" },
   "escuadra_25": { "precio": 1.0, "unidad_venta": "unidad con tornillos" },
+  "herraje_excentrico": { "precio": 1.2, "unidad_venta": "unidad (cam-lock + espiga)" },
+  "bisagra_35": { "precio": 3.0, "unidad_venta": "unidad" },
+  "riel_corredizo_juego": { "precio": 25.0, "unidad_venta": "juego" },
+  "tirador": { "precio": 2.0, "unidad_venta": "unidad" },
+  "barral_juego": { "precio": 15.0, "unidad_venta": "juego" },
+  "rinconera": { "precio": 0.8, "unidad_venta": "unidad" },
   "factor_desperdicio_placa": 1.25,
   "servicio_corte_por_placa": 15.0
 }

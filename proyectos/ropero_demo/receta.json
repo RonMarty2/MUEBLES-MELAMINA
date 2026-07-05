@@ -21,6 +21,9 @@
     "ancho": 400,
     "cantidad_cajones": 3
   },
+  "uniones": {
+    "tipo": "confirmat"
+  },
   "estante_inferior": {
     "incluir": false
   }

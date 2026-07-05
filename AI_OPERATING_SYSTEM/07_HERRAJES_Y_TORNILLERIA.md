@@ -22,6 +22,7 @@ siguiendo exactamente estas reglas; los precios unitarios viven en
 | H-09 | **Tapacanto PVC 22 mm × 2 mm** | Cantos de la tapa (alto impacto) | Perímetro visible de tapa × 1,10 |
 | H-10 | **Regatón/nivelador atornillable** | Base de laterales y cajonera | 2 por lateral-panel, 4 por cajonera |
 | H-11 | **Escuadra metálica 25 mm** | Refuerzo tapa↔viga y tapa↔laterales donde no conviene tornillo pasante | 1 cada 300 mm de unión oculta |
+| H-17 | **Herraje excéntrico (cam-lock/minifix) + espiga metálica Ø8** | Alternativa a H-01 para uniones estructurales de muebles que se van a mover/desarmar (R-26) | 2 por unión hasta 300 mm, +1 cada 150–200 mm extra (misma regla de cantidad que H-01) |
 
 ## Criterios de elección (los "por qué")
 
@@ -35,6 +36,33 @@ siguiendo exactamente estas reglas; los precios unitarios viven en
   presupone exactamente este herraje.
 - **Regatones (H-10):** la melamina apoyada directo al piso absorbe humedad por el canto y
   se hincha. Siempre separar del piso; además permiten nivelar.
+- **Confirmat (H-01) vs. excéntrico/cam-lock (H-17):** un tornillo atornillado directo al
+  canto del aglomerado depende de que la rosca "muerda" partículas sueltas — con el tiempo,
+  y sobre todo si el mueble se mueve armado, ese agarre se afloja y el agujero se agranda
+  (R-26). El herraje excéntrico no depende de ese agarre: una espiga metálica entra de
+  costado y una tuerca excéntrica gira y traba mecánicamente, igual que en los muebles de
+  fábrica desarmables (RTA). Usar H-17 en vez de H-01 para: muebles que se van a mudar,
+  muebles pensados para desarmarse, o cualquier unión que el usuario marque como
+  `uniones.tipo = "excentrica"` en la receta. H-01 sigue siendo válido y más barato para
+  muebles que se arman una sola vez y no se vuelven a mover.
+
+## R-26 — Movilidad después de armado (por qué se aflojan los muebles con el tiempo)
+
+Un mueble de melamina armado con tornillos rectos (H-01/H-03) **no es rígido como una caja
+soldada**: es más parecido a una hamaca de paneles articulados por tornillos. Si se mueve/
+arrastra entero ya armado, todo el cuerpo se tuerce levemente en diagonal (efecto
+paralelogramo) y esa fuerza de torsión se concentra en los tornillos — el punto más débil
+de la estructura. Cada movimiento agranda un poco el agujero del tornillo ("se ovaliza")
+hasta que el tornillo gira en el aire sin agarrar nada.
+
+**Mitigación (lo que hace y recomienda el sistema):**
+1. Confirmat + pre-perforado siempre (R-09) — agarre bastante mejor que un tornillo común.
+2. Viga trasera cuando el vano es grande (R-13) — reduce el "hamaqueo" que castiga los tornillos.
+3. Para muebles que se van a mover/mudar: elegir `uniones.tipo = "excentrica"` (H-17) en la
+   receta — no depende del agarre en el aglomerado.
+4. **Regla de oro para cualquier mueble ya armado:** para reubicarlo, desarmar (o al menos
+   aflojar) las uniones estructurales, moverlo por partes, y volver a armar. Nunca
+   arrastrarlo entero de un tirón — es la causa más común de que "se destornille solo".
 
 ## Perforaciones — posiciones que calcula el motor
 

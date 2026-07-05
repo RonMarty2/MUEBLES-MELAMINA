@@ -17,11 +17,13 @@ import math
 
 from .modelos import Pieza, Herraje, Perforacion, Mueble
 from .validador_escritorio import espesor_tapa, vano_libre
+from .uniones import herraje_union
 
 RETRANQUEO_FRONTAL = 50      # las patas/paneles entran 50 mm respecto del frente
 ALTURA_BANDEJA_CPU = 100     # M-06
 LARGOS_CORREDERA = [250, 300, 350, 400, 450, 500, 550, 600]  # R-08
 VANO_MAXIMO_SIN_VIGA = 1200  # R-13
+ALTO_LIBRE_ELEVACION_MONITOR = 110  # M-25: deja pasar un teclado (25-35mm) + mano
 
 
 def confirmats_por_union(largo_union):
@@ -84,6 +86,37 @@ def despiece_escritorio(receta):
                             (0, 0, H - t), (A, P, t),
                             cantos="4 cantos visibles (banda de 2 mm)"))
         tapacanto_grueso_mm += 2 * (A + P)
+
+    # ------------------------------------------------- Elevación para monitor (M-25)
+    elev = receta["elevacion_monitor"]
+    if elev["incluir"]:
+        ancho_elev, prof_elev = elev["ancho"], elev["profundidad"]
+        x_elev = (A - ancho_elev) // 2
+        y_elev = P - prof_elev
+        z_apoyo = H  # se apoya sobre la cara superior de la tapa principal
+
+        piezas.append(Pieza("Pata elevación monitor (izq)", prof_elev, ALTO_LIBRE_ELEVACION_MONITOR, e, mat,
+                            (x_elev, y_elev, z_apoyo), (e, prof_elev, ALTO_LIBRE_ELEVACION_MONITOR),
+                            cantos="canto frontal visible"))
+        piezas.append(Pieza("Pata elevación monitor (der)", prof_elev, ALTO_LIBRE_ELEVACION_MONITOR, e, mat,
+                            (x_elev + ancho_elev - e, y_elev, z_apoyo),
+                            (e, prof_elev, ALTO_LIBRE_ELEVACION_MONITOR),
+                            cantos="canto frontal visible"))
+        piezas.append(Pieza("Tapa elevación monitor", ancho_elev, prof_elev, e, mat,
+                            (x_elev, y_elev, z_apoyo + ALTO_LIBRE_ELEVACION_MONITOR),
+                            (ancho_elev, prof_elev, e),
+                            cantos="4 cantos visibles",
+                            notas=f"Deja {ALTO_LIBRE_ELEVACION_MONITOR} mm libres abajo para deslizar el teclado"))
+        tapacanto_fino_mm += 2 * ALTO_LIBRE_ELEVACION_MONITOR
+        tapacanto_grueso_mm += 2 * (ancho_elev + prof_elev)
+        n_conf_elev = confirmats_por_union(prof_elev)
+        confirmats += 2 * n_conf_elev  # patas <-> tapa elevada
+        confirmats += 2 * 2            # patas <-> tapa principal (2 tornillos c/u desde abajo)
+        avisos.append(
+            f"Elevación para monitor: bandeja de {ancho_elev}×{prof_elev} mm a "
+            f"{ALTO_LIBRE_ELEVACION_MONITOR} mm sobre la tapa (M-25), suficiente para "
+            "deslizar el teclado debajo."
+        )
 
     # ------------------------------------------------- Apoyos verticales
     piezas.append(Pieza("Lateral izquierdo (pata panel)", prof_panel, alto_apoyo, e, mat,
@@ -255,9 +288,7 @@ def despiece_escritorio(receta):
         avisos.append("Mueble espejado: cajonera a la izquierda, soporte CPU a la derecha.")
 
     # ------------------------------------------------- Herrajes (07)
-    herrajes.append(Herraje("H-01", "Tornillo confirmat 7×50 (con broca escalonada)",
-                            confirmats, "unidades",
-                            "uniones estructurales entre tableros (R-09)"))
+    herrajes.append(herraje_union(receta["uniones"]["tipo"], confirmats))
     herrajes.append(Herraje("H-04", "Tornillo aglomerado 4×30",
                             tornillos_frente, "unidades",
                             "fijar frentes de cajón desde adentro y laminar tapa doble"))

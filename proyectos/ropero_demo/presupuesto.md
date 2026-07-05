@@ -10,15 +10,13 @@ valores de tu zona**; los iniciales son de ejemplo).
 | Servicio de corte en tienda | 4 placa(s) | $ 60.00 |
 | Confirmat 7×50 | 2 × caja ×50 (necesitás 52 unidades) | $ 16.00 |
 | Corredera telescópica 500 mm (par) | 3 pares | $ 36.00 |
-| Tirador | 3 unidades | — (sin precio) |
-| Barral tubular cromado Ø25 + soportes | 1 juego | — (sin precio) |
-| Bisagra cazoleta 35 mm | 8 unidades | — (sin precio) |
-| Tirador | 2 unidades | — (sin precio) |
+| Tirador | 3 unidades | $ 6.00 |
+| Barral tubular cromado Ø25 + soportes | 1 juego | $ 15.00 |
+| Bisagra cazoleta 35 mm | 8 unidades | $ 24.00 |
+| Tirador | 2 unidades | $ 4.00 |
 | Clavos 1½" | 1 × caja ×100 (necesitás 79 unidades) | $ 3.00 |
 | Tapacanto PVC 0,45 mm | 12 m (necesitás 11.8 m) | $ 9.60 |
-| Rinconera/taco de estante | 4 unidades | — (sin precio) |
-| **TOTAL estimado** | | **$ 784.60** |
+| Rinconera/taco de estante | 4 unidades | $ 3.20 |
+| **TOTAL estimado** | | **$ 836.80** |
 
 El total NO incluye: mano de obra, flete, ni herramientas.
-
-> Sin precio cargado para: H-15, H-12, H-13, H-15, H-16. Agregalos en precios.json.

@@ -248,6 +248,54 @@ m_corr = despiece_ropero(r_corr)
 prueba("ropero corredizas: 2 hojas generadas",
        sum(1 for p in m_corr.piezas if "corrediza" in p.nombre.lower()) == 2)
 
+# ---------------------------------------------------------------- uniones (R-26)
+print("Uniones: confirmat vs. excéntrica (R-26)…")
+r_exc, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                 "uniones": {"tipo": "excentrica"}})
+m_exc = despiece_escritorio(r_exc)
+prueba("escritorio con uniones excéntrica: usa H-17, no H-01",
+       any(h.codigo == "H-17" for h in m_exc.herrajes)
+       and not any(h.codigo == "H-01" for h in m_exc.herrajes))
+r_conf, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer"})
+m_conf = despiece_escritorio(r_conf)
+prueba("escritorio por defecto: usa H-01 (confirmat)",
+       any(h.codigo == "H-01" for h in m_conf.herrajes))
+r_rop_exc, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                                     "uniones": {"tipo": "excentrica"}})
+m_rop_exc = despiece_ropero(r_rop_exc)
+prueba("ropero con uniones excéntrica: usa H-17",
+       any(h.codigo == "H-17" for h in m_rop_exc.herrajes))
+try:
+    normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                          "uniones": {"tipo": "soldadura"}})
+    prueba("rechaza uniones.tipo inválido", False, "(no lanzó error)")
+except RecetaInvalida as e:
+    prueba("rechaza uniones.tipo inválido", "R-26" in str(e))
+
+# ---------------------------------------------------------------- elevación de monitor (M-25)
+print("Elevación para monitor…")
+r_elev, avisos_elev = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                            "elevacion_monitor": {"incluir": True}})
+m_elev = despiece_escritorio(r_elev)
+por_elev = {p.nombre: p for p in m_elev.piezas}
+prueba("elevación: genera 2 patas + 1 tapa elevada",
+       "Pata elevación monitor (izq)" in por_elev and "Tapa elevación monitor" in por_elev)
+prueba("elevación: tapa elevada de 800x250 (defecto M-25)",
+       por_elev["Tapa elevación monitor"].largo == 800 and por_elev["Tapa elevación monitor"].ancho == 250)
+prueba("elevación: patas de 110mm de alto libre para teclado",
+       por_elev["Pata elevación monitor (izq)"].espesor == 18)
+prueba("elevación: confirmats suben respecto de sin elevación (8 más)",
+       any(h.codigo == "H-01" and h.cantidad == 48 for h in m_elev.herrajes))
+try:
+    normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                          "dimensiones": {"ancho": 900, "profundidad": 700, "alto": 750},
+                          "elevacion_monitor": {"incluir": True, "ancho": 1000}})
+    prueba("rechaza elevación más ancha que el escritorio", False, "(no lanzó error)")
+except RecetaInvalida as e:
+    prueba("rechaza elevación más ancha que el escritorio", "M-25" in str(e))
+r_sin_elev, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer"})
+prueba("sin elevación por defecto", r_sin_elev["elevacion_monitor"]["incluir"] is False)
+
 # ---------------------------------------------------------------- resultado
 print()
 if FALLAS:

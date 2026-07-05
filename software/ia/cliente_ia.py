@@ -23,23 +23,43 @@ es una receta JSON que cumpla el esquema versión 1.0.
 REGLAS ESTRICTAS:
 1. Respondé SOLO con el JSON de la receta, sin texto antes ni después, sin ```.
 2. Medidas en milímetros, números enteros.
-3. Campos permitidos, defectos y límites:
-   - tipo_mueble: "escritorio_gamer" (único tipo disponible)
+3. Elegí tipo_mueble según el pedido: "escritorio_gamer" o "ropero".
+4. Campos permitidos, defectos y límites POR TIPO:
+
+   escritorio_gamer:
    - dimensiones: ancho 900-2400 (defecto 1600), profundidad 500-900 (defecto 700),
      alto 700-800 (defecto 750)
-   - tapa.tipo: "simple_18" | "doble_18" | "simple_25" (defecto "doble_18")
+   - tapa.tipo: "auto" | "simple_18" | "doble_18" | "simple_25" (defecto "auto")
    - material: color (texto, defecto "Blanco"), espesor 15|18 (defecto 18),
      espesor_fondo 3 (defecto 3)
    - cajonera: posicion "derecha"|"izquierda"|"ninguna" (defecto "derecha"),
      ancho 300-600 (defecto 400), cantidad_cajones 1-4 (defecto 3)
    - soporte_cpu: incluir true|false (defecto true), ancho 200-350 (defecto 250)
    - pasacables: cantidad 0-4 (defecto 2), diametro 60|80 (defecto 60)
-4. Si el usuario pide un valor fuera de rango, usá el límite más cercano.
-5. Si el usuario pide algo que estos campos no cubren, NO inventes campos: emití la
-   receta con lo que sí se pueda y nada más.
-6. Si te doy una receta anterior y un pedido de cambio, devolvé la receta COMPLETA con
+   - elevacion_monitor: incluir true|false (defecto false), ancho 500-1200 (defecto 800),
+     profundidad 200-350 (defecto 250)
+
+   ropero:
+   - dimensiones: ancho 600-1200 (defecto 900), profundidad 550-620 (defecto 580),
+     alto 2000-2600 (defecto 2400)
+   - material: color (texto, defecto "Blanco")
+   - puertas: tipo "batiente"|"corrediza"|"ninguna" (defecto "batiente"),
+     cantidad 2-4 (defecto 2)
+   - cajones: incluir true|false (defecto false), ancho 300-600 (defecto 400),
+     cantidad_cajones 1-4 (defecto 3)
+   - estante_inferior: incluir true|false (defecto false)
+
+   Común a ambos tipos:
+   - uniones.tipo: "confirmat"|"excentrica" (defecto "confirmat"; usar "excentrica" si
+     el usuario menciona que va a mover/mudar el mueble)
+
+5. Si el usuario pide un valor fuera de rango, usá el límite más cercano.
+6. Si el usuario pide algo que estos campos no cubren (ej. una forma en L, una mesa,
+   un mueble de TV), NO inventes campos ni tipo_mueble: emití la receta más parecida
+   que sí se pueda con lo existente.
+7. Si te doy una receta anterior y un pedido de cambio, devolvé la receta COMPLETA con
    solo los campos afectados modificados.
-7. Siempre incluí "version": "1.0" y "tipo_mueble".
+8. Siempre incluí "version": "1.0" y "tipo_mueble".
 """
 
 

@@ -167,6 +167,47 @@ Formato de cada entrada:
   (`despiece_escritorio.py` y `despiece_ropero.py`), verificada con pruebas embebidas
   `?test=1` (ver también D-010).
 
+## D-013 — Uniones excéntricas (cam-lock) como alternativa al confirmat
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** el usuario relató una mala experiencia real con muebles de melamina que
+  "se aflojaban solos" y quedaban imposibles de mover sin desarmarse. Causa raíz
+  identificada: un tornillo recto atornillado al canto de aglomerado depende de que la
+  rosca "muerda" partículas sueltas; mover el mueble ya armado tuerce la estructura como
+  un paralelogramo y esa torsión se concentra en los tornillos, agrandando el agujero
+  hasta que giran en el vacío (documentado como regla R-26 en
+  `07_HERRAJES_Y_TORNILLERIA.md`).
+- **Decisión:** se agrega `uniones.tipo` ("confirmat" | "excentrica") como campo común a
+  ambos tipos de mueble. Con "excentrica", TODAS las uniones estructurales usan H-17
+  (herraje excéntrico/cam-lock + espiga) en vez de H-01 (confirmat), misma cantidad
+  calculada por `confirmats_por_union` — el nombre de la función no cambia porque la
+  matemática de espaciado es la misma, solo cambia el herraje final.
+- **Descartadas:** (a) que el sistema elija automáticamente según si el usuario "parece"
+  ir a mudar el mueble — imposible de inferir con confianza, mejor que el usuario decida
+  explícitamente; (b) ofrecer excéntrica solo en el ropero (que se percibe más "movible")
+  — el escritorio también se mueve al limpiar/reacomodar, se ofrece en ambos.
+- **Implementación:** `nucleo/uniones.py` (`herraje_union()`) evita duplicar la lógica
+  entre `despiece_escritorio.py` y `despiece_ropero.py`; espejado en JS (`herrajeUnion()`
+  en `app_fuente.html`).
+
+## D-014 — Elevación para monitor (escritorio gamer)
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** pedido del usuario: "una elevación en el medio para el monitor y abajo
+  un teclado". Decidido como opción DENTRO del escritorio gamer (no un mueble aparte),
+  ver pregunta al usuario y su respuesta.
+- **Decisión:** campo `elevacion_monitor` (incluir/ancho/profundidad) en la receta del
+  escritorio. Estructuralmente: 2 patas verticales de 18 mm que se apoyan SOBRE la tapa
+  principal (no reemplazan ninguna pieza existente) y sostienen una segunda tapa elevada
+  110 mm arriba (M-25) — ese hueco es donde se desliza el teclado.
+- **Descartada:** integrar la elevación como parte de la tapa principal (una tapa con
+  escalón tallado) — requeriría cortes no rectangulares que la placa comercial y las
+  herramientas de corte estándar no resuelven fácil; el diseño de "patas + tapa elevada"
+  usa piezas 100% rectangulares, coherente con el resto del sistema.
+- **Consecuencias:** es la primera pieza del escritorio que se apoya sobre otra pieza
+  (no sobre el piso/zócalo) — el patrón queda disponible para reutilizar en otros
+  "accesorios apoyados" futuros (bandeja de teclado corrediza, organizador, etc.)
+
 ---
 
 ## Plantilla para nuevas decisiones

@@ -61,6 +61,10 @@ cambia aquí, debe cambiar en `validador.py` / `despiece_*.py` **en el mismo com
   recibe) para no reventar el aglomerado.
 - **R-10 — Fondos.** El fondo de 3 mm va clavado/atornillado por detrás, 2 mm más chico
   que el exterior por lado. En cajones puede ir ranurado si hay fresadora (fase futura).
+- **R-26 — Movilidad después de armado.** Ningún mueble de melamina armado con tornillos
+  rectos es rígido: moverlo de un tirón concentra la torsión en los tornillos y agranda el
+  agujero hasta que giran en el aire. Ver el detalle completo y las mitigaciones (viga
+  trasera, herraje excéntrico H-17) en `07_HERRAJES_Y_TORNILLERIA.md`.
 
 ## Terminación
 

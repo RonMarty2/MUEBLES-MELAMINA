@@ -13,9 +13,11 @@ DEFECTOS = {
     "dimensiones": {"ancho": 1600, "profundidad": 700, "alto": 750},
     "tapa": {"tipo": None},  # se decide por R-04 según el vano
     "material": {"color": "Blanco", "espesor": 18, "espesor_fondo": 3},
+    "uniones": {"tipo": "confirmat"},  # R-26: "excentrica" si se va a mover/mudar
     "cajonera": {"posicion": "derecha", "ancho": 400, "cantidad_cajones": 3},
     "soporte_cpu": {"incluir": True, "ancho": 250},
     "pasacables": {"cantidad": 2, "diametro": 60},
+    "elevacion_monitor": {"incluir": False, "ancho": 800, "profundidad": 250},
 }
 
 LIMITES = {
@@ -26,25 +28,30 @@ LIMITES = {
     ("cajonera", "cantidad_cajones"): (1, 4, "R-07", "los frentes deben quedar usables"),
     ("soporte_cpu", "ancho"): (200, 350, "M-05", "ancho de gabinete ATX + ventilación"),
     ("pasacables", "cantidad"): (0, 4, "M-14", "cantidad razonable de grommets"),
+    ("elevacion_monitor", "ancho"): (500, 1200, "M-25", "ancho razonable de la bandeja elevada"),
+    ("elevacion_monitor", "profundidad"): (200, 350, "M-25", "apoyo suficiente para monitores"),
 }
 
 OPCIONES = {
     ("tapa", "tipo"): (["simple_18", "doble_18", "simple_25"], "R-01/R-04"),
     ("material", "espesor"): ([15, 18], "R-01"),
     ("material", "espesor_fondo"): ([3], "R-01"),
+    ("uniones", "tipo"): (["confirmat", "excentrica"], "R-26"),
     ("cajonera", "posicion"): (["derecha", "izquierda", "ninguna"], "R-14"),
     ("pasacables", "diametro"): ([60, 80], "H-06"),
 }
 
 CAMPOS_CONOCIDOS = {
-    "": ["version", "tipo_mueble", "nombre", "dimensiones", "tapa", "material",
-         "cajonera", "soporte_cpu", "pasacables"],
+    "": ["version", "tipo_mueble", "nombre", "dimensiones", "tapa", "material", "uniones",
+         "cajonera", "soporte_cpu", "pasacables", "elevacion_monitor"],
     "dimensiones": ["ancho", "profundidad", "alto"],
     "tapa": ["tipo"],
     "material": ["color", "espesor", "espesor_fondo"],
+    "uniones": ["tipo"],
     "cajonera": ["posicion", "ancho", "cantidad_cajones"],
     "soporte_cpu": ["incluir", "ancho"],
     "pasacables": ["cantidad", "diametro"],
+    "elevacion_monitor": ["incluir", "ancho", "profundidad"],
 }
 
 
@@ -190,6 +197,15 @@ def validar(receta):
         errores.append(
             f"La tapa de {d['ancho']} mm no sale de una placa de 2600 mm con margen de "
             "escuadrado (regla R-15)."
+        )
+
+    # M-25: la elevación para monitor debe caber en la tapa con margen a los bordes.
+    elev = receta["elevacion_monitor"]
+    if elev["incluir"] and elev["ancho"] > d["ancho"] - 200:
+        errores.append(
+            f"La elevación para monitor de {elev['ancho']} mm no entra en una tapa de "
+            f"{d['ancho']} mm dejando margen a los bordes (M-25). Achicala o agrandá el "
+            "escritorio."
         )
 
     if errores:

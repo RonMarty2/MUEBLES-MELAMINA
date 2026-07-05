@@ -16,6 +16,13 @@
         "espesor": { "type": "integer", "enum": [15, 18] },
         "espesor_fondo": { "type": "integer", "enum": [3] }
       }
+    },
+    "uniones": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tipo": { "type": "string", "enum": ["confirmat", "excentrica"] }
+      }
     }
   },
   "oneOf": [
@@ -61,6 +68,15 @@
           "properties": {
             "cantidad": { "type": "integer", "minimum": 0, "maximum": 4 },
             "diametro": { "type": "integer", "enum": [60, 80] }
+          }
+        },
+        "elevacion_monitor": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "incluir": { "type": "boolean" },
+            "ancho": { "type": "integer", "minimum": 500, "maximum": 1200 },
+            "profundidad": { "type": "integer", "minimum": 200, "maximum": 350 }
           }
         }
       }

@@ -138,6 +138,20 @@
           <select id="esc-pas-n" style="width:70px"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
           <select id="esc-pas-d" style="width:110px"><option value="60">Ø 60 mm</option><option value="80">Ø 80 mm</option></select>
         </div></div>
+      <div class="campo"><label><input type="checkbox" id="esc-elev"> Elevación para monitor (con hueco de teclado abajo)</label></div>
+      <div class="campo"><label>Ancho de la elevación <span class="unidad">500–1200</span></label>
+        <div class="fila"><input type="range" id="esc-elev-ancho" min="500" max="1200" step="10">
+        <input type="number" id="esc-elev-ancho-n" min="500" max="1200"></div></div>
+      <div class="campo"><label>Profundidad de la elevación <span class="unidad">200–350</span></label>
+        <div class="fila"><input type="range" id="esc-elev-prof" min="200" max="350" step="10">
+        <input type="number" id="esc-elev-prof-n" min="200" max="350"></div></div>
+
+      <h2>Uniones estructurales</h2>
+      <div class="campo"><label>Tipo</label>
+        <select id="esc-uniones">
+          <option value="confirmat">Tornillo confirmat (más económico)</option>
+          <option value="excentrica">Excéntrica/cam-lock (si vas a mover el mueble)</option>
+        </select></div>
     </div>
 
     <!-- ============================== CONTROLES: ROPERO ============================== -->
@@ -181,6 +195,13 @@
 
       <h2>Extras</h2>
       <div class="campo"><label><input type="checkbox" id="rop-estante-inf"> Estante inferior (zapatos)</label></div>
+
+      <h2>Uniones estructurales</h2>
+      <div class="campo"><label>Tipo</label>
+        <select id="rop-uniones">
+          <option value="confirmat">Tornillo confirmat (más económico)</option>
+          <option value="excentrica">Excéntrica/cam-lock (si vas a mover el mueble)</option>
+        </select></div>
     </div>
   </div>
 
@@ -233,6 +254,7 @@ const PRECIOS_DEFECTO = {
   corredera_par: 12, grommet: 4, tapacanto_045_m: 0.8, tapacanto_2_m: 2.5,
   regaton: 1.5, escuadra: 1, servicio_corte_placa: 15, desperdicio_pct: 25,
   bisagra: 3, riel_corredizo_juego: 25, tirador: 2, barral_juego: 15, rinconera: 0.8,
+  herraje_excentrico: 1.2,
 };
 const ETIQUETAS_PRECIO = {
   placa_melamina_18: "Placa melamina 18 mm (2600×1830)",
@@ -253,6 +275,7 @@ const ETIQUETAS_PRECIO = {
   tirador: "Tirador/manija",
   barral_juego: "Barral + soportes (juego)",
   rinconera: "Rinconera/taco de estante",
+  herraje_excentrico: "Herraje excéntrico (cam-lock) + espiga",
 };
 
 function colorPara(material) {
@@ -267,6 +290,16 @@ function confirmatsPorUnion(l) { return l <= 300 ? 2 : 2 + Math.ceil((l - 300) /
 
 /* ===================================================================== ESCRITORIO */
 const RETRANQUEO = 50, ALTURA_CPU = 100, VANO_MAX_VIGA = 1200;
+const ALTO_LIBRE_ELEVACION_MONITOR = 110; // M-25: deja pasar un teclado + mano
+
+function herrajeUnion(tipoUnion, cantidad) {                                              // R-26
+  if (tipoUnion === "excentrica")
+    return { clave: "herraje_excentrico", nombre: "Herraje excéntrico (cam-lock) + espiga Ø8",
+             cant: cantidad, porVenta: 1, unidad: "unid.",
+             paraQue: "uniones estructurales, no se afloja al mover el mueble (R-26)" };
+  return { clave: "confirmat_7x50_caja50", nombre: "Confirmat 7×50", cant: cantidad,
+           porVenta: 50, unidad: "unid.", paraQue: "uniones estructurales (R-09)" };
+}
 const LARGOS_CORREDERA = [250, 300, 350, 400, 450, 500, 550, 600];
 
 function espesorTapa(tipo) { return { simple_18: 18, doble_18: 36, simple_25: 25 }[tipo]; }
@@ -307,6 +340,9 @@ function validarEscritorio(r) {
   ocupado += r.cajonera.posicion !== "ninguna" ? r.cajonera.ancho : 18;
   const libre = r.dimensiones.ancho - ocupado;
   if (libre < 600) errores.push(`Quedan solo ${libre} mm para las piernas; mínimo 600 mm (M-04). Agrandá el ancho, achicá la cajonera o sacá el soporte CPU.`);
+  if (r.elevacion_monitor.incluir && r.elevacion_monitor.ancho > r.dimensiones.ancho - 200) {
+    errores.push(`La elevación para monitor de ${r.elevacion_monitor.ancho} mm no entra en una tapa de ${r.dimensiones.ancho} mm dejando margen a los bordes (M-25). Achicala o agrandá el escritorio.`);
+  }
   return { errores, avisos, tapaTipo };
 }
 
@@ -333,6 +369,24 @@ function despieceEscritorio(r, tapaTipo) {
   } else {
     pieza("Tapa", A, P, t, mat, [0,0,H-t], [A,P,t], "4 cantos (banda 2 mm)");
     tcGrueso += 2 * (A + P);
+  }
+
+  const elev = r.elevacion_monitor;
+  if (elev.incluir) {
+    const anchoElev = elev.ancho, profElev = elev.profundidad;
+    const xElev = Math.floor((A - anchoElev) / 2), yElev = P - profElev, zApoyo = H;
+    pieza("Pata elevación monitor (izq)", profElev, ALTO_LIBRE_ELEVACION_MONITOR, e, mat,
+          [xElev, yElev, zApoyo], [e, profElev, ALTO_LIBRE_ELEVACION_MONITOR], "canto frontal");
+    pieza("Pata elevación monitor (der)", profElev, ALTO_LIBRE_ELEVACION_MONITOR, e, mat,
+          [xElev + anchoElev - e, yElev, zApoyo], [e, profElev, ALTO_LIBRE_ELEVACION_MONITOR], "canto frontal");
+    pieza("Tapa elevación monitor", anchoElev, profElev, e, mat,
+          [xElev, yElev, zApoyo + ALTO_LIBRE_ELEVACION_MONITOR], [anchoElev, profElev, e],
+          "4 cantos", `Deja ${ALTO_LIBRE_ELEVACION_MONITOR} mm libres abajo para deslizar el teclado`);
+    tcFino += 2 * ALTO_LIBRE_ELEVACION_MONITOR;
+    tcGrueso += 2 * (anchoElev + profElev);
+    const ncElev = confirmatsPorUnion(profElev);
+    confirmats += 2 * ncElev + 4;
+    avisos.push(`Elevación para monitor: bandeja de ${anchoElev}×${profElev} mm a ${ALTO_LIBRE_ELEVACION_MONITOR} mm sobre la tapa (M-25), suficiente para deslizar el teclado debajo.`);
   }
 
   pieza("Lateral izquierdo (pata panel)", profPanel, altoApoyo, e, mat,
@@ -422,7 +476,7 @@ function despieceEscritorio(r, tapaTipo) {
   }
 
   const herrajes = [
-    { clave: "confirmat_7x50_caja50", nombre: "Confirmat 7×50", cant: confirmats, porVenta: 50, unidad: "unid.", paraQue: "uniones estructurales (R-09)" },
+    herrajeUnion(r.uniones.tipo, confirmats),
     { clave: "tornillo_4x30_caja100", nombre: "Tornillo 4×30", cant: torn30, porVenta: 100, unidad: "unid.", paraQue: "frentes de cajón y tapa doble (H-04)" },
   ];
   if (conCaj) herrajes.push({ clave: "corredera_par", nombre: `Corredera telescópica ${largoCorr} mm`, cant: caj.cantidad_cajones, porVenta: 1, unidad: "pares", paraQue: "un par por cajón (R-08)" });
@@ -596,7 +650,7 @@ function despieceRopero(r) {
     herrajes.push({ clave: "tirador", nombre: "Tirador", cant: caj.cantidad_cajones, porVenta: 1, unidad: "unid.", paraQue: "uno por frente de cajón" });
   }
 
-  herrajes.unshift({ clave: "confirmat_7x50_caja50", nombre: "Confirmat 7×50", cant: confirmats, porVenta: 50, unidad: "unid.", paraQue: "uniones estructurales (R-09)" });
+  herrajes.unshift(herrajeUnion(r.uniones.tipo, confirmats));
   herrajes.push({ clave: "clavos_caja100", nombre: "Clavos 1½\"", cant: clavos, porVenta: 100, unidad: "unid.", paraQue: "fijar el fondo (R-10)" });
   herrajes.push({ clave: "tapacanto_045_m", nombre: "Tapacanto PVC 0,45 mm", cant: Math.ceil(tcFino*1.1/1000*10)/10, porVenta: 1, unidad: "m", paraQue: "cantos visibles (R-11)" });
   herrajes.push({ clave: "rinconera", nombre: "Rinconera/taco de estante", cant: rinconeras, porVenta: 1, unidad: "unid.", paraQue: "sostener el techo/estante superior" });
@@ -692,7 +746,8 @@ const $ = id => document.getElementById(id);
 let tipoActual = "escritorio_gamer";
 
 const CAMPOS_RANGO_ESC = [["esc-ancho",1600],["esc-profundidad",700],["esc-alto",750],
-                          ["esc-caj-ancho",400],["esc-cpu-ancho",250]];
+                          ["esc-caj-ancho",400],["esc-cpu-ancho",250],
+                          ["esc-elev-ancho",800],["esc-elev-prof",250]];
 const CAMPOS_RANGO_ROP = [["rop-ancho",900],["rop-profundidad",580],["rop-alto",2400],
                           ["rop-caj-ancho",400]];
 
@@ -706,6 +761,8 @@ function leerRecetaEscritorio() {
     cajonera: { posicion: $("esc-caj-pos").value, ancho:+$("esc-caj-ancho").value, cantidad_cajones:+$("esc-caj-n").value },
     soporte_cpu: { incluir: $("esc-cpu").checked, ancho:+$("esc-cpu-ancho").value },
     pasacables: { cantidad:+$("esc-pas-n").value, diametro:+$("esc-pas-d").value },
+    elevacion_monitor: { incluir: $("esc-elev").checked, ancho:+$("esc-elev-ancho").value, profundidad:+$("esc-elev-prof").value },
+    uniones: { tipo: $("esc-uniones").value },
   };
 }
 
@@ -722,6 +779,10 @@ function aplicarRecetaEscritorio(r) {
   $("esc-cpu-ancho").value = $("esc-cpu-ancho-n").value = r.soporte_cpu?.ancho ?? 250;
   $("esc-pas-n").value = r.pasacables?.cantidad ?? 2;
   $("esc-pas-d").value = r.pasacables?.diametro ?? 60;
+  $("esc-elev").checked = r.elevacion_monitor?.incluir ?? false;
+  $("esc-elev-ancho").value = $("esc-elev-ancho-n").value = r.elevacion_monitor?.ancho ?? 800;
+  $("esc-elev-prof").value = $("esc-elev-prof-n").value = r.elevacion_monitor?.profundidad ?? 250;
+  $("esc-uniones").value = r.uniones?.tipo ?? "confirmat";
 }
 
 function leerRecetaRopero() {
@@ -733,6 +794,7 @@ function leerRecetaRopero() {
     puertas: { tipo: $("rop-puertas-tipo").value, cantidad:+$("rop-puertas-n").value },
     cajones: { incluir: $("rop-cajones").checked, ancho:+$("rop-caj-ancho").value, cantidad_cajones:+$("rop-caj-n").value },
     estante_inferior: { incluir: $("rop-estante-inf").checked },
+    uniones: { tipo: $("rop-uniones").value },
   };
 }
 
@@ -747,6 +809,7 @@ function aplicarRecetaRopero(r) {
   $("rop-caj-ancho").value = $("rop-caj-ancho-n").value = r.cajones?.ancho ?? 400;
   $("rop-caj-n").value = r.cajones?.cantidad_cajones ?? 3;
   $("rop-estante-inf").checked = r.estante_inferior?.incluir ?? false;
+  $("rop-uniones").value = r.uniones?.tipo ?? "confirmat";
 }
 
 function leerReceta() {
@@ -972,8 +1035,8 @@ function csvCortes() {
 
 /* ------------------------------------------------ IA opcional (08_REGLAS_PARA_IAS) */
 const SYSTEM_PROMPTS = {
-  escritorio_gamer: `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0). Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"escritorio_gamer"; dimensiones{ancho 900-2400 def 1600, profundidad 500-900 def 700, alto 700-800 def 750}; tapa{tipo:"simple_18"|"doble_18"|"simple_25" def "doble_18"}; material{color def "Blanco"}; cajonera{posicion:"derecha"|"izquierda"|"ninguna" def "derecha", ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; soporte_cpu{incluir def true, ancho 200-350 def 250}; pasacables{cantidad 0-4 def 2, diametro 60|80 def 60}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`,
-  ropero: `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0) para un ROPERO. Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"ropero"; dimensiones{ancho 600-1200 def 900, profundidad 550-620 def 580, alto 2000-2600 def 2400}; material{color def "Blanco"}; puertas{tipo:"batiente"|"corrediza"|"ninguna" def "batiente", cantidad 2-4 def 2}; cajones{incluir def false, ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; estante_inferior{incluir def false}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`,
+  escritorio_gamer: `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0). Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"escritorio_gamer"; dimensiones{ancho 900-2400 def 1600, profundidad 500-900 def 700, alto 700-800 def 750}; tapa{tipo:"auto"|"simple_18"|"doble_18"|"simple_25" def "auto"}; material{color def "Blanco"}; cajonera{posicion:"derecha"|"izquierda"|"ninguna" def "derecha", ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; soporte_cpu{incluir def true, ancho 200-350 def 250}; pasacables{cantidad 0-4 def 2, diametro 60|80 def 60}; elevacion_monitor{incluir def false, ancho 500-1200 def 800, profundidad 200-350 def 250}; uniones{tipo:"confirmat"|"excentrica" def "confirmat" (usar excentrica si el usuario va a mover/mudar el mueble)}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`,
+  ropero: `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0) para un ROPERO. Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"ropero"; dimensiones{ancho 600-1200 def 900, profundidad 550-620 def 580, alto 2000-2600 def 2400}; material{color def "Blanco"}; puertas{tipo:"batiente"|"corrediza"|"ninguna" def "batiente", cantidad 2-4 def 2}; cajones{incluir def false, ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; estante_inferior{incluir def false}; uniones{tipo:"confirmat"|"excentrica" def "confirmat" (usar excentrica si el usuario va a mover/mudar el mueble)}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`,
 };
 
 async function pedirIA() {
@@ -1013,7 +1076,8 @@ function correrTests() {
     dimensiones:{ancho:1600,profundidad:700,alto:750}, tapa:{tipo:"auto"},
     material:{color:"Negro",espesor:18,espesor_fondo:3},
     cajonera:{posicion:"derecha",ancho:400,cantidad_cajones:3},
-    soporte_cpu:{incluir:true,ancho:250}, pasacables:{cantidad:2,diametro:60} };
+    soporte_cpu:{incluir:true,ancho:250}, pasacables:{cantidad:2,diametro:60},
+    elevacion_monitor:{incluir:false,ancho:800,profundidad:250}, uniones:{tipo:"confirmat"} };
   const v = validarEscritorio(R);
   ok("escritorio: tapa auto → doble_18 (R-04)", v.tapaTipo === "doble_18");
   const m = despieceEscritorio(R, v.tapaTipo);
@@ -1035,8 +1099,29 @@ function correrTests() {
   const confirmatFila = m.herrajes.find(h => h.clave === "confirmat_7x50_caja50");
   ok("escritorio: 40 confirmats como Python", confirmatFila.cant === 40, `(${confirmatFila.cant})`);
 
+  // --- Uniones (R-26) ---
+  const Rexc = JSON.parse(JSON.stringify(R)); Rexc.uniones.tipo = "excentrica";
+  const mExc = despieceEscritorio(Rexc, validarEscritorio(Rexc).tapaTipo);
+  ok("escritorio uniones excéntrica: usa H-17 no confirmat",
+     mExc.herrajes.some(h => h.clave === "herraje_excentrico") && !mExc.herrajes.some(h => h.clave === "confirmat_7x50_caja50"));
+
+  // --- Elevación para monitor (M-25) ---
+  const Relev = JSON.parse(JSON.stringify(R)); Relev.elevacion_monitor.incluir = true;
+  const mElev = despieceEscritorio(Relev, validarEscritorio(Relev).tapaTipo);
+  const porElev = {}; mElev.piezas.forEach(p => porElev[p.nombre] = p);
+  ok("elevación: genera patas + tapa elevada",
+     "Pata elevación monitor (izq)" in porElev && "Tapa elevación monitor" in porElev);
+  ok("elevación: tapa elevada 800x250 (defecto)",
+     porElev["Tapa elevación monitor"].largo === 800 && porElev["Tapa elevación monitor"].ancho === 250);
+  const confirmatElev = mElev.herrajes.find(h => h.clave === "confirmat_7x50_caja50");
+  ok("elevación: 48 confirmats (40 base + 8, igual que Python)", confirmatElev.cant === 48, `(${confirmatElev.cant})`);
+  const Rrechazo = JSON.parse(JSON.stringify(R));
+  Rrechazo.dimensiones.ancho = 900; Rrechazo.elevacion_monitor = {incluir:true, ancho:1000, profundidad:250};
+  ok("elevación: rechaza más ancha que el escritorio (M-25)", validarEscritorio(Rrechazo).errores.length > 0);
+
   // --- Ropero ---
   const RR = { version:"1.0", tipo_mueble:"ropero", nombre:"Test Ropero",
+    uniones:{tipo:"confirmat"},
     dimensiones:{ancho:900,profundidad:580,alto:2400}, material:{color:"Blanco",espesor:18,espesor_fondo:3},
     puertas:{tipo:"batiente",cantidad:2}, cajones:{incluir:false,ancho:400,cantidad_cajones:3},
     estante_inferior:{incluir:false} };
@@ -1060,6 +1145,10 @@ function correrTests() {
   const RR4 = JSON.parse(JSON.stringify(RR));
   RR4.dimensiones.ancho = 600; RR4.puertas.cantidad = 4;
   ok("ropero: rechaza puertas demasiado angostas", validarRopero(RR4).errores.length > 0);
+
+  const RRexc = JSON.parse(JSON.stringify(RR)); RRexc.uniones.tipo = "excentrica";
+  const mRRexc = despieceRopero(RRexc);
+  ok("ropero uniones excéntrica: usa H-17", mRRexc.herrajes.some(h => h.clave === "herraje_excentrico"));
 
   const fallas = res.filter(l => l.startsWith("✖")).length;
   document.body.innerHTML = `<div id="resultado-tests"><h2>${fallas === 0 ? "✔ TODAS LAS PRUEBAS PASAN" : "✖ " + fallas + " FALLAS"}</h2>${res.join("\n")}</div>`;
@@ -1094,7 +1183,9 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
   for (const id of ["esc-color","esc-tapa","esc-caj-pos","esc-caj-n","esc-cpu","esc-pas-n","esc-pas-d",
-                    "rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf"])
+                    "esc-elev","esc-uniones",
+                    "rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf",
+                    "rop-uniones"])
     $(id).addEventListener("change", recalcular);
 
   document.querySelectorAll("#pestanas div").forEach(d =>

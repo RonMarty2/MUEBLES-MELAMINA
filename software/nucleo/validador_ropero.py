@@ -19,6 +19,7 @@ DEFECTOS = {
     "nombre": "Mueble sin nombre",
     "dimensiones": {"ancho": 900, "profundidad": 580, "alto": 2400},
     "material": {"color": "Blanco", "espesor": 18, "espesor_fondo": 3},
+    "uniones": {"tipo": "confirmat"},  # R-26: "excentrica" si se va a mover/mudar
     "puertas": {"tipo": "batiente", "cantidad": 2},
     "cajones": {"incluir": False, "ancho": 400, "cantidad_cajones": 3},
     "estante_inferior": {"incluir": False},
@@ -36,14 +37,16 @@ LIMITES = {
 OPCIONES = {
     ("material", "espesor"): ([15, 18], "R-01"),
     ("material", "espesor_fondo"): ([3], "R-01"),
+    ("uniones", "tipo"): (["confirmat", "excentrica"], "R-26"),
     ("puertas", "tipo"): (["batiente", "corrediza", "ninguna"], "R-21/R-23"),
 }
 
 CAMPOS_CONOCIDOS = {
-    "": ["version", "tipo_mueble", "nombre", "dimensiones", "material",
+    "": ["version", "tipo_mueble", "nombre", "dimensiones", "material", "uniones",
          "puertas", "cajones", "estante_inferior"],
     "dimensiones": ["ancho", "profundidad", "alto"],
     "material": ["color", "espesor", "espesor_fondo"],
+    "uniones": ["tipo"],
     "puertas": ["tipo", "cantidad"],
     "cajones": ["incluir", "ancho", "cantidad_cajones"],
     "estante_inferior": ["incluir"],

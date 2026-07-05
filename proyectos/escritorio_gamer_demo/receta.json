@@ -27,5 +27,13 @@
   },
   "tapa": {
     "tipo": "doble_18"
+  },
+  "uniones": {
+    "tipo": "confirmat"
+  },
+  "elevacion_monitor": {
+    "incluir": false,
+    "ancho": 800,
+    "profundidad": 250
   }
 }

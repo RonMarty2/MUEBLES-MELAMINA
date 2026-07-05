@@ -16,6 +16,7 @@ from .modelos import Pieza, Herraje, Perforacion, Mueble
 from .validador_ropero import (ZOCALO, ALTO_BARRAL, RETRANQUEO_BARRAL,
                                ANCHO_MAX_PUERTA_BATIENTE, SOLAPE_CORREDIZA)
 from .despiece_escritorio import confirmats_por_union, elegir_corredera
+from .uniones import herraje_union
 
 ALTO_FRENTE_OBJETIVO = 250  # M-24: frente cómodo (rango real 120-350, R-07) para la
                              # cajonera del ropero, que NO reparte toda la altura del
@@ -200,8 +201,7 @@ def despiece_ropero(receta):
         avisos.append("Módulo sin puertas (placard abierto tipo vestidor).")
 
     # --------------------------------------------------------------- Herrajes generales
-    herrajes.insert(0, Herraje("H-01", "Confirmat 7×50", confirmats, "unidades",
-                              "uniones estructurales (R-09)"))
+    herrajes.insert(0, herraje_union(receta["uniones"]["tipo"], confirmats))
     herrajes.append(Herraje("H-07", "Clavos 1½\"", clavos, "unidades", "fijar el fondo (R-10)"))
     herrajes.append(Herraje("H-08", "Tapacanto PVC 0,45 mm",
                             round(tc_fino * 1.10 / 1000, 1), "metros", "cantos visibles (R-11)"))
