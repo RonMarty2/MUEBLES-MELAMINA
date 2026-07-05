@@ -1,10 +1,21 @@
 # MUEBLES-MELAMINA — Diseño automático de muebles de melamina
 
-## Empezar en 30 segundos
+## Cómo usarlo (igual que un proyecto con `iniciar`)
 
-**Descargá el archivo [`DISENADOR_MUEBLES.html`](DISENADOR_MUEBLES.html) y abrilo con
-doble clic.** Eso es todo. No hay que instalar Python, ni Node, ni nada — es una sola
-página que funciona en tu navegador (Chrome, Edge, Firefox), sin internet.
+Descargá la carpeta del proyecto una vez y adentro tenés dos archivos, como en cualquier
+proyecto con lanzador:
+
+- **`iniciar`** → doble clic: abre el diseñador en tu navegador. Eso es todo.
+- **`actualizar`** → doble clic: descarga la última versión (necesita Git).
+
+En Windows usá `iniciar.bat` y `actualizar.bat`; en Mac/Linux, `iniciar.sh` y
+`actualizar.sh`. No hace falta instalar Python ni Node ni levantar ningún servidor: el
+diseñador es una sola página (`DISENADOR_MUEBLES.html`) que abre al instante y funciona
+sin internet.
+
+> ¿Preferís sin la carpeta? También podés descargar solo
+> [`DISENADOR_MUEBLES.html`](DISENADOR_MUEBLES.html) y abrirlo con doble clic — es
+> exactamente la misma app.
 
 Arriba a la izquierda elegís el **tipo de mueble** (Escritorio gamer / Ropero-placard).
 Adentro vas a ver: controles para configurar el mueble, el 3D **en vivo** que se
