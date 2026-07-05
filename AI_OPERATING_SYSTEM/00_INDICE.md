@@ -25,6 +25,7 @@ determinista en Python hace todo lo demás.
 | 08 | [08_REGLAS_PARA_IAS.md](08_REGLAS_PARA_IAS.md) | System prompt y protocolo para LM Studio / ChatGPT / Claude | configures un modelo o depures una receta mal generada |
 | 09 | [09_DECISIONES_TECNICAS.md](09_DECISIONES_TECNICAS.md) | Registro de decisiones (ADR): qué se decidió, por qué, qué se descartó | quieras cambiar algo ya decidido — leé primero si ya se discutió |
 | 10 | [10_HOJA_DE_RUTA.md](10_HOJA_DE_RUTA.md) | Fases futuras: más muebles, UI, planos 2D, CNC, docs pendientes | planifiques trabajo nuevo |
+| 11 | [11_REGLAS_Y_MEDIDAS_ROPERO.md](11_REGLAS_Y_MEDIDAS_ROPERO.md) | Reglas y medidas propias del ropero/placard (barral, puertas, zócalo) | calcules o valides un ropero |
 
 ## Reglas de mantenimiento de esta memoria
 

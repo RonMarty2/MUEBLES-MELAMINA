@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "tipo_mueble": "ropero",
+  "nombre": "Ropero Demo",
+  "dimensiones": {
+    "ancho": 900,
+    "profundidad": 580,
+    "alto": 2400
+  },
+  "material": {
+    "color": "Blanco",
+    "espesor": 18,
+    "espesor_fondo": 3
+  },
+  "puertas": {
+    "tipo": "batiente",
+    "cantidad": 2
+  },
+  "cajones": {
+    "incluir": true,
+    "ancho": 400,
+    "cantidad_cajones": 3
+  },
+  "estante_inferior": {
+    "incluir": false
+  }
+}

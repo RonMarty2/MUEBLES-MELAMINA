@@ -1,30 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Receta de mueble de melamina",
-  "description": "Contrato central del sistema. Explicación humana en AI_OPERATING_SYSTEM/04_ESQUEMA_RECETA_JSON.md",
+  "description": "Contrato central del sistema. Explicación humana en AI_OPERATING_SYSTEM/04_ESQUEMA_RECETA_JSON.md (escritorio) y 11_REGLAS_Y_MEDIDAS_ROPERO.md (ropero). Los campos comunes están arriba; cada tipo_mueble valida sus propias secciones en el oneOf de abajo.",
   "type": "object",
-  "additionalProperties": false,
   "required": ["version", "tipo_mueble"],
   "properties": {
     "version": { "type": "string", "enum": ["1.0"] },
-    "tipo_mueble": { "type": "string", "enum": ["escritorio_gamer"] },
+    "tipo_mueble": { "type": "string", "enum": ["escritorio_gamer", "ropero"] },
     "nombre": { "type": "string" },
-    "dimensiones": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "ancho": { "type": "integer", "minimum": 900, "maximum": 2400 },
-        "profundidad": { "type": "integer", "minimum": 500, "maximum": 900 },
-        "alto": { "type": "integer", "minimum": 700, "maximum": 800 }
-      }
-    },
-    "tapa": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "tipo": { "type": "string", "enum": ["simple_18", "doble_18", "simple_25"] }
-      }
-    },
     "material": {
       "type": "object",
       "additionalProperties": false,
@@ -33,31 +16,92 @@
         "espesor": { "type": "integer", "enum": [15, 18] },
         "espesor_fondo": { "type": "integer", "enum": [3] }
       }
-    },
-    "cajonera": {
-      "type": "object",
-      "additionalProperties": false,
+    }
+  },
+  "oneOf": [
+    {
       "properties": {
-        "posicion": { "type": "string", "enum": ["derecha", "izquierda", "ninguna"] },
-        "ancho": { "type": "integer", "minimum": 300, "maximum": 600 },
-        "cantidad_cajones": { "type": "integer", "minimum": 1, "maximum": 4 }
+        "tipo_mueble": { "const": "escritorio_gamer" },
+        "dimensiones": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ancho": { "type": "integer", "minimum": 900, "maximum": 2400 },
+            "profundidad": { "type": "integer", "minimum": 500, "maximum": 900 },
+            "alto": { "type": "integer", "minimum": 700, "maximum": 800 }
+          }
+        },
+        "tapa": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tipo": { "type": "string", "enum": ["auto", "simple_18", "doble_18", "simple_25"] }
+          }
+        },
+        "cajonera": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "posicion": { "type": "string", "enum": ["derecha", "izquierda", "ninguna"] },
+            "ancho": { "type": "integer", "minimum": 300, "maximum": 600 },
+            "cantidad_cajones": { "type": "integer", "minimum": 1, "maximum": 4 }
+          }
+        },
+        "soporte_cpu": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "incluir": { "type": "boolean" },
+            "ancho": { "type": "integer", "minimum": 200, "maximum": 350 }
+          }
+        },
+        "pasacables": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cantidad": { "type": "integer", "minimum": 0, "maximum": 4 },
+            "diametro": { "type": "integer", "enum": [60, 80] }
+          }
+        }
       }
     },
-    "soporte_cpu": {
-      "type": "object",
-      "additionalProperties": false,
+    {
       "properties": {
-        "incluir": { "type": "boolean" },
-        "ancho": { "type": "integer", "minimum": 200, "maximum": 350 }
-      }
-    },
-    "pasacables": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "cantidad": { "type": "integer", "minimum": 0, "maximum": 4 },
-        "diametro": { "type": "integer", "enum": [60, 80] }
+        "tipo_mueble": { "const": "ropero" },
+        "dimensiones": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ancho": { "type": "integer", "minimum": 600, "maximum": 1200 },
+            "profundidad": { "type": "integer", "minimum": 550, "maximum": 620 },
+            "alto": { "type": "integer", "minimum": 2000, "maximum": 2600 }
+          }
+        },
+        "puertas": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tipo": { "type": "string", "enum": ["batiente", "corrediza", "ninguna"] },
+            "cantidad": { "type": "integer", "minimum": 2, "maximum": 4 }
+          }
+        },
+        "cajones": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "incluir": { "type": "boolean" },
+            "ancho": { "type": "integer", "minimum": 300, "maximum": 600 },
+            "cantidad_cajones": { "type": "integer", "minimum": 1, "maximum": 4 }
+          }
+        },
+        "estante_inferior": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "incluir": { "type": "boolean" }
+          }
+        }
       }
     }
-  }
+  ]
 }

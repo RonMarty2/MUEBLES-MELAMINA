@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Escritorio Gamer — Diseñador de Muebles de Melamina</title>
+<title>Diseñador de Muebles de Melamina</title>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, -apple-system, sans-serif; height: 100vh;
@@ -29,6 +29,9 @@
   .campo select { width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 4px;
                   font-size: 13px; background: #fff; }
   .campo .unidad { font-size: 11px; color: #888; }
+  #selector-mueble { padding: 3px 0 12px; margin-bottom: 6px; border-bottom: 2px solid #eee; }
+  #selector-mueble select { width: 100%; padding: 8px; font-size: 14px; font-weight: 600;
+                            border: 2px solid #3b82f6; border-radius: 6px; background: #eff6ff; }
   #zona3d { flex: 1; position: relative; min-width: 0; }
   #zona3d canvas { display: block; }
   #ayuda3d { position: absolute; bottom: 8px; right: 12px; font-size: 11.5px;
@@ -60,7 +63,7 @@
 </head>
 <body>
 <header>
-  <h1>🛠️ Escritorio Gamer</h1>
+  <h1 id="titulo-app">🛠️ Diseñador de Muebles</h1>
   <div id="ia-caja">
     <input id="ia-texto" placeholder='Pedilo en palabras (opcional, necesita LM Studio): "hacelo de 1,80 con 2 cajones"'>
     <button id="ia-boton" class="gris">Pedir a la IA</button>
@@ -76,55 +79,109 @@
 
 <div id="principal">
   <div id="controles">
-    <h2>Medidas (mm)</h2>
-    <div class="campo"><label>Ancho <span class="unidad">900–2400</span></label>
-      <div class="fila"><input type="range" id="ancho" min="900" max="2400" step="10">
-      <input type="number" id="ancho-n" min="900" max="2400"></div></div>
-    <div class="campo"><label>Profundidad <span class="unidad">500–900</span></label>
-      <div class="fila"><input type="range" id="profundidad" min="500" max="900" step="10">
-      <input type="number" id="profundidad-n" min="500" max="900"></div></div>
-    <div class="campo"><label>Alto <span class="unidad">700–800 (ergonomía M-01)</span></label>
-      <div class="fila"><input type="range" id="alto" min="700" max="800" step="5">
-      <input type="number" id="alto-n" min="700" max="800"></div></div>
+    <div id="selector-mueble">
+      <label style="font-size:12.5px; color:#333; margin-bottom:4px; display:block">Tipo de mueble</label>
+      <select id="tipo-mueble">
+        <option value="escritorio_gamer">🖥️ Escritorio gamer</option>
+        <option value="ropero">🚪 Ropero / placard</option>
+      </select>
+    </div>
 
-    <h2>Material</h2>
-    <div class="campo"><label>Color de melamina</label>
-      <select id="color">
-        <option>Blanco</option><option>Negro</option><option>Gris</option>
-        <option>Grafito</option><option>Roble</option><option>Nogal</option>
-        <option>Cedro</option><option>Wengue</option>
-      </select></div>
-    <div class="campo"><label>Tapa</label>
-      <select id="tapa">
-        <option value="auto">Automática (recomendado)</option>
-        <option value="simple_18">Simple 18 mm</option>
-        <option value="doble_18">Doble 18 mm (36 mm)</option>
-        <option value="simple_25">Simple 25 mm</option>
-      </select></div>
+    <!-- ============================== CONTROLES: ESCRITORIO ============================== -->
+    <div id="controles-escritorio_gamer">
+      <h2>Medidas (mm)</h2>
+      <div class="campo"><label>Ancho <span class="unidad">900–2400</span></label>
+        <div class="fila"><input type="range" id="esc-ancho" min="900" max="2400" step="10">
+        <input type="number" id="esc-ancho-n" min="900" max="2400"></div></div>
+      <div class="campo"><label>Profundidad <span class="unidad">500–900</span></label>
+        <div class="fila"><input type="range" id="esc-profundidad" min="500" max="900" step="10">
+        <input type="number" id="esc-profundidad-n" min="500" max="900"></div></div>
+      <div class="campo"><label>Alto <span class="unidad">700–800 (ergonomía M-01)</span></label>
+        <div class="fila"><input type="range" id="esc-alto" min="700" max="800" step="5">
+        <input type="number" id="esc-alto-n" min="700" max="800"></div></div>
 
-    <h2>Cajonera</h2>
-    <div class="campo"><label>Posición</label>
-      <select id="caj-pos">
-        <option value="derecha">Derecha</option>
-        <option value="izquierda">Izquierda</option>
-        <option value="ninguna">Sin cajonera</option>
-      </select></div>
-    <div class="campo"><label>Ancho <span class="unidad">300–600</span></label>
-      <div class="fila"><input type="range" id="caj-ancho" min="300" max="600" step="10">
-      <input type="number" id="caj-ancho-n" min="300" max="600"></div></div>
-    <div class="campo"><label>Cantidad de cajones</label>
-      <select id="caj-n"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div>
+      <h2>Material</h2>
+      <div class="campo"><label>Color de melamina</label>
+        <select id="esc-color">
+          <option>Blanco</option><option>Negro</option><option>Gris</option>
+          <option>Grafito</option><option>Roble</option><option>Nogal</option>
+          <option>Cedro</option><option>Wengue</option>
+        </select></div>
+      <div class="campo"><label>Tapa</label>
+        <select id="esc-tapa">
+          <option value="auto">Automática (recomendado)</option>
+          <option value="simple_18">Simple 18 mm</option>
+          <option value="doble_18">Doble 18 mm (36 mm)</option>
+          <option value="simple_25">Simple 25 mm</option>
+        </select></div>
 
-    <h2>Extras gamer</h2>
-    <div class="campo"><label><input type="checkbox" id="cpu" checked> Soporte para CPU</label></div>
-    <div class="campo"><label>Ancho soporte CPU <span class="unidad">200–350</span></label>
-      <div class="fila"><input type="range" id="cpu-ancho" min="200" max="350" step="10">
-      <input type="number" id="cpu-ancho-n" min="200" max="350"></div></div>
-    <div class="campo"><label>Pasacables</label>
-      <div class="fila">
-        <select id="pas-n" style="width:70px"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
-        <select id="pas-d" style="width:110px"><option value="60">Ø 60 mm</option><option value="80">Ø 80 mm</option></select>
-      </div></div>
+      <h2>Cajonera</h2>
+      <div class="campo"><label>Posición</label>
+        <select id="esc-caj-pos">
+          <option value="derecha">Derecha</option>
+          <option value="izquierda">Izquierda</option>
+          <option value="ninguna">Sin cajonera</option>
+        </select></div>
+      <div class="campo"><label>Ancho <span class="unidad">300–600</span></label>
+        <div class="fila"><input type="range" id="esc-caj-ancho" min="300" max="600" step="10">
+        <input type="number" id="esc-caj-ancho-n" min="300" max="600"></div></div>
+      <div class="campo"><label>Cantidad de cajones</label>
+        <select id="esc-caj-n"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div>
+
+      <h2>Extras gamer</h2>
+      <div class="campo"><label><input type="checkbox" id="esc-cpu" checked> Soporte para CPU</label></div>
+      <div class="campo"><label>Ancho soporte CPU <span class="unidad">200–350</span></label>
+        <div class="fila"><input type="range" id="esc-cpu-ancho" min="200" max="350" step="10">
+        <input type="number" id="esc-cpu-ancho-n" min="200" max="350"></div></div>
+      <div class="campo"><label>Pasacables</label>
+        <div class="fila">
+          <select id="esc-pas-n" style="width:70px"><option>0</option><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+          <select id="esc-pas-d" style="width:110px"><option value="60">Ø 60 mm</option><option value="80">Ø 80 mm</option></select>
+        </div></div>
+    </div>
+
+    <!-- ============================== CONTROLES: ROPERO ============================== -->
+    <div id="controles-ropero" style="display:none">
+      <h2>Medidas (mm)</h2>
+      <div class="campo"><label>Ancho <span class="unidad">600–1200 (M-16)</span></label>
+        <div class="fila"><input type="range" id="rop-ancho" min="600" max="1200" step="10">
+        <input type="number" id="rop-ancho-n" min="600" max="1200"></div></div>
+      <div class="campo"><label>Profundidad <span class="unidad">550–620 (M-17)</span></label>
+        <div class="fila"><input type="range" id="rop-profundidad" min="550" max="620" step="5">
+        <input type="number" id="rop-profundidad-n" min="550" max="620"></div></div>
+      <div class="campo"><label>Alto <span class="unidad">2000–2600 (M-18)</span></label>
+        <div class="fila"><input type="range" id="rop-alto" min="2000" max="2600" step="10">
+        <input type="number" id="rop-alto-n" min="2000" max="2600"></div></div>
+
+      <h2>Material</h2>
+      <div class="campo"><label>Color de melamina</label>
+        <select id="rop-color">
+          <option>Blanco</option><option>Negro</option><option>Gris</option>
+          <option>Grafito</option><option>Roble</option><option>Nogal</option>
+          <option>Cedro</option><option>Wengue</option>
+        </select></div>
+
+      <h2>Puertas</h2>
+      <div class="campo"><label>Tipo</label>
+        <select id="rop-puertas-tipo">
+          <option value="batiente">Batientes (con bisagra)</option>
+          <option value="corrediza">Corredizas</option>
+          <option value="ninguna">Sin puertas (vestidor abierto)</option>
+        </select></div>
+      <div class="campo"><label>Cantidad de hojas</label>
+        <select id="rop-puertas-n"><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></div>
+
+      <h2>Cajones interiores</h2>
+      <div class="campo"><label><input type="checkbox" id="rop-cajones"> Incluir cajones</label></div>
+      <div class="campo"><label>Ancho de la sección <span class="unidad">300–600</span></label>
+        <div class="fila"><input type="range" id="rop-caj-ancho" min="300" max="600" step="10">
+        <input type="number" id="rop-caj-ancho-n" min="300" max="600"></div></div>
+      <div class="campo"><label>Cantidad de cajones</label>
+        <select id="rop-caj-n"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div>
+
+      <h2>Extras</h2>
+      <div class="campo"><label><input type="checkbox" id="rop-estante-inf"> Estante inferior (zapatos)</label></div>
+    </div>
   </div>
 
   <div id="zona3d">
@@ -155,18 +212,19 @@
 <script>
 "use strict";
 /* =====================================================================
-   MOTOR DE DESPIECE — port 1:1 del motor Python (software/nucleo/).
-   Reglas R-xx: AI_OPERATING_SYSTEM/05_REGLAS_DE_CARPINTERIA.md
-   Medidas M-xx: 06_MEDIDAS_ESTANDAR.md · Herrajes H-xx: 07_HERRAJES.
-   Si cambiás una fórmula acá, cambiala también en Python (paridad D-010).
+   MOTOR DE DESPIECE — port 1:1 de los motores Python (software/nucleo/).
+   Escritorio: despiece_escritorio.py + validador_escritorio.py
+   Ropero:     despiece_ropero.py + validador_ropero.py
+   Reglas comunes: AI_OPERATING_SYSTEM/05_REGLAS_DE_CARPINTERIA.md
+   Reglas del ropero: 11_REGLAS_Y_MEDIDAS_ROPERO.md
+   Si cambiás una fórmula acá, cambiala también en Python (paridad D-010/D-011).
    ===================================================================== */
 
-const RETRANQUEO = 50, ALTURA_CPU = 100, VANO_MAX_VIGA = 1200;
-const LARGOS_CORREDERA = [250, 300, 350, 400, 450, 500, 550, 600];
 const COLORES = { blanco:[245,245,240], negro:[45,45,48], gris:[150,150,150],
   grafito:[90,90,95], roble:[190,155,100], nogal:[120,85,60],
   cedro:[165,115,80], wengue:[75,55,45] };
 const COLOR_FONDO_MDF = [170,140,105];
+const COLOR_METAL = [190,195,200];
 
 const PRECIOS_DEFECTO = {
   moneda: "$",
@@ -174,6 +232,7 @@ const PRECIOS_DEFECTO = {
   confirmat_7x50_caja50: 8, tornillo_4x30_caja100: 6, clavos_caja100: 3,
   corredera_par: 12, grommet: 4, tapacanto_045_m: 0.8, tapacanto_2_m: 2.5,
   regaton: 1.5, escuadra: 1, servicio_corte_placa: 15, desperdicio_pct: 25,
+  bisagra: 3, riel_corredizo_juego: 25, tirador: 2, barral_juego: 15, rinconera: 0.8,
 };
 const ETIQUETAS_PRECIO = {
   placa_melamina_18: "Placa melamina 18 mm (2600×1830)",
@@ -189,22 +248,34 @@ const ETIQUETAS_PRECIO = {
   escuadra: "Escuadra 25 mm",
   servicio_corte_placa: "Servicio de corte (por placa)",
   desperdicio_pct: "Desperdicio estimado (%)",
+  bisagra: "Bisagra cazoleta 35 mm",
+  riel_corredizo_juego: "Riel corredizo (juego)",
+  tirador: "Tirador/manija",
+  barral_juego: "Barral + soportes (juego)",
+  rinconera: "Rinconera/taco de estante",
 };
 
-function espesorTapa(tipo) { return { simple_18: 18, doble_18: 36, simple_25: 25 }[tipo]; }
-function confirmatsPorUnion(l) { return l <= 300 ? 2 : 2 + Math.ceil((l - 300) / 200); } // R-09
-function elegirCorredera(profInterior) {                                                 // R-08
-  const c = LARGOS_CORREDERA.filter(l => l <= profInterior - 20);
-  return c.length ? c[c.length - 1] : LARGOS_CORREDERA[0];
-}
 function colorPara(material) {
   const m = material.toLowerCase();
   if (m.includes("fibrof")) return COLOR_FONDO_MDF;
+  if (m.includes("tubo") || m.includes("cromado")) return COLOR_METAL;
   for (const [n, rgb] of Object.entries(COLORES)) if (m.includes(n)) return rgb;
   return [200,190,170];
 }
 
-function vanoLibre(r) {                                                                   // R-14
+function confirmatsPorUnion(l) { return l <= 300 ? 2 : 2 + Math.ceil((l - 300) / 200); } // R-09
+
+/* ===================================================================== ESCRITORIO */
+const RETRANQUEO = 50, ALTURA_CPU = 100, VANO_MAX_VIGA = 1200;
+const LARGOS_CORREDERA = [250, 300, 350, 400, 450, 500, 550, 600];
+
+function espesorTapa(tipo) { return { simple_18: 18, doble_18: 36, simple_25: 25 }[tipo]; }
+function elegirCorredera(profInterior) {                                                 // R-08
+  const c = LARGOS_CORREDERA.filter(l => l <= profInterior - 20);
+  return c.length ? c[c.length - 1] : LARGOS_CORREDERA[0];
+}
+
+function vanoLibreEscritorio(r) {                                                         // R-14
   let izq = 18;
   if (r.soporte_cpu.incluir) izq = 18 + r.soporte_cpu.ancho + 18;
   let der = r.dimensiones.ancho - 18;
@@ -212,11 +283,10 @@ function vanoLibre(r) {                                                         
   return Math.max(0, der - izq);
 }
 
-// Valida y devuelve { errores:[], avisos:[], tapaTipo } (la UI ya limita rangos).
-function validar(r) {
+function validarEscritorio(r) {
   const errores = [], avisos = [];
   let tapaTipo = r.tapa.tipo;
-  const vano = vanoLibre(r);
+  const vano = vanoLibreEscritorio(r);
   if (tapaTipo === "auto") {
     if (vano > 800) {
       tapaTipo = "doble_18";
@@ -240,8 +310,7 @@ function validar(r) {
   return { errores, avisos, tapaTipo };
 }
 
-// Despiece completo. Devuelve { piezas, herrajes, perforaciones, avisos }.
-function despiece(r, tapaTipo) {
+function despieceEscritorio(r, tapaTipo) {
   const A = r.dimensiones.ancho, P = r.dimensiones.profundidad, H = r.dimensiones.alto;
   const e = 18, ef = 3, t = espesorTapa(tapaTipo);
   const altoApoyo = H - t, profPanel = P - RETRANQUEO;
@@ -255,7 +324,6 @@ function despiece(r, tapaTipo) {
     piezas.push({ nombre, largo, ancho, espesor: esp, material, pos, dim, cantos, notas });
   };
 
-  // Tapa
   if (tapaTipo === "doble_18") {
     pieza("Tapa capa inferior", A, P, 18, mat, [0,0,H-36], [A,P,18], "", "Encolada y atornillada a la superior");
     pieza("Tapa capa superior", A, P, 18, mat, [0,0,H-18], [A,P,18], "4 cantos (banda 2 mm doble)");
@@ -267,13 +335,11 @@ function despiece(r, tapaTipo) {
     tcGrueso += 2 * (A + P);
   }
 
-  // Lateral izquierdo
   pieza("Lateral izquierdo (pata panel)", profPanel, altoApoyo, e, mat,
         [0,RETRANQUEO,0], [e,profPanel,altoApoyo], "canto frontal");
   tcFino += altoApoyo; regatones += 2; escuadrasMm += profPanel;
   let xIzqInt = e;
 
-  // Soporte CPU (R-17)
   if (r.soporte_cpu.incluir) {
     const w = r.soporte_cpu.ancho, xp = e + w;
     pieza("Parante soporte CPU", profPanel, altoApoyo, e, mat, [xp,RETRANQUEO,0], [e,profPanel,altoApoyo], "canto frontal");
@@ -287,10 +353,9 @@ function despiece(r, tapaTipo) {
     xIzqInt = xp + e;
   }
 
-  // Cajonera
   const caj = r.cajonera, conCaj = caj.posicion !== "ninguna";
   if (conCaj) {
-    const C = caj.ancho, PC = P - 100, x0 = A - C, y0 = RETRANQUEO, interior = C - 2*e;   // R-02, M-09
+    const C = caj.ancho, PC = P - 100, x0 = A - C, y0 = RETRANQUEO, interior = C - 2*e;
     pieza("Lateral cajonera interno", PC, altoApoyo, e, mat, [x0,y0,0], [e,PC,altoApoyo], "canto frontal");
     pieza("Lateral cajonera externo", PC, altoApoyo, e, mat, [A-e,y0,0], [e,PC,altoApoyo], "canto frontal");
     pieza("Piso cajonera", PC, interior, e, mat, [x0+e,y0,0], [interior,PC,e]);
@@ -303,9 +368,9 @@ function despiece(r, tapaTipo) {
       detalle: `${ncp} confirmats por lado para el piso, eje a 9 mm del borde inferior, broca 4,5 pasante (P-01)` });
 
     const n = caj.cantidad_cajones, altoUtil = altoApoyo - e;
-    const altoFrente = Math.floor((altoUtil - 3*n)/n);                                     // R-06
-    largoCorr = elegirCorredera(PC);                                                       // R-08
-    const anchoCaja = interior - 26, altoCaja = altoFrente - 30, xC = x0 + e + 13;        // R-05, R-12
+    const altoFrente = Math.floor((altoUtil - 3*n)/n);
+    largoCorr = elegirCorredera(PC);
+    const anchoCaja = interior - 26, altoCaja = altoFrente - 30, xC = x0 + e + 13;
     avisos.push(`Cajones: ${n} frentes de ${altoFrente} mm; caja ${anchoCaja} × ${largoCorr} × ${altoCaja} mm; correderas de ${largoCorr} mm (R-05/R-08).`);
 
     for (let i = 0; i < n; i++) {
@@ -329,7 +394,6 @@ function despiece(r, tapaTipo) {
     tcFino += altoApoyo; regatones += 2; escuadrasMm += profPanel;
   }
 
-  // Viga trasera (R-13)
   const xDerInt = conCaj ? A - caj.ancho : A - e;
   const vano = xDerInt - xIzqInt;
   if (vano > VANO_MAX_VIGA) {
@@ -340,7 +404,6 @@ function despiece(r, tapaTipo) {
     avisos.push(`Se agregó viga trasera de ${vano} × 300 mm: el vano supera ${VANO_MAX_VIGA} mm y sin ella el mueble cimbra (R-13).`);
   }
 
-  // Pasacables (R-16)
   const pasN = r.pasacables.cantidad, pasD = r.pasacables.diametro, grommets = [];
   if (pasN > 0) {
     const paso = Math.floor((xDerInt - xIzqInt)/(pasN+1));
@@ -352,7 +415,6 @@ function despiece(r, tapaTipo) {
     }
   }
 
-  // Espejo (cajonera a la izquierda)
   if (caj.posicion === "izquierda") {
     for (const p of piezas) p.pos = [A - p.pos[0] - p.dim[0], p.pos[1], p.pos[2]];
     for (const g of grommets) g.x = A - g.x;
@@ -372,14 +434,183 @@ function despiece(r, tapaTipo) {
     { clave: "regaton", nombre: "Regatón nivelador", cant: regatones, porVenta: 1, unidad: "unid.", paraQue: "separar del piso y nivelar" },
     { clave: "escuadra", nombre: "Escuadra 25 mm", cant: Math.ceil(escuadrasMm/300), porVenta: 1, unidad: "unid.", paraQue: "fijar la tapa sin tornillos a la vista" },
   );
-  return { piezas, herrajes, perforaciones: perfs, avisos, grommets, tapaTipo };
+  return { piezas, herrajes, perforaciones: perfs, avisos, grommets };
 }
 
-// Compras + presupuesto a partir del despiece y los precios.
+/* ===================================================================== ROPERO */
+const ZOCALO = 100, ALTO_BARRAL = 1750, RETRANQUEO_BARRAL = 50;
+const ALTO_LIBRE_SOBRE_BARRAL_MIN = 280, ANCHO_MAX_PUERTA_BATIENTE = 600, SOLAPE_CORREDIZA = 20;
+const ALTO_FRENTE_OBJETIVO_ROPERO = 250;
+
+function validarRopero(r) {
+  const errores = [], avisos = [];
+  const d = r.dimensiones, e = 18;
+  const anchoInterior = d.ancho - 2*e;
+
+  if (anchoInterior > 1000) {
+    avisos.push(`Ancho interior de ${anchoInterior} mm: se agrega soporte central de barral para que no se arquee (R-19).`);
+  }
+  const gapSobreBarral = d.alto - ZOCALO - e - ALTO_BARRAL;
+  if (gapSobreBarral < 50) {
+    errores.push(`Con ${d.alto} mm de alto, el barral (a ${ALTO_BARRAL} mm) casi toca el techo (quedan ${gapSobreBarral} mm libres). Aumentá el alto del ropero (R-20).`);
+  } else if (gapSobreBarral < ALTO_LIBRE_SOBRE_BARRAL_MIN) {
+    avisos.push(`Quedan solo ${gapSobreBarral} mm libres sobre el barral (recomendado ${ALTO_LIBRE_SOBRE_BARRAL_MIN} mm, M-21).`);
+  }
+  if (r.puertas.tipo === "batiente") {
+    const anchoVano = d.ancho - 2*e, n = r.puertas.cantidad;
+    const anchoHoja = Math.floor((anchoVano - 3*(n+1)) / n);
+    if (anchoHoja > ANCHO_MAX_PUERTA_BATIENTE) {
+      errores.push(`Con ${n} puertas batientes, cada hoja quedaría de ${anchoHoja} mm; el máximo recomendado es ${ANCHO_MAX_PUERTA_BATIENTE} mm (R-21). Agregá una puerta más o usá corredizas.`);
+    } else if (anchoHoja < 250) {
+      errores.push(`Con ${n} puertas batientes, cada hoja quedaría de ${anchoHoja} mm: muy angosta. Reducí la cantidad de puertas.`);
+    }
+  }
+  if (r.cajones.incluir) {
+    const libreParaBarral = anchoInterior - r.cajones.ancho;
+    if (libreParaBarral < 350) {
+      errores.push(`Con una sección de cajones de ${r.cajones.ancho} mm, solo quedarían ${libreParaBarral} mm para el barral (mínimo 350 mm). Achicá los cajones o agrandá el módulo.`);
+    }
+  }
+  return { errores, avisos };
+}
+
+function despieceRopero(r) {
+  const d = r.dimensiones, A = d.ancho, P = d.profundidad, H = d.alto;
+  const e = 18, ef = 3, color = r.material.color;
+  const mat = `Melamina 18mm ${color}`, matFondo = "Fibrofácil 3mm";
+  const altoEstructura = H - ZOCALO, altoInterior = altoEstructura - 2*e;
+  const interiorAncho = A - 2*e;
+
+  const piezas = [], perfs = [], avisos = [];
+  let confirmats = 0, clavos = 0, tcFino = 0, bisagras = 0, rinconeras = 4;
+
+  const pieza = (nombre, cortA, cortB, esp, material, pos, dim, cantos = "", notas = "") => {
+    const [largo, ancho] = cortA >= cortB ? [cortA, cortB] : [cortB, cortA];
+    piezas.push({ nombre, largo, ancho, espesor: esp, material, pos, dim, cantos, notas });
+  };
+
+  pieza("Lateral izquierdo", P, altoEstructura, e, mat, [0,0,ZOCALO], [e,P,altoEstructura], "canto frontal");
+  pieza("Lateral derecho", P, altoEstructura, e, mat, [A-e,0,ZOCALO], [e,P,altoEstructura], "canto frontal");
+  tcFino += 2*altoEstructura;
+  confirmats += 2 * confirmatsPorUnion(P);
+
+  pieza("Piso", P, interiorAncho, e, mat, [e,0,ZOCALO], [interiorAncho,P,e]);
+  pieza("Techo (estante superior)", P, interiorAncho, e, mat, [e,0,H-e], [interiorAncho,P,e],
+        "", "Apoyado sobre rinconeras (H-16); actúa como estante superior (R-20)");
+  pieza("Fondo", altoEstructura-4, A-4, ef, matFondo, [2,P-ef,ZOCALO+2], [A-4,ef,altoEstructura-4],
+        "", "Clavado sin sellar herméticamente, para ventilar (R-25)");
+  clavos += Math.ceil(2*((A-4)+(altoEstructura-4))/150);
+  confirmats += 2 * confirmatsPorUnion(P);
+
+  pieza("Zócalo frontal", interiorAncho, ZOCALO, e, mat, [e,30,0], [interiorAncho,e,ZOCALO],
+        "", "Retranqueado 30 mm del frente (R-18)");
+  confirmats += confirmatsPorUnion(interiorAncho);
+
+  let anchoBarralZona = interiorAncho, xZonaBarralIni = e;
+  const caj = r.cajones;
+  if (caj.incluir) {
+    const C = caj.ancho, x0 = A - C, PC = P - e - 20, interiorCaj = C - 2*e;
+    pieza("Divisor cajones", P, altoInterior, e, mat, [x0,0,ZOCALO+e], [e,P,altoInterior], "canto frontal");
+    tcFino += altoInterior;
+    confirmats += confirmatsPorUnion(P);
+
+    const n = caj.cantidad_cajones;
+    const altoFrente = ALTO_FRENTE_OBJETIVO_ROPERO;
+    const altoCajonera = n*(altoFrente+3) + 3;
+    const largoCorr = elegirCorredera(PC);
+    const anchoCaja = interiorCaj - 26, altoCaja = altoFrente - 30, xC = x0 + e + 13;
+
+    pieza("Tapa de cajonera", P, interiorCaj, e, mat, [x0+e,0,ZOCALO+e+altoCajonera], [interiorCaj,P,e],
+          "", "Cierra el bloque de cajones; arriba queda espacio libre");
+    confirmats += confirmatsPorUnion(interiorCaj);
+
+    avisos.push(`Cajones del ropero: bloque de ${n} frentes de ${altoFrente} mm (${altoCajonera} mm de alto total); caja ${anchoCaja} × ${largoCorr} × ${altoCaja} mm (R-05/R-24/M-24). Queda espacio libre arriba para un estante adicional.`);
+
+    for (let i = 0; i < n; i++) {
+      const zFrente = ZOCALO + e + i*(altoFrente+3), zCaja = zFrente + 15, num = i+1;
+      pieza(`Frente cajón ${num}`, C-4, altoFrente, e, mat, [x0+2,0,zFrente], [C-4,e,altoFrente],
+            "4 cantos", "Fijado desde adentro con 4 tornillos 4×30");
+      pieza(`Lateral caja cajón ${num} (izq)`, largoCorr, altoCaja, e, mat, [xC,0,zCaja], [e,largoCorr,altoCaja]);
+      pieza(`Lateral caja cajón ${num} (der)`, largoCorr, altoCaja, e, mat, [xC+anchoCaja-e,0,zCaja], [e,largoCorr,altoCaja]);
+      pieza(`Frente interno cajón ${num}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,0,zCaja], [anchoCaja-2*e,e,altoCaja]);
+      pieza(`Contrafrente cajón ${num}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,largoCorr-e,zCaja], [anchoCaja-2*e,e,altoCaja]);
+      pieza(`Fondo cajón ${num}`, largoCorr-2, anchoCaja-2, ef, matFondo, [xC+1,1,zCaja-ef], [anchoCaja-2,largoCorr-2,ef]);
+      tcFino += 2*((C-4)+altoFrente);
+      confirmats += 4 * confirmatsPorUnion(altoCaja);
+      clavos += Math.ceil(2*((anchoCaja-2)+(largoCorr-2))/150);
+      perfs.push({ pieza: "Divisor cajones / Lateral derecho", cara: "cara interior",
+        detalle: `Eje corredera cajón ${num} a ${zCaja + Math.floor(altoCaja/2)} mm del piso del mueble (P-02)` });
+    }
+    anchoBarralZona = x0 - e - e;
+  }
+
+  const largoBarral = anchoBarralZona - 2*RETRANQUEO_BARRAL;
+  pieza("Barral colgador", largoBarral, 25, 25, "Tubo cromado",
+        [xZonaBarralIni+RETRANQUEO_BARRAL, P/2-12, ALTO_BARRAL], [largoBarral,25,25],
+        "", "Tubo, no es corte de placa: comprar por metros (H-12)");
+  const soportesBarral = anchoBarralZona > 1000 ? 3 : 2;
+  const herrajes = [
+    { clave: "barral_juego", nombre: "Barral tubular cromado Ø25 + soportes", cant: 1, porVenta: 1, unidad: "juego", paraQue: `${soportesBarral} soportes (R-19)` },
+  ];
+
+  if (r.estante_inferior.incluir) {
+    pieza("Estante inferior (zapatos)", P-20, anchoBarralZona, e, mat,
+          [xZonaBarralIni,0,ZOCALO+250], [anchoBarralZona,P-20,e], "", "A 250 mm del piso, para calzado (M-23)");
+    confirmats += confirmatsPorUnion(anchoBarralZona);
+    rinconeras += 4;
+  }
+
+  const puertas = r.puertas;
+  if (puertas.tipo === "batiente") {
+    const n = puertas.cantidad;
+    const anchoHoja = Math.floor((interiorAncho - 3*(n+1)) / n);
+    const altoHoja = altoEstructura - 6;
+    for (let i = 0; i < n; i++) {
+      const xHoja = e + 3 + i*(anchoHoja+3);
+      pieza(`Puerta batiente ${i+1}`, altoHoja, anchoHoja, e, mat, [xHoja,-e,ZOCALO+3], [anchoHoja,e,altoHoja], "4 cantos");
+    }
+    const nBis = altoHoja <= 1500 ? 2 : (altoHoja <= 2100 ? 3 : 4);
+    bisagras = n * nBis;
+    herrajes.push({ clave: "bisagra", nombre: "Bisagra cazoleta 35 mm", cant: bisagras, porVenta: 1, unidad: "unid.", paraQue: `${nBis} por puerta según su alto (R-22)` });
+    herrajes.push({ clave: "tirador", nombre: "Tirador", cant: n, porVenta: 1, unidad: "unid.", paraQue: "uno por puerta" });
+    avisos.push(`${n} puertas batientes de ${anchoHoja}×${altoHoja} mm, ${nBis} bisagras c/u (R-21/R-22).`);
+  } else if (puertas.tipo === "corrediza") {
+    const n = puertas.cantidad;
+    const anchoHoja = Math.floor(interiorAncho / n) + SOLAPE_CORREDIZA;
+    const altoHoja = altoEstructura - 10;
+    for (let i = 0; i < n; i++) {
+      const xHoja = e + i*Math.floor(interiorAncho/n) - (i > 0 ? SOLAPE_CORREDIZA/2 : 0);
+      pieza(`Puerta corrediza ${i+1}`, altoHoja, anchoHoja, e, mat,
+            [xHoja, i % 2 === 0 ? -20 : -40, ZOCALO+5], [anchoHoja,e,altoHoja], "4 cantos",
+            `Riel ${i % 2 === 0 ? "delantero" : "trasero"} (R-23)`);
+    }
+    herrajes.push({ clave: "riel_corredizo_juego", nombre: "Riel corredizo superior + inferior (juego)", cant: 1, porVenta: 1, unidad: "juego", paraQue: `largo ${A} mm (R-23)` });
+    herrajes.push({ clave: "tirador", nombre: "Tirador", cant: n, porVenta: 1, unidad: "unid.", paraQue: "uno por puerta" });
+    avisos.push(`${n} puertas corredizas de ${anchoHoja}×${altoHoja} mm, solape ${SOLAPE_CORREDIZA} mm (R-23).`);
+  } else {
+    avisos.push("Módulo sin puertas (placard abierto tipo vestidor).");
+  }
+
+  if (caj.incluir) {
+    herrajes.push({ clave: "corredera_par", nombre: `Corredera telescópica ${elegirCorredera(P-e-20)} mm`, cant: caj.cantidad_cajones, porVenta: 1, unidad: "pares", paraQue: "un par por cajón (R-08)" });
+    herrajes.push({ clave: "tirador", nombre: "Tirador", cant: caj.cantidad_cajones, porVenta: 1, unidad: "unid.", paraQue: "uno por frente de cajón" });
+  }
+
+  herrajes.unshift({ clave: "confirmat_7x50_caja50", nombre: "Confirmat 7×50", cant: confirmats, porVenta: 50, unidad: "unid.", paraQue: "uniones estructurales (R-09)" });
+  herrajes.push({ clave: "clavos_caja100", nombre: "Clavos 1½\"", cant: clavos, porVenta: 100, unidad: "unid.", paraQue: "fijar el fondo (R-10)" });
+  herrajes.push({ clave: "tapacanto_045_m", nombre: "Tapacanto PVC 0,45 mm", cant: Math.ceil(tcFino*1.1/1000*10)/10, porVenta: 1, unidad: "m", paraQue: "cantos visibles (R-11)" });
+  herrajes.push({ clave: "rinconera", nombre: "Rinconera/taco de estante", cant: rinconeras, porVenta: 1, unidad: "unid.", paraQue: "sostener el techo/estante superior" });
+
+  return { piezas, herrajes, perforaciones: perfs, avisos, grommets: [] };
+}
+
+/* ===================================================================== COMPRAS/PRESUPUESTO */
 function presupuestar(m, precios) {
   const filas = [];
   const areas = {};
   for (const p of m.piezas) {
+    const mat = p.material.toLowerCase();
+    if (!mat.includes("melamina") && !mat.includes("fibrof")) continue; // barral: no es placa
     areas[p.espesor] = (areas[p.espesor] || 0) + (p.largo/1000)*(p.ancho/1000);
   }
   const factor = 1 + (precios.desperdicio_pct || 25)/100, AREA = 2.6*1.83;
@@ -404,14 +635,14 @@ function presupuestar(m, precios) {
   return filas;
 }
 
-// Script Ruby para SketchUp (port de generador_sketchup.py).
+/* ===================================================================== GENERADOR SKETCHUP */
 function generarRb(m, receta) {
   const items = m.piezas.map(p => {
     const [r,g,b] = colorPara(p.material);
     return `  { nombre: "${p.nombre}", pos: [${p.pos}], dim: [${p.dim}], material: "${p.material}", color: [${r}, ${g}, ${b}] },`;
   }).join("\n");
-  const pas = m.grommets.map(gr => `  { x: ${gr.x}, y: ${gr.y}, z: ${receta.dimensiones.alto}, d: ${gr.d} },`).join("\n");
-  return `# Escritorio gamer — generado por ESCRITORIO_GAMER.html
+  const pas = (m.grommets || []).map(gr => `  { x: ${gr.x}, y: ${gr.y}, z: ${receta.dimensiones.alto}, d: ${gr.d} },`).join("\n");
+  return `# ${receta.nombre || "Mueble"} — generado por DISENADOR_MUEBLES.html
 # En SketchUp: Ventana > Consola Ruby >  load "RUTA/a/este/archivo.rb"
 PIEZAS = [
 ${items}
@@ -420,7 +651,7 @@ PASACABLES = [
 ${pas}
 ]
 model = Sketchup.active_model
-model.start_operation("Escritorio Gamer", true)
+model.start_operation("Mueble", true)
 materiales = {}
 PIEZAS.each do |pza|
   mn = pza[:material]
@@ -458,35 +689,80 @@ puts "Listo: #{PIEZAS.length} piezas. Extensiones > OpenCutList para los cortes.
 /* ===================================================================== UI */
 
 const $ = id => document.getElementById(id);
-const CAMPOS_RANGO = [["ancho",1600],["profundidad",700],["alto",750],
-                      ["caj-ancho",400],["cpu-ancho",250]];
+let tipoActual = "escritorio_gamer";
 
-function leerReceta() {
+const CAMPOS_RANGO_ESC = [["esc-ancho",1600],["esc-profundidad",700],["esc-alto",750],
+                          ["esc-caj-ancho",400],["esc-cpu-ancho",250]];
+const CAMPOS_RANGO_ROP = [["rop-ancho",900],["rop-profundidad",580],["rop-alto",2400],
+                          ["rop-caj-ancho",400]];
+
+function leerRecetaEscritorio() {
   return {
     version: "1.0", tipo_mueble: "escritorio_gamer",
     nombre: "Mi escritorio gamer",
-    dimensiones: { ancho:+$("ancho").value, profundidad:+$("profundidad").value, alto:+$("alto").value },
-    tapa: { tipo: $("tapa").value },
-    material: { color: $("color").value, espesor: 18, espesor_fondo: 3 },
-    cajonera: { posicion: $("caj-pos").value, ancho:+$("caj-ancho").value, cantidad_cajones:+$("caj-n").value },
-    soporte_cpu: { incluir: $("cpu").checked, ancho:+$("cpu-ancho").value },
-    pasacables: { cantidad:+$("pas-n").value, diametro:+$("pas-d").value },
+    dimensiones: { ancho:+$("esc-ancho").value, profundidad:+$("esc-profundidad").value, alto:+$("esc-alto").value },
+    tapa: { tipo: $("esc-tapa").value },
+    material: { color: $("esc-color").value, espesor: 18, espesor_fondo: 3 },
+    cajonera: { posicion: $("esc-caj-pos").value, ancho:+$("esc-caj-ancho").value, cantidad_cajones:+$("esc-caj-n").value },
+    soporte_cpu: { incluir: $("esc-cpu").checked, ancho:+$("esc-cpu-ancho").value },
+    pasacables: { cantidad:+$("esc-pas-n").value, diametro:+$("esc-pas-d").value },
   };
 }
 
+function aplicarRecetaEscritorio(r) {
+  $("esc-ancho").value = $("esc-ancho-n").value = r.dimensiones?.ancho ?? 1600;
+  $("esc-profundidad").value = $("esc-profundidad-n").value = r.dimensiones?.profundidad ?? 700;
+  $("esc-alto").value = $("esc-alto-n").value = r.dimensiones?.alto ?? 750;
+  $("esc-tapa").value = r.tapa?.tipo && r.tapa.tipo !== "auto" ? r.tapa.tipo : "auto";
+  $("esc-color").value = r.material?.color ?? "Negro";
+  $("esc-caj-pos").value = r.cajonera?.posicion ?? "derecha";
+  $("esc-caj-ancho").value = $("esc-caj-ancho-n").value = r.cajonera?.ancho ?? 400;
+  $("esc-caj-n").value = r.cajonera?.cantidad_cajones ?? 3;
+  $("esc-cpu").checked = r.soporte_cpu?.incluir ?? true;
+  $("esc-cpu-ancho").value = $("esc-cpu-ancho-n").value = r.soporte_cpu?.ancho ?? 250;
+  $("esc-pas-n").value = r.pasacables?.cantidad ?? 2;
+  $("esc-pas-d").value = r.pasacables?.diametro ?? 60;
+}
+
+function leerRecetaRopero() {
+  return {
+    version: "1.0", tipo_mueble: "ropero",
+    nombre: "Mi ropero",
+    dimensiones: { ancho:+$("rop-ancho").value, profundidad:+$("rop-profundidad").value, alto:+$("rop-alto").value },
+    material: { color: $("rop-color").value, espesor: 18, espesor_fondo: 3 },
+    puertas: { tipo: $("rop-puertas-tipo").value, cantidad:+$("rop-puertas-n").value },
+    cajones: { incluir: $("rop-cajones").checked, ancho:+$("rop-caj-ancho").value, cantidad_cajones:+$("rop-caj-n").value },
+    estante_inferior: { incluir: $("rop-estante-inf").checked },
+  };
+}
+
+function aplicarRecetaRopero(r) {
+  $("rop-ancho").value = $("rop-ancho-n").value = r.dimensiones?.ancho ?? 900;
+  $("rop-profundidad").value = $("rop-profundidad-n").value = r.dimensiones?.profundidad ?? 580;
+  $("rop-alto").value = $("rop-alto-n").value = r.dimensiones?.alto ?? 2400;
+  $("rop-color").value = r.material?.color ?? "Blanco";
+  $("rop-puertas-tipo").value = r.puertas?.tipo ?? "batiente";
+  $("rop-puertas-n").value = r.puertas?.cantidad ?? 2;
+  $("rop-cajones").checked = r.cajones?.incluir ?? false;
+  $("rop-caj-ancho").value = $("rop-caj-ancho-n").value = r.cajones?.ancho ?? 400;
+  $("rop-caj-n").value = r.cajones?.cantidad_cajones ?? 3;
+  $("rop-estante-inf").checked = r.estante_inferior?.incluir ?? false;
+}
+
+function leerReceta() {
+  return tipoActual === "ropero" ? leerRecetaRopero() : leerRecetaEscritorio();
+}
 function aplicarReceta(r) {
-  $("ancho").value = $("ancho-n").value = r.dimensiones?.ancho ?? 1600;
-  $("profundidad").value = $("profundidad-n").value = r.dimensiones?.profundidad ?? 700;
-  $("alto").value = $("alto-n").value = r.dimensiones?.alto ?? 750;
-  $("tapa").value = r.tapa?.tipo && r.tapa.tipo !== "auto" ? r.tapa.tipo : "auto";
-  $("color").value = r.material?.color ?? "Negro";
-  $("caj-pos").value = r.cajonera?.posicion ?? "derecha";
-  $("caj-ancho").value = $("caj-ancho-n").value = r.cajonera?.ancho ?? 400;
-  $("caj-n").value = r.cajonera?.cantidad_cajones ?? 3;
-  $("cpu").checked = r.soporte_cpu?.incluir ?? true;
-  $("cpu-ancho").value = $("cpu-ancho-n").value = r.soporte_cpu?.ancho ?? 250;
-  $("pas-n").value = r.pasacables?.cantidad ?? 2;
-  $("pas-d").value = r.pasacables?.diametro ?? 60;
+  const tipo = r.tipo_mueble || "escritorio_gamer";
+  tipoActual = tipo;
+  $("tipo-mueble").value = tipo;
+  mostrarControlesDelTipo();
+  if (tipo === "ropero") aplicarRecetaRopero(r); else aplicarRecetaEscritorio(r);
+}
+function mostrarControlesDelTipo() {
+  $("controles-escritorio_gamer").style.display = tipoActual === "escritorio_gamer" ? "" : "none";
+  $("controles-ropero").style.display = tipoActual === "ropero" ? "" : "none";
+  $("titulo-app").textContent = tipoActual === "ropero" ? "🚪 Ropero / Placard" : "🖥️ Escritorio Gamer";
 }
 
 let mueble = null, recetaActual = null, precios = null;
@@ -499,8 +775,10 @@ function cargarPrecios() {
 
 function recalcular() {
   recetaActual = leerReceta();
-  localStorage.setItem("receta", JSON.stringify(recetaActual));
-  const v = validar(recetaActual);
+  localStorage.setItem("receta_" + tipoActual, JSON.stringify(recetaActual));
+  localStorage.setItem("ultimo_tipo", tipoActual);
+
+  const v = tipoActual === "ropero" ? validarRopero(recetaActual) : validarEscritorio(recetaActual);
   const cont = $("avisos");
   cont.innerHTML = "";
   for (const err of v.errores) {
@@ -508,7 +786,7 @@ function recalcular() {
     cont.appendChild(d);
   }
   if (v.errores.length) { mueble = null; render3D(); pintarPestana(); return; }
-  mueble = despiece(recetaActual, v.tapaTipo);
+  mueble = tipoActual === "ropero" ? despieceRopero(recetaActual) : despieceEscritorio(recetaActual, v.tapaTipo);
   for (const a of [...v.avisos, ...mueble.avisos]) {
     const d = document.createElement("div"); d.className = "aviso"; d.textContent = "💡 " + a;
     cont.appendChild(d);
@@ -532,7 +810,7 @@ function pintarPestana() {
     let filas = "";
     const grupos = new Map();
     for (const p of mueble.piezas) {
-      const base = p.nombre.replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "");
+      const base = p.nombre.replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
       const k = `${base}|${p.largo}|${p.ancho}|${p.espesor}`;
       if (!grupos.has(k)) grupos.set(k, { ...p, nombre: base, cant: 0 });
       grupos.get(k).cant++;
@@ -579,6 +857,7 @@ function pintarPestana() {
     c.innerHTML = `
       <h3 style="margin-top:0">Cómo se usa</h3>
       <ol style="font-size:13px; line-height:1.7">
+        <li>Elegí el tipo de mueble arriba a la izquierda (Escritorio gamer / Ropero).</li>
         <li>Mové los controles de la izquierda: el mueble, los cortes y el presupuesto se actualizan solos.</li>
         <li>Si algo no se puede construir, aparece un cartel <b>rojo</b> explicando por qué (reglas reales de carpintería).</li>
         <li><b>⬇ Cortes CSV</b>: descargá la lista y llevala a la tienda que corta melamina.</li>
@@ -586,7 +865,7 @@ function pintarPestana() {
         <li><b>💾 Guardar / 📂 Abrir</b>: guardá tu diseño en un archivo para seguir otro día.</li>
         <li><b>Pedir a la IA</b> (opcional): abrí LM Studio → Developer → Start Server (activá CORS en la config del server) → escribí tu pedido arriba y apretá el botón.</li>
       </ol>
-      <p class="nota">Las reglas (R-xx), medidas (M-xx) y herrajes (H-xx) están documentadas en la carpeta AI_OPERATING_SYSTEM del proyecto.</p>`;
+      <p class="nota">Las reglas (R-xx), medidas (M-xx) y herrajes (H-xx) están documentadas en la carpeta AI_OPERATING_SYSTEM del proyecto (05, 06, 07 para reglas comunes; 11 para el ropero).</p>`;
   }
 }
 
@@ -634,7 +913,6 @@ function ubicarCamara() {
 function render3D() {
   for (const m of mallas) escena.remove(m);
   mallas = [];
-  // luces y piso una sola vez
   if (!escena.userData.base) {
     escena.add(new THREE.AmbientLight(0xffffff, 0.65));
     const sol = new THREE.DirectionalLight(0xffffff, 0.7);
@@ -648,7 +926,7 @@ function render3D() {
   if (!mueble) return;
   const esc = 0.001, d = recetaActual.dimensiones;
   centro = { x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 };
-  dist = Math.max(dist, Math.max(d.ancho, d.profundidad, d.alto)*esc*1.2);
+  dist = Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1);
   for (const p of mueble.piezas) {
     const [dx,dy,dz] = p.dim, [x,y,z] = p.pos, [r,g,b] = colorPara(p.material);
     const geo = new THREE.BoxGeometry(dx*esc, dz*esc, dy*esc);
@@ -661,7 +939,7 @@ function render3D() {
     borde.position.copy(m.position);
     escena.add(borde); mallas.push(borde);
   }
-  for (const gr of mueble.grommets) {
+  for (const gr of (mueble.grommets || [])) {
     const marca = new THREE.Mesh(
       new THREE.CylinderGeometry(gr.d/2*esc, gr.d/2*esc, 0.006, 24),
       new THREE.MeshLambertMaterial({ color: 0xdc2828 }));
@@ -682,7 +960,7 @@ function csvCortes() {
   let out = "﻿Pieza;Cantidad;Largo (mm);Ancho (mm);Espesor (mm);Material;Tapacanto;Notas\n";
   const grupos = new Map();
   for (const p of mueble.piezas) {
-    const base = p.nombre.replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "");
+    const base = p.nombre.replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
     const k = `${base}|${p.largo}|${p.ancho}|${p.espesor}`;
     if (!grupos.has(k)) grupos.set(k, { ...p, nombre: base, cant: 0 });
     grupos.get(k).cant++;
@@ -693,7 +971,10 @@ function csvCortes() {
 }
 
 /* ------------------------------------------------ IA opcional (08_REGLAS_PARA_IAS) */
-const SYSTEM_PROMPT = `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0). Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"escritorio_gamer"; dimensiones{ancho 900-2400 def 1600, profundidad 500-900 def 700, alto 700-800 def 750}; tapa{tipo:"simple_18"|"doble_18"|"simple_25" def "doble_18"}; material{color def "Blanco"}; cajonera{posicion:"derecha"|"izquierda"|"ninguna" def "derecha", ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; soporte_cpu{incluir def true, ancho 200-350 def 250}; pasacables{cantidad 0-4 def 2, diametro 60|80 def 60}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`;
+const SYSTEM_PROMPTS = {
+  escritorio_gamer: `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0). Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"escritorio_gamer"; dimensiones{ancho 900-2400 def 1600, profundidad 500-900 def 700, alto 700-800 def 750}; tapa{tipo:"simple_18"|"doble_18"|"simple_25" def "doble_18"}; material{color def "Blanco"}; cajonera{posicion:"derecha"|"izquierda"|"ninguna" def "derecha", ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; soporte_cpu{incluir def true, ancho 200-350 def 250}; pasacables{cantidad 0-4 def 2, diametro 60|80 def 60}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`,
+  ropero: `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0) para un ROPERO. Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"ropero"; dimensiones{ancho 600-1200 def 900, profundidad 550-620 def 580, alto 2000-2600 def 2400}; material{color def "Blanco"}; puertas{tipo:"batiente"|"corrediza"|"ninguna" def "batiente", cantidad 2-4 def 2}; cajones{incluir def false, ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; estante_inferior{incluir def false}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`,
+};
 
 async function pedirIA() {
   const texto = $("ia-texto").value.trim();
@@ -704,7 +985,7 @@ async function pedirIA() {
     const resp = await fetch("http://localhost:1234/v1/chat/completions", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model: "", temperature: 0.2, messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: SYSTEM_PROMPTS[tipoActual] },
         { role: "user", content: "Receta actual:\n" + JSON.stringify(recetaActual) + "\n\nPedido: " + texto },
       ]}),
     });
@@ -722,35 +1003,64 @@ async function pedirIA() {
 }
 
 /* ------------------------------------------------ pruebas de paridad (?test=1)
-   Mismos números canónicos que software/tests/test_sistema.py (D-010). */
+   Mismos números canónicos que software/tests/test_sistema.py (D-010/D-011). */
 function correrTests() {
+  const res = [];
+  const ok = (nombre, cond, det="") => res.push((cond ? "✔ " : "✖ FALLA ") + nombre + (cond ? "" : " " + det));
+
+  // --- Escritorio ---
   const R = { version:"1.0", tipo_mueble:"escritorio_gamer", nombre:"Test",
     dimensiones:{ancho:1600,profundidad:700,alto:750}, tapa:{tipo:"auto"},
     material:{color:"Negro",espesor:18,espesor_fondo:3},
     cajonera:{posicion:"derecha",ancho:400,cantidad_cajones:3},
     soporte_cpu:{incluir:true,ancho:250}, pasacables:{cantidad:2,diametro:60} };
-  const res = [];
-  const ok = (nombre, cond, det="") => res.push((cond ? "✔ " : "✖ FALLA ") + nombre + (cond ? "" : " " + det));
-  const v = validar(R);
-  ok("tapa auto → doble_18 (R-04)", v.tapaTipo === "doble_18");
-  const m = despiece(R, v.tapaTipo);
+  const v = validarEscritorio(R);
+  ok("escritorio: tapa auto → doble_18 (R-04)", v.tapaTipo === "doble_18");
+  const m = despieceEscritorio(R, v.tapaTipo);
   const por = {}; m.piezas.forEach(p => por[p.nombre] = p);
-  ok("27 piezas", m.piezas.length === 27, `(${m.piezas.length})`);
-  ok("lateral 714×650", por["Lateral izquierdo (pata panel)"].largo === 714 && por["Lateral izquierdo (pata panel)"].ancho === 650);
-  ok("piso cajonera interior 364 (R-02)", por["Piso cajonera"].ancho === 364);
-  ok("frente cajón 396×229 (R-06)", por["Frente cajón 1"].largo === 396 && por["Frente cajón 1"].ancho === 229);
-  ok("caja cajón 550 prof / 199 alto (R-08/R-12)", por["Lateral caja cajón 1 (izq)"].largo === 550 && por["Lateral caja cajón 1 (izq)"].ancho === 199);
-  ok("frente interno 302 (R-05)", por["Frente interno cajón 1"].largo === 302);
-  ok("confirmats R-09: 300→2, 600→4", confirmatsPorUnion(300) === 2 && confirmatsPorUnion(600) === 4);
-  ok("corredera 600→550 (R-08)", elegirCorredera(600) === 550);
-  ok("sin viga a 1600", !por["Viga trasera"]);
+  ok("escritorio: 27 piezas", m.piezas.length === 27, `(${m.piezas.length})`);
+  ok("escritorio: lateral 714×650", por["Lateral izquierdo (pata panel)"].largo === 714 && por["Lateral izquierdo (pata panel)"].ancho === 650);
+  ok("escritorio: piso cajonera interior 364 (R-02)", por["Piso cajonera"].ancho === 364);
+  ok("escritorio: frente cajón 396×229 (R-06)", por["Frente cajón 1"].largo === 396 && por["Frente cajón 1"].ancho === 229);
+  ok("escritorio: caja cajón 550 prof / 199 alto (R-08/R-12)", por["Lateral caja cajón 1 (izq)"].largo === 550 && por["Lateral caja cajón 1 (izq)"].ancho === 199);
+  ok("escritorio: frente interno 302 (R-05)", por["Frente interno cajón 1"].largo === 302);
+  ok("escritorio: confirmats R-09: 300→2, 600→4", confirmatsPorUnion(300) === 2 && confirmatsPorUnion(600) === 4);
+  ok("escritorio: corredera 600→550 (R-08)", elegirCorredera(600) === 550);
+  ok("escritorio: sin viga a 1600", !por["Viga trasera"]);
   const R2 = JSON.parse(JSON.stringify(R)); R2.dimensiones.ancho = 2000;
-  const m2 = despiece(R2, validar(R2).tapaTipo);
-  ok("viga a 2000 (R-13)", m2.piezas.some(p => p.nombre === "Viga trasera"));
+  const m2 = despieceEscritorio(R2, validarEscritorio(R2).tapaTipo);
+  ok("escritorio: viga a 2000 (R-13)", m2.piezas.some(p => p.nombre === "Viga trasera"));
   const R3 = JSON.parse(JSON.stringify(R)); R3.dimensiones.ancho = 1200; R3.cajonera.ancho = 500;
-  ok("rechaza sin lugar piernas (M-04)", validar(R3).errores.length > 0);
+  ok("escritorio: rechaza sin lugar piernas (M-04)", validarEscritorio(R3).errores.length > 0);
   const confirmatFila = m.herrajes.find(h => h.clave === "confirmat_7x50_caja50");
-  ok("40 confirmats como Python", confirmatFila.cant === 40, `(${confirmatFila.cant})`);
+  ok("escritorio: 40 confirmats como Python", confirmatFila.cant === 40, `(${confirmatFila.cant})`);
+
+  // --- Ropero ---
+  const RR = { version:"1.0", tipo_mueble:"ropero", nombre:"Test Ropero",
+    dimensiones:{ancho:900,profundidad:580,alto:2400}, material:{color:"Blanco",espesor:18,espesor_fondo:3},
+    puertas:{tipo:"batiente",cantidad:2}, cajones:{incluir:false,ancho:400,cantidad_cajones:3},
+    estante_inferior:{incluir:false} };
+  const vr = validarRopero(RR);
+  ok("ropero: sin errores por defecto", vr.errores.length === 0, JSON.stringify(vr.errores));
+  const mr = despieceRopero(RR);
+  const porR = {}; mr.piezas.forEach(p => porR[p.nombre] = p);
+  ok("ropero: 9 piezas (sin cajones, 2 puertas)", mr.piezas.length === 9, `(${mr.piezas.length})`);
+  ok("ropero: laterales 2300×580 (alto-ZOCALO)", porR["Lateral izquierdo"].largo === 2300 && porR["Lateral izquierdo"].ancho === 580);
+  ok("ropero: interior 864 (900-2*18, R-02)", porR["Piso"].largo === 864, `(dio ${porR["Piso"].largo})`);
+  ok("ropero: 2 puertas batientes de 427mm", porR["Puerta batiente 1"].ancho === 427, `(dio ${porR["Puerta batiente 1"].ancho})`);
+
+  const RRC = JSON.parse(JSON.stringify(RR));
+  RRC.cajones = { incluir:true, ancho:400, cantidad_cajones:3 };
+  const mrc = despieceRopero(RRC);
+  const porRC = {}; mrc.piezas.forEach(p => porRC[p.nombre] = p);
+  ok("ropero+cajones: 29 piezas (incluye tapa de cajonera)", mrc.piezas.length === 29, `(${mrc.piezas.length})`);
+  ok("ropero+cajones: frente interno 302mm de largo (338-36, R-02/R-05)", porRC["Frente interno cajón 1"].largo === 302, `(dio ${porRC["Frente interno cajón 1"].largo})`);
+  ok("ropero+cajones: frente de cajón acotado a 250mm (M-24)", porRC["Frente cajón 1"].ancho === 250, `(dio ${porRC["Frente cajón 1"].ancho})`);
+
+  const RR4 = JSON.parse(JSON.stringify(RR));
+  RR4.dimensiones.ancho = 600; RR4.puertas.cantidad = 4;
+  ok("ropero: rechaza puertas demasiado angostas", validarRopero(RR4).errores.length > 0);
+
   const fallas = res.filter(l => l.startsWith("✖")).length;
   document.body.innerHTML = `<div id="resultado-tests"><h2>${fallas === 0 ? "✔ TODAS LAS PRUEBAS PASAN" : "✖ " + fallas + " FALLAS"}</h2>${res.join("\n")}</div>`;
 }
@@ -759,11 +1069,23 @@ function correrTests() {
 window.addEventListener("DOMContentLoaded", () => {
   if (new URLSearchParams(location.search).get("test") === "1") { correrTests(); return; }
   cargarPrecios();
-  let guardada = null;
-  try { guardada = JSON.parse(localStorage.getItem("receta")); } catch {}
-  aplicarReceta(guardada || { material: { color: "Negro" } });
 
-  for (const [id] of CAMPOS_RANGO) {
+  tipoActual = localStorage.getItem("ultimo_tipo") || "escritorio_gamer";
+  $("tipo-mueble").value = tipoActual;
+  mostrarControlesDelTipo();
+  let guardadaEsc = null, guardadaRop = null;
+  try { guardadaEsc = JSON.parse(localStorage.getItem("receta_escritorio_gamer")); } catch {}
+  try { guardadaRop = JSON.parse(localStorage.getItem("receta_ropero")); } catch {}
+  aplicarRecetaEscritorio(guardadaEsc || { material: { color: "Negro" } });
+  aplicarRecetaRopero(guardadaRop || {});
+
+  $("tipo-mueble").addEventListener("change", () => {
+    tipoActual = $("tipo-mueble").value;
+    mostrarControlesDelTipo();
+    recalcular();
+  });
+
+  for (const [id] of [...CAMPOS_RANGO_ESC, ...CAMPOS_RANGO_ROP]) {
     $(id).addEventListener("input", () => { $(id+"-n").value = $(id).value; recalcular(); });
     $(id+"-n").addEventListener("change", () => {
       const el = $(id+"-n");
@@ -771,7 +1093,8 @@ window.addEventListener("DOMContentLoaded", () => {
       $(id).value = el.value; recalcular();
     });
   }
-  for (const id of ["color","tapa","caj-pos","caj-n","cpu","pas-n","pas-d"])
+  for (const id of ["esc-color","esc-tapa","esc-caj-pos","esc-caj-n","esc-cpu","esc-pas-n","esc-pas-d",
+                    "rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf"])
     $(id).addEventListener("change", recalcular);
 
   document.querySelectorAll("#pestanas div").forEach(d =>
@@ -779,7 +1102,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   $("btn-csv").onclick = () => mueble && descargar("lista_cortes.csv", csvCortes(), "text/csv");
   $("btn-rb").onclick = () => mueble && descargar("mueble_sketchup.rb", generarRb(mueble, recetaActual), "text/plain");
-  $("btn-guardar").onclick = () => descargar("mi_escritorio.json",
+  $("btn-guardar").onclick = () => descargar(tipoActual === "ropero" ? "mi_ropero.json" : "mi_escritorio.json",
     JSON.stringify(recetaActual, null, 2), "application/json");
   $("btn-cargar").onclick = () => $("archivo-receta").click();
   $("archivo-receta").onchange = e => {
@@ -791,7 +1114,6 @@ window.addEventListener("DOMContentLoaded", () => {
   };
   $("ia-boton").onclick = pedirIA;
   $("ia-texto").addEventListener("keydown", e => { if (e.key === "Enter") pedirIA(); });
-  $("zona3d").addEventListener("dblclick", () => {});
 
   iniciar3D();
   recalcular();

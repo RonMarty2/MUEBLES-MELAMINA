@@ -18,6 +18,18 @@ Este documento es su explicación para humanos e IAs.
    motor. Una receta mínima válida puede tener 3 campos.
 4. **`version` obligatoria.** Hoy `"1.0"`. El motor rechaza versiones que no conoce.
 
+## Tipos de mueble soportados
+
+| `tipo_mueble` | Documento con sus reglas y campos propios |
+|---|---|
+| `escritorio_gamer` | Este documento (abajo) |
+| `ropero` | `11_REGLAS_Y_MEDIDAS_ROPERO.md` (mismos principios: version, defectos, límites) |
+
+Los campos comunes a cualquier mueble son `version`, `tipo_mueble`, `nombre` y `material`
+(color/espesor). El resto de las secciones son propias de cada tipo — el validador
+rechaza secciones que no correspondan al `tipo_mueble` indicado (p. ej. `cajonera` en una
+receta de `ropero` es un campo desconocido: ese tipo usa `cajones`).
+
 ## Receta completa de referencia (tipo `escritorio_gamer`)
 
 ```json

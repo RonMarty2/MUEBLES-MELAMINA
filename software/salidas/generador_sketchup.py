@@ -25,12 +25,15 @@ COLORES = {
 }
 COLOR_DEFECTO = (200, 190, 170)
 COLOR_FONDO = (170, 140, 105)
+COLOR_METAL = (190, 195, 200)
 
 
 def _color_para(material):
     m = material.lower()
     if "fibrof" in m:
         return COLOR_FONDO
+    if "tubo" in m or "cromado" in m:
+        return COLOR_METAL
     for nombre, rgb in COLORES.items():
         if nombre in m:
             return rgb

@@ -16,7 +16,7 @@ en x al final.
 import math
 
 from .modelos import Pieza, Herraje, Perforacion, Mueble
-from .validador import espesor_tapa, vano_libre
+from .validador_escritorio import espesor_tapa, vano_libre
 
 RETRANQUEO_FRONTAL = 50      # las patas/paneles entran 50 mm respecto del frente
 ALTURA_BANDEJA_CPU = 100     # M-06

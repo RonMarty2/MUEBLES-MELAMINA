@@ -1,11 +1,12 @@
-"""Construye ESCRITORIO_GAMER.html (la app de doble clic) incrustando three.js.
+"""Construye DISENADOR_MUEBLES.html (la app de doble clic) incrustando three.js.
 
 Uso:  python software/app/construir.py
 
 Toma software/app/app_fuente.html (la app con el marcador __THREE_JS__) y le
 incrusta software/salidas/recursos/three.min.js, produciendo un único archivo
 autocontenido en la raíz del repo. Así el usuario final solo necesita ese
-archivo: doble clic y funciona sin internet ni instalaciones (Decisión D-010).
+archivo: doble clic y funciona sin internet ni instalaciones (Decisión D-010,
+D-012 para el selector de tipo de mueble).
 """
 
 from pathlib import Path
@@ -13,7 +14,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parents[2]
 FUENTE = RAIZ / "software" / "app" / "app_fuente.html"
 THREE = RAIZ / "software" / "salidas" / "recursos" / "three.min.js"
-SALIDA = RAIZ / "ESCRITORIO_GAMER.html"
+SALIDA = RAIZ / "DISENADOR_MUEBLES.html"
 
 
 def construir():

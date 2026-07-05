@@ -126,6 +126,47 @@ Formato de cada entrada:
   a partir de `software/app/app_fuente.html` + `software/salidas/recursos/three.min.js`.
   Editar SIEMPRE el fuente, nunca el archivo generado.
 
+## D-011 — Segundo tipo de mueble: ropero/placard
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** el usuario pidió poder crear más tipos de mueble (ropero, mesa, TV).
+  Elegimos ropero primero por ser el más pedido y porque introduce patrones nuevos
+  (puertas, barral) que conviene resolver antes que los más simples.
+- **Decisión:** siguiendo el procedimiento de `02_ARQUITECTURA.md`, se agregó:
+  reglas propias en `11_REGLAS_Y_MEDIDAS_ROPERO.md` (R-18 a R-25, M-16 a M-23,
+  H-12 a H-16); `nucleo/validador_ropero.py` y `nucleo/despiece_ropero.py`; sección
+  `ropero` en `schema_receta.json` (oneOf por `tipo_mueble`). Los generadores de
+  salida (SketchUp, cortes, presupuesto) **no se tocaron**: reciben el mismo objeto
+  `Mueble` genérico sin importar el tipo (confirma que la frontera de módulo funciona).
+- **Refactor asociado:** `validador.py` pasó de ser un módulo monolítico de
+  escritorio a un **dispatcher** (`MODULOS_POR_TIPO`) que delega en
+  `validador_<tipo>.py`. La lógica vieja de escritorio se movió sin cambios a
+  `validador_escritorio.py`. Esto evita que agregar tipos futuros siga
+  inflando un único archivo.
+- **Reutilización:** el despiece de cajones del ropero (R-24) llama a las mismas
+  funciones `confirmats_por_union` y `elegir_corredera` de `despiece_escritorio.py`
+  en vez de duplicarlas — ambos tipos comparten la aritmética de cajón (R-05 a R-08).
+- **Descartada:** un motor "genérico paramétrico" que cubra escritorio y ropero con
+  una sola función — ya descartado en D-004 por la misma razón (reglas estructurales
+  distintas por tipo terminan en un `if` infernal).
+- **Consecuencias:** el patrón queda demostrado para el próximo tipo (mesa, mueble de
+  TV, cocina): nuevo doc de reglas numerado, nuevo `validador_<tipo>.py`, nuevo
+  `despiece_<tipo>.py`, sección nueva en el schema, sin tocar generadores de salida.
+
+## D-012 — App con selector de mueble (una sola interfaz para todos los tipos)
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** con más de un tipo de mueble, el usuario pidió una única app (no un
+  archivo HTML por mueble) con un selector arriba para cambiar de tipo.
+- **Decisión:** `ESCRITORIO_GAMER.html` se renombra a **`DISENADOR_MUEBLES.html`**
+  (D-010 sigue vigente: un solo archivo autocontenido, three.js incrustada, motor en
+  JS). Arriba de los controles se agrega un selector "Escritorio gamer / Ropero"; el
+  panel de controles y las pestañas de resultados cambian según el tipo elegido, pero
+  el motor 3D, los generadores de CSV/RB y el layout general son compartidos.
+- **Consecuencias:** el motor JS mantiene paridad con AMBOS motores Python
+  (`despiece_escritorio.py` y `despiece_ropero.py`), verificada con pruebas embebidas
+  `?test=1` (ver también D-010).
+
 ---
 
 ## Plantilla para nuevas decisiones

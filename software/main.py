@@ -27,6 +27,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from nucleo.validador import normalizar_y_validar, RecetaInvalida
 from nucleo.despiece_escritorio import despiece_escritorio
+from nucleo.despiece_ropero import despiece_ropero
+
+DESPIECE_POR_TIPO = {
+    "escritorio_gamer": despiece_escritorio,
+    "ropero": despiece_ropero,
+}
 from salidas.generador_sketchup import generar_script_sketchup
 from salidas.generador_visor_html import generar_visor_html
 from salidas.generador_cortes import generar_lista_cortes, generar_perforaciones
@@ -80,7 +86,7 @@ def main():
             return 1
 
     # ------------------------------------------------ despiece
-    mueble = despiece_escritorio(receta)
+    mueble = DESPIECE_POR_TIPO[receta["tipo_mueble"]](receta)
     avisos = avisos + mueble.avisos
 
     # ------------------------------------------------ salidas

@@ -1,6 +1,7 @@
-# Muebles generados por el usuario (el demo de referencia SÍ se versiona)
+# Muebles generados por el usuario (los demos de referencia SÍ se versionan)
 proyectos/*
 !proyectos/escritorio_gamer_demo/
+!proyectos/ropero_demo/
 
 # Python
 __pycache__/

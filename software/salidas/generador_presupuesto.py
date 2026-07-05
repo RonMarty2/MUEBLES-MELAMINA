@@ -30,6 +30,9 @@ def _estimar_placas(mueble, factor_desperdicio):
     """
     areas = {}
     for p in mueble.piezas:
+        m = p.material.lower()
+        if "melamina" not in m and "fibrof" not in m:
+            continue  # herrajes tipo barral (tubo) no son piezas de placa
         areas.setdefault(p.espesor, 0.0)
         areas[p.espesor] += (p.largo / 1000) * (p.ancho / 1000)
     placas = {}
