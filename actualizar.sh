@@ -7,6 +7,8 @@
 cd "$(dirname "$0")" || exit 1
 echo "Buscando actualizaciones..."
 echo ""
-git pull
+git fetch origin
+git switch main
+git pull --ff-only origin main
 echo ""
 echo "Listo. Ya tenes la ultima version."

@@ -6,7 +6,9 @@ REM ============================================================
 cd /d "%~dp0"
 echo Buscando actualizaciones...
 echo.
-git pull
+git fetch origin
+git switch main
+git pull --ff-only origin main
 echo.
 echo Listo. Ya tenes la ultima version.
 echo Podes cerrar esta ventana.
