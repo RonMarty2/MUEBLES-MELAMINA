@@ -14,6 +14,8 @@ from nucleo.validador_escritorio import espesor_tapa, vano_libre
 from nucleo.despiece_escritorio import (despiece_escritorio,
                                         confirmats_por_union, elegir_corredera)
 from nucleo.despiece_ropero import despiece_ropero
+from nucleo.herrajes_calidad import (DISTANCIA_CAZOLETA_CANTO, altura_corredera,
+                                     posiciones_bisagras)
 
 OK = 0
 FALLAS = []
@@ -113,6 +115,8 @@ prueba("ancho frente 396 (400−4)", f1.largo == 396, f"(dio {f1.largo})")
 
 # Caja: ancho = 364 − 26 = 338 (R-05); corredera para PC=600 → 550 (R-08)
 prueba("corredera 550 para prof.interior 600 (R-08)", elegir_corredera(600) == 550)
+prueba("P-02: eje corredera a mitad de caja 199 -> 99",
+       altura_corredera(199) == 99)
 lat_caja = piezas["Lateral caja cajón 1 (izq)"]
 prueba("prof caja = corredera 550", lat_caja.largo == 550, f"(dio {lat_caja.largo})")
 prueba("alto caja 199 (229−30, R-12)", lat_caja.ancho == 199, f"(dio {lat_caja.ancho})")
@@ -207,6 +211,17 @@ prueba("ropero: laterales 2300x580 (alto-ZOCALO)", por_rop["Lateral izquierdo"].
 prueba("ropero: interior 864 (900-2*18, R-02)", por_rop["Piso"].largo == 864, f"(dio {por_rop['Piso'].largo})")
 prueba("ropero: 2 puertas batientes de 427mm", por_rop["Puerta batiente 1"].ancho == 427,
        f"(dio {por_rop['Puerta batiente 1'].ancho})")
+prueba("R-22: posiciones bisagra 1400 -> 100/1300",
+       posiciones_bisagras(1400) == [100, 1300])
+prueba("R-22: posiciones bisagra 1800 -> 100/900/1700",
+       posiciones_bisagras(1800) == [100, 900, 1700])
+prueba("R-22: posiciones bisagra 2300 -> 100/800/1500/2200",
+       posiciones_bisagras(2300) == [100, 800, 1500, 2200])
+prueba("P-04: cazoleta a 21,5mm del canto",
+       DISTANCIA_CAZOLETA_CANTO == 21.5)
+prueba("ropero: emite perforaciones de cazoleta Ø35",
+       any("cazoleta bisagra" in pf.para_que and pf.diametro == 35.0
+           for pf in m_rop.perforaciones))
 prueba("ropero: barral no cuenta como placa (excluido del área)",
        not any(h.codigo == "H-01" and "25" in h.nombre for h in m_rop.herrajes))
 

@@ -17,8 +17,10 @@ from .validador_ropero import (ZOCALO, ALTO_BARRAL, RETRANQUEO_BARRAL,
                                ANCHO_MAX_PUERTA_BATIENTE, SOLAPE_CORREDIZA)
 from .despiece_escritorio import confirmats_por_union, elegir_corredera
 from .uniones import herraje_union
-from .herrajes_calidad import (corredera as corredera_calidad,
-                               bisagra as bisagra_calidad, union_sugerida)
+from .herrajes_calidad import (DISTANCIA_CAZOLETA_CANTO, altura_corredera,
+                               corredera as corredera_calidad,
+                               bisagra as bisagra_calidad, posiciones_bisagras,
+                               union_sugerida)
 
 ALTO_FRENTE_OBJETIVO = 250  # M-24: frente cómodo (rango real 120-350, R-07) para la
                              # cajonera del ropero, que NO reparte toda la altura del
@@ -145,10 +147,13 @@ def despiece_ropero(receta):
             tc_fino += 2 * ((C - 4) + alto_frente)
             confirmats += 4 * confirmats_por_union(alto_caja)
             clavos += math.ceil(2 * ((ancho_caja - 2) + (largo_corr - 2)) / 150)
+            eje_relativo = altura_corredera(alto_caja)
+            eje = z_caja + eje_relativo
             perfs.append(Perforacion(
                 "Divisor cajones / Lateral derecho", "cara interior", 0,
-                z_caja + alto_caja // 2, 3.0, "10 mm",
-                f"eje corredera cajón {num} (P-02)"))
+                eje, 3.0, "10 mm",
+                f"eje corredera cajón {num}: centro a {eje_relativo} mm del canto inferior "
+                f"de la caja y a {eje} mm del piso del mueble (P-02); fijar con tornillos 4×16"))
 
         herrajes.append(corredera_calidad(nivel, largo_corr, n))
         herrajes.append(Herraje("H-15", "Tirador", n, "unidades", "uno por frente de cajón"))
@@ -177,16 +182,33 @@ def despiece_ropero(receta):
         n = puertas["cantidad"]
         ancho_hoja = (interior_ancho - 3 * (n + 1)) // n
         alto_hoja = alto_estructura - 6
+        pos_bisagras = posiciones_bisagras(alto_hoja)
         for i in range(n):
             x_hoja = e + 3 + i * (ancho_hoja + 3)
-            piezas.append(Pieza(f"Puerta batiente {i + 1}", alto_hoja, ancho_hoja, e, mat,
+            nombre_puerta = f"Puerta batiente {i + 1}"
+            piezas.append(Pieza(nombre_puerta, alto_hoja, ancho_hoja, e, mat,
                                 (x_hoja, -e, ZOCALO + 3), (ancho_hoja, e, alto_hoja),
                                 cantos="4 cantos visibles"))
-        n_bis = 2 if alto_hoja <= 1500 else (3 if alto_hoja <= 2100 else 4)
+            lado_bisagra = "izquierdo" if i < n / 2 else "derecho"
+            x_cazoleta = (DISTANCIA_CAZOLETA_CANTO if lado_bisagra == "izquierdo"
+                          else ancho_hoja - DISTANCIA_CAZOLETA_CANTO)
+            for pos_sup in pos_bisagras:
+                y_desde_abajo = alto_hoja - pos_sup
+                perfs.append(Perforacion(
+                    nombre_puerta, "cara interior", x_cazoleta, y_desde_abajo,
+                    35.0, "12-13 mm",
+                    f"cazoleta bisagra: centro a {pos_sup} mm del borde superior y "
+                    f"{DISTANCIA_CAZOLETA_CANTO} mm del canto {lado_bisagra}; "
+                    "NO perforar pasante (P-04/R-22)"))
+        n_bis = len(pos_bisagras)
         bisagras = n * n_bis
         herrajes.append(bisagra_calidad(nivel, bisagras))
         herrajes.append(Herraje("H-15", "Tirador", n, "unidades", "uno por puerta"))
-        avisos.append(f"{n} puertas batientes de {ancho_hoja}×{alto_hoja} mm, {n_bis} bisagras c/u (R-21/R-22).")
+        pos_txt = ", ".join(f"{p} mm" for p in pos_bisagras)
+        avisos.append(
+            f"{n} puertas batientes de {ancho_hoja}×{alto_hoja} mm, {n_bis} bisagras c/u "
+            f"(R-21/R-22). Centros desde borde superior: {pos_txt}; cazoleta Ø35 a "
+            f"{DISTANCIA_CAZOLETA_CANTO} mm del canto (P-04).")
     elif puertas["tipo"] == "corrediza":
         n = puertas["cantidad"]
         ancho_hoja = (interior_ancho // n) + SOLAPE_CORREDIZA

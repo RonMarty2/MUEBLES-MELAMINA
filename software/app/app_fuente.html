@@ -103,6 +103,11 @@
                   margin: 6px 0; font-size: 12.5px; }
   .herraje-dibujo { flex-shrink: 0; }
   .herraje-card b { font-size: 13px; }
+  .colocacion-card { background: #fff; border: 1px solid #d6d3ce; border-radius: 8px;
+                     padding: 10px 12px; margin: 8px 0; font-size: 12.5px; }
+  .colocacion-card h4 { margin: 0 0 6px; font-size: 13.5px; }
+  .colocacion-card svg { width: 100%; max-width: 620px; height: auto; display: block; }
+  .colocacion-nota { color: #555; line-height: 1.45; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -387,11 +392,19 @@ function unionSugerida(nivel, tipoElegido) {                                    
   return [tipoElegido, null];
 }
 const LARGOS_CORREDERA = [250, 300, 350, 400, 450, 500, 550, 600];
+const DISTANCIA_CAZOLETA_CANTO = 21.5; // P-04
 
 function espesorTapa(tipo) { return { simple_18: 18, doble_18: 36, simple_25: 25 }[tipo]; }
 function elegirCorredera(profInterior) {                                                 // R-08
   const c = LARGOS_CORREDERA.filter(l => l <= profInterior - 20);
   return c.length ? c[c.length - 1] : LARGOS_CORREDERA[0];
+}
+function alturaCorredera(altoCaja) { return Math.floor(altoCaja / 2); }                    // P-02
+function posicionesBisagras(altoHoja) {                                                    // R-22
+  const cantidad = altoHoja <= 1500 ? 2 : (altoHoja <= 2100 ? 3 : 4);
+  if (altoHoja <= 200) return [Math.floor(altoHoja / 2)];
+  const tramo = altoHoja - 200, divisor = cantidad - 1;
+  return Array.from({ length: cantidad }, (_, i) => 100 + Math.floor((tramo * i + Math.floor(divisor / 2)) / divisor));
 }
 
 function vanoLibreEscritorio(r) {                                                         // R-14
@@ -531,8 +544,9 @@ function despieceEscritorio(r, tapaTipo) {
       confirmats += 4 * confirmatsPorUnion(altoCaja);
       clavos += Math.ceil(2*((anchoCaja-2)+(largoCorr-2))/150);
       torn30 += 4;
+      const ejeRel = alturaCorredera(altoCaja), ejeMueble = zCj + ejeRel;
       perfs.push({ pieza: "Laterales de cajonera", cara: "cara interior",
-        detalle: `Eje corredera cajón ${num} a ${zCj + Math.floor(altoCaja/2)} mm del piso del mueble; tornillos 4×16 (P-02)` });
+        detalle: `Eje corredera cajón ${num}: centro a ${ejeRel} mm del canto inferior de la caja y a ${ejeMueble} mm del piso del mueble; tornillos 4×16 (P-02)` });
     }
   } else {
     pieza("Lateral derecho (pata panel)", profPanel, altoApoyo, e, mat, [A-e,RETRANQUEO,0], [e,profPanel,altoApoyo], "canto frontal");
@@ -687,8 +701,9 @@ function despieceRopero(r) {
       tcFino += 2*((C-4)+altoFrente);
       confirmats += 4 * confirmatsPorUnion(altoCaja);
       clavos += Math.ceil(2*((anchoCaja-2)+(largoCorr-2))/150);
+      const ejeRel = alturaCorredera(altoCaja), ejeMueble = zCaja + ejeRel;
       perfs.push({ pieza: "Divisor cajones / Lateral derecho", cara: "cara interior",
-        detalle: `Eje corredera cajón ${num} a ${zCaja + Math.floor(altoCaja/2)} mm del piso del mueble (P-02)` });
+        detalle: `Eje corredera cajón ${num}: centro a ${ejeRel} mm del canto inferior de la caja y a ${ejeMueble} mm del piso del mueble (P-02); tornillos 4×16` });
     }
     anchoBarralZona = x0 - e - e;
   }
@@ -714,15 +729,24 @@ function despieceRopero(r) {
     const n = puertas.cantidad;
     const anchoHoja = Math.floor((interiorAncho - 3*(n+1)) / n);
     const altoHoja = altoEstructura - 6;
+    const posBisagras = posicionesBisagras(altoHoja);
     for (let i = 0; i < n; i++) {
       const xHoja = e + 3 + i*(anchoHoja+3);
-      pieza(`Puerta batiente ${i+1}`, altoHoja, anchoHoja, e, mat, [xHoja,-e,ZOCALO+3], [anchoHoja,e,altoHoja], "4 cantos");
+      const nombrePuerta = `Puerta batiente ${i+1}`;
+      pieza(nombrePuerta, altoHoja, anchoHoja, e, mat, [xHoja,-e,ZOCALO+3], [anchoHoja,e,altoHoja], "4 cantos");
+      const ladoBisagra = i < n / 2 ? "izquierdo" : "derecho";
+      const xCazoleta = ladoBisagra === "izquierdo" ? DISTANCIA_CAZOLETA_CANTO : anchoHoja - DISTANCIA_CAZOLETA_CANTO;
+      for (const posSup of posBisagras) {
+        perfs.push({ pieza: nombrePuerta, cara: "cara interior",
+          detalle: `Cazoleta bisagra: centro a ${posSup} mm del borde superior y ${DISTANCIA_CAZOLETA_CANTO} mm del canto ${ladoBisagra}; broca copa Ø35, profundidad 12-13 mm, NO perforar pasante (P-04/R-22)`,
+          x: xCazoleta, y: altoHoja - posSup, d: 35 });
+      }
     }
-    const nBis = altoHoja <= 1500 ? 2 : (altoHoja <= 2100 ? 3 : 4);
+    const nBis = posBisagras.length;
     bisagras = n * nBis;
     herrajes.push(bisagraCalidad(nivel, bisagras));
     herrajes.push({ clave: "tirador", nombre: "Tirador", cant: n, porVenta: 1, unidad: "unid.", paraQue: "uno por puerta" });
-    avisos.push(`${n} puertas batientes de ${anchoHoja}×${altoHoja} mm, ${nBis} bisagras c/u (R-21/R-22).`);
+    avisos.push(`${n} puertas batientes de ${anchoHoja}×${altoHoja} mm, ${nBis} bisagras c/u (R-21/R-22). Centros desde borde superior: ${posBisagras.join(", ")} mm; cazoleta Ø35 a ${DISTANCIA_CAZOLETA_CANTO} mm del canto (P-04).`);
   } else if (puertas.tipo === "corrediza") {
     const n = puertas.cantidad;
     const anchoHoja = Math.floor(interiorAncho / n) + SOLAPE_CORREDIZA;
@@ -826,6 +850,145 @@ function svgBrocaGenerica(etiqueta) {
     ${Array.from({length:6},(_,i)=>`<line x1="29" y1="${22+i*5}" x2="43" y2="${22+i*5}" stroke="#888" stroke-width="0.8"/>`).join("")}
   </svg>`;
 }
+function svgCorrederaGenerica() {
+  return `<svg width="150" height="66" viewBox="0 0 150 66">
+    <rect x="14" y="24" width="118" height="14" rx="2" fill="#d8d8d8" stroke="#777"/>
+    <rect x="24" y="29" width="98" height="4" rx="2" fill="#9ca3af"/>
+    <circle cx="40" cy="31" r="2.5" fill="#555"/><circle cx="76" cy="31" r="2.5" fill="#555"/><circle cx="112" cy="31" r="2.5" fill="#555"/>
+    <path d="M124,17 L140,31 L124,45" fill="none" stroke="#333" stroke-width="2"/>
+    <text x="73" y="58" text-anchor="middle" font-size="10" fill="#333">riel telescópico</text>
+  </svg>`;
+}
+
+function fmtMmCrudo(mm) { return `${String(mm).replace(".", ",")} mm`; }
+function fmtCota(mm) {
+  const redondeado = Number.isInteger(mm) ? mm : Math.round(mm * 10) / 10;
+  const mmTxt = fmtMmCrudo(redondeado);
+  return unidad === "cm" ? `${fmtNum(redondeado)} cm (${mmTxt})` : mmTxt;
+}
+
+function datosBisagra(m) {
+  const puertas = (m?.piezas || []).filter(p => p.nombre.startsWith("Puerta batiente"));
+  if (!puertas.length) return null;
+  const puerta = puertas[0];
+  const alto = Math.round(puerta.dim[2]), ancho = Math.round(puerta.dim[0]);
+  return { alto, ancho, posiciones: posicionesBisagras(alto), cantidadPuertas: puertas.length };
+}
+
+function datosCorredera(m) {
+  const piezas = m?.piezas || [];
+  const lateralCaja = piezas.find(p => p.nombre.startsWith("Lateral caja cajón") && p.nombre.includes("(izq)"))
+    || piezas.find(p => p.nombre.startsWith("Lateral caja cajón"));
+  if (!lateralCaja) return null;
+  const altoCaja = Math.round(lateralCaja.dim[2]);
+  const ejeCaja = alturaCorredera(altoCaja);
+  const ejeMueble = Math.round(lateralCaja.pos[2] + ejeCaja);
+  const piso = piezas.find(p => p.nombre === "Piso cajonera") || piezas.find(p => p.nombre === "Piso");
+  const pisoInterior = piso ? Math.round(piso.pos[2] + piso.dim[2]) : 0;
+  return {
+    altoCaja,
+    ejeCaja,
+    ejeMueble,
+    desdePisoInterior: Math.max(0, ejeMueble - pisoInterior),
+    largo: Math.round(lateralCaja.dim[1])
+  };
+}
+
+function svgColocacionBisagra(datos) {
+  const x = 105, y = 34, w = 72, h = 180;
+  const marca = pos => y + (pos / datos.alto) * h;
+  const bisagras = datos.posiciones.map((pos, i) => {
+    const yy = marca(pos);
+    return `<circle cx="${x + 14}" cy="${yy}" r="8" fill="#fff" stroke="#111" stroke-width="1.5"/>
+      <circle cx="${x + 14}" cy="${yy}" r="3" fill="#111"/>
+      <line x1="${x}" y1="${yy}" x2="${x - 18}" y2="${yy}" stroke="#111" stroke-width="1.5"/>
+      <text x="${x + w + 14}" y="${yy + 4}" font-size="10" fill="#333">bisagra ${i + 1}: ${fmtCota(pos)} desde arriba</text>`;
+  }).join("");
+  const primera = datos.posiciones[0];
+  const ultimaDesdeAbajo = datos.alto - datos.posiciones[datos.posiciones.length - 1];
+  return `<svg class="plano-bisagra" viewBox="0 0 620 260" role="img" aria-label="Plano acotado de colocación de bisagras">
+    <rect x="1" y="1" width="618" height="258" rx="8" fill="#fff" stroke="#d6d3ce"/>
+    <text x="20" y="24" font-size="14" font-weight="700" fill="#111">Bisagra cazoleta Ø35 - cara interna de la puerta</text>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fafafa" stroke="#111" stroke-width="1.5"/>
+    <line x1="${x}" y1="${y}" x2="${x + w}" y2="${y}" stroke="#111"/>
+    <line x1="${x}" y1="${y + h}" x2="${x + w}" y2="${y + h}" stroke="#111"/>
+    <text x="${x + w/2}" y="${y - 8}" text-anchor="middle" font-size="10" fill="#444">borde superior</text>
+    <text x="${x + w/2}" y="${y + h + 18}" text-anchor="middle" font-size="10" fill="#444">borde inferior</text>
+    ${bisagras}
+    <line x1="66" y1="${y}" x2="66" y2="${marca(primera)}" stroke="#111"/>
+    <path d="M60 ${y} L72 ${y} M60 ${marca(primera)} L72 ${marca(primera)}" stroke="#111"/>
+    <text x="18" y="${(y + marca(primera)) / 2}" font-size="10" fill="#111" transform="rotate(-90 18 ${(y + marca(primera)) / 2})">${fmtCota(primera)}</text>
+    <line x1="66" y1="${marca(datos.posiciones[datos.posiciones.length - 1])}" x2="66" y2="${y + h}" stroke="#111"/>
+    <path d="M60 ${marca(datos.posiciones[datos.posiciones.length - 1])} L72 ${marca(datos.posiciones[datos.posiciones.length - 1])} M60 ${y + h} L72 ${y + h}" stroke="#111"/>
+    <text x="42" y="${(marca(datos.posiciones[datos.posiciones.length - 1]) + y + h) / 2}" font-size="10" fill="#111" transform="rotate(-90 42 ${(marca(datos.posiciones[datos.posiciones.length - 1]) + y + h) / 2})">${fmtCota(ultimaDesdeAbajo)}</text>
+    <circle cx="390" cy="103" r="62" fill="#f8f7f4" stroke="#111" stroke-width="1.2"/>
+    <rect x="354" y="52" width="16" height="102" fill="#fff" stroke="#111"/>
+    <circle cx="394" cy="103" r="25" fill="#fff" stroke="#111" stroke-width="1.6"/>
+    <circle cx="394" cy="103" r="17" fill="#e5e7eb" stroke="#777"/>
+    <line x1="370" y1="168" x2="394" y2="168" stroke="#111"/>
+    <line x1="370" y1="160" x2="370" y2="176" stroke="#111"/>
+    <line x1="394" y1="160" x2="394" y2="176" stroke="#111"/>
+    <text x="382" y="187" text-anchor="middle" font-size="11" fill="#111">${fmtCota(DISTANCIA_CAZOLETA_CANTO)} al canto</text>
+    <text x="390" y="37" text-anchor="middle" font-size="10" fill="#444">detalle de la cazoleta</text>
+    <path d="M448 100 L522 100 M508 88 L522 100 L508 112" fill="none" stroke="#111" stroke-width="2"/>
+    <text x="462" y="84" font-size="11" fill="#111">brazo de la bisagra</text>
+    <text x="462" y="119" font-size="11" fill="#111">apunta hacia el lateral del mueble</text>
+    <text x="220" y="226" font-size="11" fill="#444">Puertas del lado derecho: espejar este dibujo al canto contrario.</text>
+    <text x="220" y="243" font-size="11" fill="#444">Perforar Ø35 solo 12-13 mm de profundidad. No atravesar la puerta.</text>
+  </svg>`;
+}
+
+function svgColocacionCorredera(datos) {
+  const x = 110, y = 44, w = 360, h = 138;
+  const altoRef = Math.max(250, datos.desdePisoInterior + 90, datos.altoCaja + 80);
+  const ejeY = y + h - (datos.desdePisoInterior / altoRef) * h;
+  return `<svg class="plano-corredera" viewBox="0 0 620 250" role="img" aria-label="Plano acotado de colocación de corredera">
+    <rect x="1" y="1" width="618" height="248" rx="8" fill="#fff" stroke="#d6d3ce"/>
+    <text x="20" y="25" font-size="14" font-weight="700" fill="#111">Corredera - lateral interior del mueble</text>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fafafa" stroke="#111" stroke-width="1.5"/>
+    <text x="${x}" y="${y + h + 20}" font-size="10" fill="#444">frente del mueble</text>
+    <text x="${x + w - 28}" y="${y + h + 20}" font-size="10" fill="#444">fondo</text>
+    <line x1="${x}" y1="${ejeY}" x2="${x + w}" y2="${ejeY}" stroke="#111" stroke-width="2"/>
+    <line x1="${x}" y1="${ejeY - 7}" x2="${x + w}" y2="${ejeY - 7}" stroke="#9ca3af" stroke-dasharray="5 5"/>
+    ${[45, 150, 255].map(dx => `<circle cx="${x + dx}" cy="${ejeY}" r="4" fill="#fff" stroke="#111" stroke-width="1.3"/>`).join("")}
+    <path d="M${x + 20} ${ejeY - 24} L${x + w - 36} ${ejeY - 24} M${x + w - 50} ${ejeY - 35} L${x + w - 36} ${ejeY - 24} L${x + w - 50} ${ejeY - 13}" fill="none" stroke="#111" stroke-width="1.6"/>
+    <text x="${x + 80}" y="${ejeY - 31}" font-size="11" fill="#111">dirección de salida del cajón</text>
+    <line x1="72" y1="${y + h}" x2="72" y2="${ejeY}" stroke="#111"/>
+    <path d="M64 ${y + h} L80 ${y + h} M64 ${ejeY} L80 ${ejeY}" stroke="#111"/>
+    <text x="38" y="${(y + h + ejeY) / 2}" font-size="10" fill="#111" transform="rotate(-90 38 ${(y + h + ejeY) / 2})">${fmtCota(datos.desdePisoInterior)} desde piso interior</text>
+    <line x1="${x}" y1="${y + h + 32}" x2="${x}" y2="${y + h + 48}" stroke="#111"/>
+    <text x="${x + 12}" y="${y + h + 45}" font-size="11" fill="#111">frente a ras: 0 mm, no retranquear</text>
+    <rect x="390" y="55" width="88" height="58" fill="#f8f7f4" stroke="#111"/>
+    <line x1="400" y1="84" x2="466" y2="84" stroke="#111" stroke-width="2"/>
+    <text x="490" y="76" font-size="11" fill="#111">en la caja del cajón:</text>
+    <text x="490" y="93" font-size="11" fill="#111">centro a ${fmtCota(datos.ejeCaja)}</text>
+    <text x="490" y="110" font-size="11" fill="#111">del canto inferior</text>
+    <text x="20" y="226" font-size="11" fill="#444">Usar tornillos 4×16 en las ranuras de la corredera. Primero presentá, probá deslizamiento y recién ahí apretá.</text>
+  </svg>`;
+}
+
+function tarjetasColocacionHerrajes(texto, m) {
+  if (!texto || !m) return "";
+  const t = normalizarTxt(texto);
+  let html = "";
+  if (/bisagra/.test(t)) {
+    const datos = datosBisagra(m);
+    if (datos) html += `<div class="colocacion-card">
+      <h4>Plano acotado de colocación - bisagras</h4>
+      ${svgColocacionBisagra(datos)}
+      <div class="colocacion-nota">Comprá ${datos.posiciones.length * datos.cantidadPuertas} bisagra(s) cazoleta Ø35. Para marcar: cinta métrica, lápiz y escuadra; para perforar: broca copa/Forstner Ø35 con tope de profundidad.</div>
+    </div>`;
+  }
+  if (/corredera/.test(t)) {
+    const datos = datosCorredera(m);
+    if (datos) html += `<div class="colocacion-card">
+      <h4>Plano acotado de colocación - correderas</h4>
+      ${svgColocacionCorredera(datos)}
+      <div class="colocacion-nota">Comprá un par de correderas por cajón, de ${fmtCota(datos.largo)} de largo. Para instalar: cinta métrica, lápiz, escuadra, broca Ø2 mm y punta PH2.</div>
+    </div>`;
+  }
+  return html;
+}
 
 const GLOSARIO_HERRAJES = [
   { patron: /tornillo\s*4\s*[x×]\s*30/, nombre: "Tornillo para aglomerado 4×30", diametro: 4, largo: 30,
@@ -842,7 +1005,13 @@ const GLOSARIO_HERRAJES = [
     nota: "Se usan dos brocas distintas: una fina para la espiga metálica y una más ancha para alojar la pieza excéntrica que gira y traba." },
   { patron: /bisagra/, nombre: "Bisagra cazoleta 35 mm", diametro: null, largo: null,
     broca: "broca copa (Forstner) Ø35 mm",
+    herramientas: "cinta métrica, lápiz, escuadra, broca copa/Forstner Ø35, tope de profundidad y punta PH2",
     nota: "Se perfora solo 12-13 mm de profundidad en la cara interna de la puerta — NUNCA de punta a punta." },
+  { patron: /corredera/, nombre: "Corredera telescópica para cajón", diametro: null, largo: null,
+    broca: "Ø2 mm (agujero guía para tornillo 4×16)",
+    herramientas: "cinta métrica, lápiz, escuadra, taladro, broca Ø2 mm y punta PH2",
+    svg: svgCorrederaGenerica,
+    nota: "Va en dos mitades: una atornillada al lateral de la caja del cajón y la otra al lateral interior del mueble, exactamente a la misma altura." },
   { patron: /tarugo/, nombre: "Tarugo de madera Ø8", diametro: 8, largo: 30,
     broca: "Ø8 mm",
     nota: "El agujero debe ser del mismo diámetro que el tarugo, para que entre ajustado con un poco de cola vinílica." },
@@ -851,7 +1020,7 @@ const GLOSARIO_HERRAJES = [
     nota: "El fondo es fino (3 mm): no hace falta perforar guía, pero clavá con cuidado cerca del borde para no partirlo." },
 ];
 
-function tarjetasHerrajes(texto) {
+function tarjetasHerrajes(texto, m = mueble, incluirColocacion = true) {
   if (!texto) return "";
   const partes = texto.split(/[+/]/).map(normalizarTxt);
   const vistos = new Set();
@@ -860,18 +1029,19 @@ function tarjetasHerrajes(texto) {
     for (const g of GLOSARIO_HERRAJES) {
       if (!g.patron.test(parte) || vistos.has(g.nombre)) continue;
       vistos.add(g.nombre);
-      const dibujo = g.diametro ? svgTornillo(g.diametro, g.largo) : svgBrocaGenerica(g.broca);
+      const dibujo = g.svg ? g.svg() : (g.diametro ? svgTornillo(g.diametro, g.largo) : svgBrocaGenerica(g.broca));
       html += `<div class="herraje-card">
         <div class="herraje-dibujo">${dibujo}</div>
         <div>
           <b>${g.nombre}</b><br>
           ${g.broca ? `<span class="nota">Perforá primero (agujero guía) con: <b>${g.broca}</b></span><br>` : ""}
+          ${g.herramientas ? `<span class="nota">Herramientas: <b>${g.herramientas}</b></span><br>` : ""}
           <span class="nota">${g.nota}</span>
         </div>
       </div>`;
     }
   }
-  return html;
+  return (incluirColocacion ? tarjetasColocacionHerrajes(texto, m) : "") + html;
 }
 
 function instruccionesArmadoJS(m, receta) {
@@ -895,7 +1065,7 @@ function instruccionesArmadoJS(m, receta) {
       ["Fondo"], "Clavos 1½\"");
     if (hayPieza(m, "Divisor cajones"))
       paso("Armá la cajonera interior",
-        "Colocá el divisor y armá el bloque de cajones (cajas + correderas + frentes), igual que en un escritorio.",
+        "Colocá el divisor y armá el bloque de cajones (cajas + correderas + frentes). Para las correderas, medí desde el piso interior del hueco y seguí el plano acotado: la línea central debe coincidir en cajón y mueble.",
         ["Divisor cajones", "Tapa de cajonera", "Lateral caja cajón", "Frente cajón"], "Corredera (según calidad) + tirador");
     if (hayPieza(m, "Barral"))
       paso("Colocá el barral para colgar la ropa",
@@ -907,9 +1077,9 @@ function instruccionesArmadoJS(m, receta) {
         ["Estante inferior (zapatos)"], "Rinconera/taco");
     if (hayPieza(m, "Puerta batiente"))
       paso("Colocá las puertas batientes",
-        "Perforá las cazoletas de las bisagras en cada puerta, atornillá las bisagras y colgá las puertas. Regulá hasta que cierren parejas.",
+        "Marcá los centros de las cazoletas en la cara interna de cada puerta siguiendo el plano acotado. Perforá con broca copa Ø35 solo 12-13 mm de profundidad, sin atravesar la puerta. Atornillá las bisagras, colgá las puertas y regulá hasta que cierren parejas.",
         ["Puerta batiente 1", "Puerta batiente 2"], "Bisagra cazoleta (según calidad) + tirador",
-        "Si elegiste soft-close, cierran solas sin golpe.");
+        "Herramientas: cinta métrica, lápiz, escuadra, broca copa/Forstner Ø35, tope de profundidad y punta PH2. Si elegiste soft-close, cierran solas sin golpe.");
     else if (hayPieza(m, "Puerta corrediza"))
       paso("Colocá los rieles y las puertas corredizas",
         "Atornillá el riel de arriba y el de abajo. Colgá cada hoja; se solapan un poco. Probá que deslicen suave.",
@@ -940,9 +1110,9 @@ function instruccionesArmadoJS(m, receta) {
       ["Lateral caja cajón", "Frente interno cajón", "Contrafrente cajón", "Fondo cajón"], "Confirmat + clavos",
       "Todas las cajas iguales para que los cajones corran parejos.");
     paso("Colocá las correderas y meté los cajones",
-      "Atornillá una guía a cada lado del cajón y la otra al mueble, a la misma altura. Probá que corra suave.",
+      "Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, a la misma altura. Medí desde el piso interior del hueco según el plano acotado: la línea central de la corredera debe coincidir en cajón y mueble. Usá tornillos 4×16 y probá que corra suave antes de poner el frente.",
       [], "Corredera (según el nivel de calidad que elegiste)",
-      "Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.");
+      "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.");
     paso("Atornillá los frentes de los cajones",
       "El frente visible (con el tirador) se atornilla desde ADENTRO del cajón. Dejá 3 mm de luz entre frentes.",
       ["Frente cajón"], "Tornillo 4×30 + tirador");
@@ -1241,7 +1411,7 @@ function pintarArmado(c) {
   });
   c.innerHTML = `
     ${cajaExplica("🔧 Guía de armado paso a paso",
-      "Tocá cada paso de la lista: la app <b>gira y acerca la cámara</b>, <b>separa un poco las piezas</b> de ese paso (como en los manuales de IKEA) y te muestra dónde va cada tornillo (puntos amarillos) y qué cantos llevan cinta (líneas naranjas). Cada tornillo se marca <b>dos veces, unidas por una línea punteada</b>: un punto en la cara de cada pieza, para que quede claro que es la misma unión vista desde los dos lados ya separados. Usá “⤢ Agrandar” arriba a la derecha para ver todo más grande.")}
+      "Tocá cada paso de la lista: la app <b>gira y acerca la cámara</b>, <b>separa un poco las piezas</b> de ese paso (como en los manuales de IKEA) y te muestra dónde va cada tornillo (puntos amarillos) y qué cantos llevan cinta (líneas naranjas). Cuando el paso lleva <b>bisagras o correderas</b>, debajo aparece un <b>plano 2D acotado</b> con las distancias reales desde los bordes, la cara correcta y la dirección de colocación. Usá “⤢ Agrandar” arriba a la derecha para ver todo más grande.")}
     <div class="leyenda-3d">
       <span><span class="punto" style="background:#ffc400"></span> Tornillo / fijación (el punto se repite en cada pieza, unidos por línea punteada)</span>
       <span><span class="punto" style="background:#ff8c1a"></span> Canto con tapacanto (cinta de borde)</span>
@@ -1251,11 +1421,12 @@ function pintarArmado(c) {
       <div class="armado-lista">${lista}</div>
       <div class="armado-detalle">
         <h3>Paso ${p.n} de ${pasos.length}: ${p.titulo}</h3>
+        ${p.herraje ? tarjetasColocacionHerrajes(p.herraje, mueble) : ""}
         <p class="texto-paso">${convAvisos(p.texto)}</p>
         ${p.piezas.length ? `<p class="nota">🧩 <b>Piezas de este paso</b> (resaltadas y enfocadas en el 3D de arriba): <b>${p.piezas.join(", ")}</b></p>` : ""}
         ${nMarcadores ? `<p class="nota">🟡 Se marcaron <b>${nMarcadores} punto(s) amarillo(s)</b> en el dibujo: ahí van los tornillos/fijaciones entre estas piezas.</p>` : ""}
         ${tieneCantos ? `<p class="nota">🟠 Los bordes <b>naranjas</b> de estas piezas llevan tapacanto (cinta de terminación) — no van tornillos ahí.</p>` : ""}
-        ${p.herraje ? `<p class="nota">🔩 <b>Herraje que necesitás:</b> ${p.herraje}</p>${tarjetasHerrajes(p.herraje)}` : ""}
+        ${p.herraje ? `<p class="nota">🔩 <b>Herraje que necesitás:</b> ${p.herraje}</p>${tarjetasHerrajes(p.herraje, mueble, false)}` : ""}
         ${p.tip ? `<div class="paso-tip">💡 ${convAvisos(p.tip)}</div>` : ""}
         <div style="margin-top:12px">
           <button id="paso-ant" class="btn-paso-grande gris" ${pasoArmadoActivo === 0 ? "disabled" : ""}>◀ Anterior</button>
@@ -1698,6 +1869,7 @@ function correrTests() {
   ok("escritorio: frente interno 302 (R-05)", por["Frente interno cajón 1"].largo === 302);
   ok("escritorio: confirmats R-09: 300→2, 600→4", confirmatsPorUnion(300) === 2 && confirmatsPorUnion(600) === 4);
   ok("escritorio: corredera 600→550 (R-08)", elegirCorredera(600) === 550);
+  ok("P-02: altura corredera 199→99", alturaCorredera(199) === 99);
   ok("escritorio: sin viga a 1600", !por["Viga trasera"]);
   const R2 = JSON.parse(JSON.stringify(R)); R2.dimensiones.ancho = 2000;
   const m2 = despieceEscritorio(R2, validarEscritorio(R2).tapaTipo);
@@ -1741,6 +1913,9 @@ function correrTests() {
   ok("ropero: laterales 2300×580 (alto-ZOCALO)", porR["Lateral izquierdo"].largo === 2300 && porR["Lateral izquierdo"].ancho === 580);
   ok("ropero: interior 864 (900-2*18, R-02)", porR["Piso"].largo === 864, `(dio ${porR["Piso"].largo})`);
   ok("ropero: 2 puertas batientes de 427mm", porR["Puerta batiente 1"].ancho === 427, `(dio ${porR["Puerta batiente 1"].ancho})`);
+  ok("R-22: bisagras 1800 -> 100/900/1700", JSON.stringify(posicionesBisagras(1800)) === JSON.stringify([100,900,1700]));
+  ok("R-22: bisagras 2300 -> 100/800/1500/2200", JSON.stringify(posicionesBisagras(2300)) === JSON.stringify([100,800,1500,2200]));
+  ok("ropero: perforaciones cazoleta Ø35", mr.perforaciones.some(p => p.detalle.includes("Cazoleta bisagra") && p.d === 35));
 
   const RRC = JSON.parse(JSON.stringify(RR));
   RRC.cajones = { incluir:true, ancho:400, cantidad_cajones:3 };
@@ -1804,6 +1979,9 @@ function correrTests() {
   ok("glosario: reconoce tornillo 4×30", tarjetasTornillo.includes("Tornillo para aglomerado 4×30"));
   ok("glosario: muestra broca 2,5mm", tarjetasTornillo.includes("2,5 mm"));
   ok("glosario: reconoce confirmat", tarjetasHerrajes("Confirmat / excéntrico + clavos").includes("broca escalonada"));
+  ok("glosario: reconoce corredera", tarjetasHerrajes("Corredera (según calidad)", m).includes("Corredera telescópica para cajón"));
+  ok("plano: corredera acotada", tarjetasHerrajes("Corredera (según calidad)", m).includes("plano-corredera"));
+  ok("plano: bisagra acotada", tarjetasHerrajes("Bisagra cazoleta", mr).includes("plano-bisagra"));
   ok("glosario: no repite herraje si aparece dos veces", (tarjetasHerrajes("Tornillo 4×30 + Tornillo 4×30").match(/herraje-card/g) || []).length === 1);
   ok("glosario: sin texto no rompe", tarjetasHerrajes("") === "");
 

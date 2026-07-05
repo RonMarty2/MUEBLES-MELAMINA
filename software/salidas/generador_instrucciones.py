@@ -62,9 +62,11 @@ def instrucciones_escritorio(mueble, receta):
              tip="Todas las cajas deben quedar iguales para que los cajones corran parejos.")
         paso("Colocá las correderas y meté los cajones",
              "Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, "
-             "a la misma altura. Deslizá el cajón para probar que corre suave.",
+             "a la misma altura. Medí desde el piso interior del hueco según el plano acotado "
+             "de la app: la línea central de la corredera debe coincidir en cajón y mueble. "
+             "Usá tornillos 4×16 y probá que el cajón corra suave antes de poner el frente.",
              herraje="Corredera (según el nivel de calidad que elegiste)",
-             tip="Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.")
+             tip="Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, no lo fuerces al cerrar.")
         paso("Atornillá los frentes de los cajones",
              "El frente visible (con el tirador) se atornilla desde ADENTRO del cajón, con "
              "tornillos 4×30. Dejá 3 mm de luz entre frentes para que no rocen.",
@@ -169,12 +171,14 @@ def instrucciones_ropero(mueble, receta):
 
     if _hay(mueble, "Puerta batiente"):
         paso("Colocá las puertas batientes",
-             "Marcá y perforá las cazoletas de las bisagras en cada puerta, atornillá las "
-             "bisagras y colgá las puertas. Regulá con los tornillos de la bisagra hasta que "
-             "cierren parejas.",
+             "Marcá los centros de las cazoletas en la cara interna de cada puerta siguiendo "
+             "el plano acotado: distancias desde arriba/abajo y desde el canto lateral. Perforá "
+             "con broca copa Ø35 solo 12-13 mm de profundidad (no atravieses la puerta), "
+             "atornillá las bisagras y colgá las puertas. Regulá con los tornillos de la "
+             "bisagra hasta que cierren parejas.",
              piezas=["Puerta batiente 1", "Puerta batiente 2"],
              herraje="Bisagra cazoleta (según calidad) + tirador",
-             tip="Si elegiste soft-close, las puertas cierran solas sin golpe.")
+             tip="Herramientas: cinta métrica, lápiz, escuadra, broca copa/Forstner Ø35, tope de profundidad y punta PH2. Si elegiste soft-close, cierran solas sin golpe.")
     elif _hay(mueble, "Puerta corrediza"):
         paso("Colocá los rieles y las puertas corredizas",
              "Atornillá el riel de arriba y el de abajo. Colgá cada hoja en su riel; se "

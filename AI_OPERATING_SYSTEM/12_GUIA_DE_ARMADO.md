@@ -85,6 +85,15 @@ Un cajón tiene DOS partes independientes:
 
 Las correderas van de a pares: una guía atornillada a cada costado de la caja, la otra
 pareja atornillada al mueble a la misma altura (eje a la mitad del alto de la caja, P-02).
+La app debe mostrar un plano acotado: desde qué piso/borde medir, cuál es el frente, y que
+la corredera va a ras del frente (0 mm de retranqueo salvo que una regla específica diga lo
+contrario).
+
+Las bisagras cazoleta se marcan en la cara interna de la puerta. La app debe mostrar un
+plano acotado con: centros verticales según R-22, cazoleta Ø35 a 21,5 mm del canto lateral
+(P-04), profundidad 12-13 mm sin atravesar, y el brazo de la bisagra apuntando hacia el
+lateral/divisor del mueble. Herramientas mínimas: cinta métrica, lápiz, escuadra, broca
+copa/Forstner Ø35, tope de profundidad y punta PH2.
 
 ## Documentos relacionados
 

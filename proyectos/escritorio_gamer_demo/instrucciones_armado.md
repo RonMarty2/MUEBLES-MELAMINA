@@ -35,9 +35,9 @@ Cada cajón es una caja: dos laterales, un frente interno y un contrafrente, má
 
 ## Paso 5: Colocá las correderas y meté los cajones
 
-Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, a la misma altura. Deslizá el cajón para probar que corre suave.
+Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, a la misma altura. Medí desde el piso interior del hueco según el plano acotado de la app: la línea central de la corredera debe coincidir en cajón y mueble. Usá tornillos 4×16 y probá que el cajón corra suave antes de poner el frente.
 - **Herraje:** Corredera (según el nivel de calidad que elegiste)
-- 💡 Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.
+- 💡 Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, no lo fuerces al cerrar.
 
 ## Paso 6: Atornillá los frentes de los cajones
 

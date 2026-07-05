@@ -54,7 +54,9 @@ existente (R-05 a R-08, R-12 de `05_REGLAS_DE_CARPINTERIA.md`).
   bisagras cazoleta estándar y se comba).
 - **R-22 — Bisagras por puerta.** Según el alto de la puerta (H-13): hasta 1500 mm → 2
   bisagras; 1500–2100 mm → 3 bisagras; más de 2100 mm → 4 bisagras. Separadas 100 mm de
-  cada extremo, el resto repartidas uniformemente.
+  cada extremo, el resto repartidas uniformemente. El motor devuelve los centros reales en
+  mm medidos desde el borde superior de la hoja; la distancia lateral de la cazoleta se rige
+  por P-04.
 - **R-23 — Puertas corredizas.** Van sobre riel superior e inferior (H-14), NO llevan
   bisagras. Cada hoja se solapa **20 mm** con la contigua (para tapar la luz al deslizar):
   ancho de hoja = (ancho módulo ÷ n hojas) + solape/2 en los bordes de solape. Se

@@ -364,6 +364,30 @@ Formato de cada entrada:
 
 ---
 
+## D-022 — Planos acotados tipo IKEA para bisagras y correderas
+
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** la vista explotada D-021 resolvió la ambigüedad de tornillos entre piezas,
+  pero el usuario mostró manuales reales de IKEA y señaló que seguía sin saber cómo colocar
+  correderas y bisagras: en qué cara van, hacia qué dirección apuntan y a qué distancia de
+  los bordes hay que marcar.
+- **Decisión:** agregar en la pestaña Armado tarjetas SVG 2D acotadas, calculadas con las
+  medidas reales del mueble actual, solo para herrajes donde la perspectiva 3D no comunica
+  bien la cota: bisagras cazoleta y correderas de cajón. El glosario visual sigue diciendo
+  "qué herraje es"; el nuevo plano dice "dónde y cómo colocarlo".
+- **Reglas implementadas:** `posiciones_bisagras()` aplica R-22 y devuelve centros desde el
+  borde superior de la puerta; P-04 fija la cazoleta Ø35 a 21,5 mm del canto y profundidad
+  12-13 mm; `altura_corredera()` centraliza P-02 para que el eje de corredera en Python y JS
+  coincida. La app muestra además herramientas mínimas (cinta, lápiz, escuadra, brocas y
+  punta PH2) y notas de orientación ("cara interna", "brazo hacia el lateral", "frente a ras").
+- **Consecuencias:** Python ahora emite perforaciones reales de cazoleta en roperos batientes
+  y textos de corredera más explícitos. JS dibuja los planos y tiene pruebas de paridad para
+  bisagras/correderas. `DISENADOR_MUEBLES.html` debe reconstruirse siempre que cambie
+  `app_fuente.html`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

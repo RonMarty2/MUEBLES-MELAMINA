@@ -18,7 +18,8 @@ import math
 from .modelos import Pieza, Herraje, Perforacion, Mueble
 from .validador_escritorio import espesor_tapa, vano_libre
 from .uniones import herraje_union
-from .herrajes_calidad import corredera as corredera_calidad, union_sugerida
+from .herrajes_calidad import (altura_corredera,
+                               corredera as corredera_calidad, union_sugerida)
 
 RETRANQUEO_FRONTAL = 50      # las patas/paneles entran 50 mm respecto del frente
 ALTURA_BANDEJA_CPU = 100     # M-06
@@ -247,10 +248,12 @@ def despiece_escritorio(receta):
             confirmats += 4 * confirmats_por_union(alto_caja)
             clavos += math.ceil(2 * ((ancho_caja - 2) + (largo_corr - 2)) / 150)
             tornillos_frente += 4
-            eje = z_caja + alto_caja // 2
+            eje_relativo = altura_corredera(alto_caja)
+            eje = z_caja + eje_relativo
             perfs.append(Perforacion(
                 "Lateral cajonera interno / externo", "cara interior", 0, eje, 3.0, "10 mm",
-                f"eje corredera cajón {num} a {eje} mm del piso del mueble (P-02); "
+                f"eje corredera cajón {num}: centro a {eje_relativo} mm del canto inferior "
+                f"de la caja y a {eje} mm del piso del mueble (P-02); "
                 f"fijar con tornillos 4×16 en agujeros de la corredera"))
 
     else:

@@ -25,6 +25,7 @@ siguiendo exactamente estas reglas; los precios unitarios viven en
 | H-17 | **Herraje excéntrico (cam-lock/minifix) + espiga metálica Ø8** | Alternativa a H-01 para uniones estructurales de muebles que se van a mover/desarmar (R-26) | 2 por unión hasta 300 mm, +1 cada 150–200 mm extra (misma regla de cantidad que H-01) |
 | H-05e | **Corredera de rodillo (par, media extensión)** | Cajones, nivel de calidad **económico** (D-018) | 1 par por cajón; se desgasta y con el tiempo el cajón puede bailar |
 | H-18 | **Corredera telescópica soft-close (par, acero 40 kg)** | Cajones, nivel de calidad **premium** (D-018) | 1 par por cajón; extracción total + cierre suave, no se afloja ni baila |
+| H-13 | **Bisagra cazoleta 35 mm** | Puertas batientes de ropero | Cantidad según R-22; cazoleta Ø35 según P-04 |
 | H-19 | **Bisagra cazoleta 35 mm soft-close** | Puertas del ropero, nivel de calidad **premium** (D-018) | Misma cantidad que H-13 según R-22; cierra sola sin golpe |
 
 ## Criterios de elección (los "por qué")
@@ -81,6 +82,10 @@ Convenciones:
   las correderas (frontal y trasera como mínimo).
 - **P-03:** pasacables: centro a 60 mm del borde trasero de la tapa (R-16), broca copa o
   caladora Ø según grommet.
+- **P-04:** bisagras cazoleta Ø35: centros verticales según R-22 (100 mm desde arriba,
+  100 mm desde abajo, intermedias repartidas). Centro de la cazoleta a **21,5 mm del canto
+  lateral de la puerta**; perforar en la cara interna con broca copa/Forstner Ø35 a
+  **12-13 mm de profundidad**, nunca pasante.
 
 ## Lista de compras — formato de salida
 

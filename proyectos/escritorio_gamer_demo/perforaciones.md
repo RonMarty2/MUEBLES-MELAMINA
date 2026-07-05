@@ -24,9 +24,9 @@ indicada de cada pieza. Convenciones P-xx en
 | Lateral cajonera externo | cara (por fuera) | 216 | 9 | 4.5 mm | pasante | confirmat piso cajonera (P-01) |
 | Lateral cajonera externo | cara (por fuera) | 383 | 9 | 4.5 mm | pasante | confirmat piso cajonera (P-01) |
 | Lateral cajonera externo | cara (por fuera) | 550 | 9 | 4.5 mm | pasante | confirmat piso cajonera (P-01) |
-| Lateral cajonera interno / externo | cara interior | 0 | 132 | 3.0 mm | 10 mm | eje corredera cajón 1 a 132 mm del piso del mueble (P-02); fijar con tornillos 4×16 en agujeros de la corredera |
-| Lateral cajonera interno / externo | cara interior | 0 | 364 | 3.0 mm | 10 mm | eje corredera cajón 2 a 364 mm del piso del mueble (P-02); fijar con tornillos 4×16 en agujeros de la corredera |
-| Lateral cajonera interno / externo | cara interior | 0 | 596 | 3.0 mm | 10 mm | eje corredera cajón 3 a 596 mm del piso del mueble (P-02); fijar con tornillos 4×16 en agujeros de la corredera |
+| Lateral cajonera interno / externo | cara interior | 0 | 132 | 3.0 mm | 10 mm | eje corredera cajón 1: centro a 99 mm del canto inferior de la caja y a 132 mm del piso del mueble (P-02); fijar con tornillos 4×16 en agujeros de la corredera |
+| Lateral cajonera interno / externo | cara interior | 0 | 364 | 3.0 mm | 10 mm | eje corredera cajón 2: centro a 99 mm del canto inferior de la caja y a 364 mm del piso del mueble (P-02); fijar con tornillos 4×16 en agujeros de la corredera |
+| Lateral cajonera interno / externo | cara interior | 0 | 596 | 3.0 mm | 10 mm | eje corredera cajón 3: centro a 99 mm del canto inferior de la caja y a 596 mm del piso del mueble (P-02); fijar con tornillos 4×16 en agujeros de la corredera |
 | Tapa (ambas capas) | cara superior | 590 | 640 | 60 mm | pasante | pasacables 1: broca copa Ø60 a 60 mm del borde trasero (R-16); colocar grommet (H-06) |
 | Tapa (ambas capas) | cara superior | 894 | 640 | 60 mm | pasante | pasacables 2: broca copa Ø60 a 60 mm del borde trasero (R-16); colocar grommet (H-06) |
 

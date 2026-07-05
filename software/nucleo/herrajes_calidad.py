@@ -12,6 +12,29 @@ nombre, texto). El precio se resuelve por código en generador_presupuesto.py.
 from .modelos import Herraje
 
 NIVELES = ["economico", "estandar", "premium"]
+DISTANCIA_CAZOLETA_CANTO = 21.5  # P-04: centro de cazoleta Ø35 a canto de puerta
+
+
+def posiciones_bisagras(alto_hoja):
+    """R-22: centros de bisagras medidos desde el borde superior de la puerta."""
+    if alto_hoja <= 1500:
+        cantidad = 2
+    elif alto_hoja <= 2100:
+        cantidad = 3
+    else:
+        cantidad = 4
+
+    if alto_hoja <= 200:
+        return [alto_hoja // 2]
+
+    tramo = alto_hoja - 200
+    divisor = cantidad - 1
+    return [100 + (tramo * i + divisor // 2) // divisor for i in range(cantidad)]
+
+
+def altura_corredera(alto_caja):
+    """P-02: centro de la corredera medido desde el canto inferior de la caja."""
+    return alto_caja // 2
 
 
 def corredera(nivel, largo_mm, cantidad):

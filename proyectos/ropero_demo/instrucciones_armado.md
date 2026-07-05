@@ -48,11 +48,11 @@ Atornillá los soportes del barral a los laterales, a la altura indicada, y apoy
 
 ## Paso 7: Colocá las puertas batientes
 
-Marcá y perforá las cazoletas de las bisagras en cada puerta, atornillá las bisagras y colgá las puertas. Regulá con los tornillos de la bisagra hasta que cierren parejas.
+Marcá los centros de las cazoletas en la cara interna de cada puerta siguiendo el plano acotado: distancias desde arriba/abajo y desde el canto lateral. Perforá con broca copa Ø35 solo 12-13 mm de profundidad (no atravieses la puerta), atornillá las bisagras y colgá las puertas. Regulá con los tornillos de la bisagra hasta que cierren parejas.
 
 - **Piezas:** Puerta batiente 1, Puerta batiente 2
 - **Herraje:** Bisagra cazoleta (según calidad) + tirador
-- 💡 Si elegiste soft-close, las puertas cierran solas sin golpe.
+- 💡 Herramientas: cinta métrica, lápiz, escuadra, broca copa/Forstner Ø35, tope de profundidad y punta PH2. Si elegiste soft-close, cierran solas sin golpe.
 
 ## Paso 8: Terminación final
 
