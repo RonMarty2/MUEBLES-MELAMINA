@@ -1247,11 +1247,11 @@ function pintarArmado(c) {
   });
   c.innerHTML = `
     ${cajaExplica("🔧 Guía de armado paso a paso",
-      "Tocá cada paso de la lista: la app <b>gira y acerca la cámara</b> a esa pieza y te muestra en el dibujo dónde va cada tornillo (puntos amarillos) y qué cantos llevan cinta (líneas naranjas). Usá “⤢ Agrandar” arriba a la derecha para ver todo más grande.")}
+      "Tocá cada paso de la lista: la app <b>gira y acerca la cámara</b>, <b>separa un poco las piezas</b> de ese paso (como en los manuales de IKEA) y te muestra dónde va cada tornillo (puntos amarillos) y qué cantos llevan cinta (líneas naranjas). Cada tornillo se marca <b>dos veces, unidas por una línea punteada</b>: un punto en la cara de cada pieza, para que quede claro que es la misma unión vista desde los dos lados ya separados. Usá “⤢ Agrandar” arriba a la derecha para ver todo más grande.")}
     <div class="leyenda-3d">
-      <span><span class="punto" style="background:#ffc400"></span> Tornillo / fijación (aproximado)</span>
+      <span><span class="punto" style="background:#ffc400"></span> Tornillo / fijación (el punto se repite en cada pieza, unidos por línea punteada)</span>
       <span><span class="punto" style="background:#ff8c1a"></span> Canto con tapacanto (cinta de borde)</span>
-      <span><span class="punto" style="background:#3b82f6"></span> Pieza de este paso (resaltada, el resto se atenúa)</span>
+      <span><span class="punto" style="background:#3b82f6"></span> Pieza de este paso (separada y resaltada, el resto se atenúa)</span>
     </div>
     <div class="armado-cols">
       <div class="armado-lista">${lista}</div>
@@ -1284,6 +1284,7 @@ function aplicarResaltadoPaso() {
   const nombres = p ? p.piezas : [];
   resaltarPiezas(nombres);
   resaltarCantos(nombres);
+  explotarPiezas(nombres);
   enfocarPiezas(nombres);
   pintarMarcadoresTornillo(nombres);
 }
@@ -1435,11 +1436,14 @@ function render3D() {
     m.position.set((x+dx/2)*esc,(z+dz/2)*esc,(y+dy/2)*esc);
     m.userData.pieza = p.nombre;
     m.userData.p = p;  // datos crudos (mm): pos/dim/cantos, para marcadores y cámara
+    m.userData.posBase = m.position.clone();  // para volver acá al salir de Armado
     escena.add(m); mallas.push(m);
     const borde = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
       new THREE.LineBasicMaterial({ color: 0x555555 }));
     borde.position.copy(m.position);
     borde.userData.pieza = p.nombre;
+    borde.userData.p = p;
+    borde.userData.posBase = borde.position.clone();
     borde.userData.esBorde = true;
     escena.add(borde); mallas.push(borde);
   }
@@ -1471,6 +1475,7 @@ function limpiarResaltado() {
     }
     if (m.userData.esBorde) m.material.color.set(0x555555);
   }
+  explotarPiezas([]);
   pintarMarcadoresTornillo([]);
 }
 
@@ -1516,7 +1521,36 @@ function enfocarPiezas(nombres) {
     z: (box.minY+box.maxY)/2*esc,
   };
   const extent = Math.max(box.maxX-box.minX, box.maxZ-box.minZ, box.maxY-box.minY) * esc;
-  dist = Math.max(extent * 2.4, 0.3);
+  dist = Math.max(extent * 2.9, 0.35);  // margen extra: las piezas se separan (vista explotada)
+}
+
+/* ------------------------------------------------ vista "explotada" tipo IKEA (D-021)
+   Separa las piezas del paso activo desde su centro común, para que cada agujero se
+   vea claramente sobre la cara de SU pieza (y no ambiguo "en el medio" de la unión). */
+const EXPLODE_MM = 70;
+function vectorExplode(pieza, centroGrupo) {
+  const [px,py,pz] = pieza.pos, [pdx,pdy,pdz] = pieza.dim;
+  const cx = px+pdx/2, cy = py+pdy/2, cz = pz+pdz/2;
+  const vx = cx-centroGrupo.x, vy = cy-centroGrupo.y, vz = cz-centroGrupo.z;
+  const len = Math.hypot(vx,vy,vz);
+  return len < 1 ? { x:0, y:0, z:0 } : { x: vx/len, y: vy/len, z: vz/len };
+}
+function explotarPiezas(nombres) {
+  const esc = 0.001;
+  const box = bboxDePiezas(nombres);
+  const centroGrupo = box ? {
+    x: (box.minX+box.maxX)/2, y: (box.minY+box.maxY)/2, z: (box.minZ+box.maxZ)/2,
+  } : null;
+  for (const m of mallas) {
+    if (m.userData.pieza === undefined || !m.userData.posBase) continue;
+    const activo = centroGrupo && nombres.some(n => m.userData.pieza.startsWith(n));
+    if (!activo) { m.position.copy(m.userData.posBase); continue; }
+    const v = vectorExplode(m.userData.p, centroGrupo);
+    m.position.set(
+      m.userData.posBase.x + v.x*EXPLODE_MM*esc,
+      m.userData.posBase.y + v.z*EXPLODE_MM*esc,
+      m.userData.posBase.z + v.y*EXPLODE_MM*esc);
+  }
 }
 
 /* ------------------------------------------------ marcadores de tornillo (aprox. geométrica) */
@@ -1531,7 +1565,7 @@ function calcularMarcadoresTornillo(nombres) {
     if (Math.abs(max1-min0) <= TOL) return min0;
     return null;
   };
-  const agregarSiSolapa = (contacto, uA0,uA1,uB0,uB1, vA0,vA1,vB0,vB1, eje) => {
+  const agregarSiSolapa = (contacto, uA0,uA1,uB0,uB1, vA0,vA1,vB0,vB1, eje, nombreA, nombreB) => {
     if (contacto === null) return;
     const uIni = Math.max(uA0,uB0), uFin = Math.min(uA1,uB1);
     const vIni = Math.max(vA0,vB0), vFin = Math.min(vA1,vB1);
@@ -1539,9 +1573,11 @@ function calcularMarcadoresTornillo(nombres) {
     const vCentro = (vIni+vFin)/2;
     const us = (uFin - uIni > 300) ? [uIni+50, uFin-50] : [(uIni+uFin)/2];
     for (const u of us) {
-      if (eje === "x") puntos.push([contacto, u, vCentro]);
-      else if (eje === "y") puntos.push([u, contacto, vCentro]);
-      else puntos.push([u, vCentro, contacto]);
+      let punto;
+      if (eje === "x") punto = [contacto, u, vCentro];
+      else if (eje === "y") punto = [u, contacto, vCentro];
+      else punto = [u, vCentro, contacto];
+      puntos.push({ x: punto[0], y: punto[1], z: punto[2], piezaA: nombreA, piezaB: nombreB });
     }
   };
   for (let i = 0; i < piezas.length; i++) {
@@ -1549,9 +1585,9 @@ function calcularMarcadoresTornillo(nombres) {
       const A = piezas[i], B = piezas[j];
       const [ax,ay,az] = A.pos, [adx,ady,adz] = A.dim;
       const [bx,by,bz] = B.pos, [bdx,bdy,bdz] = B.dim;
-      agregarSiSolapa(contactoEnEje(ax,ax+adx,bx,bx+bdx), ay,ay+ady,by,by+bdy, az,az+adz,bz,bz+bdz, "x");
-      agregarSiSolapa(contactoEnEje(ay,ay+ady,by,by+bdy), ax,ax+adx,bx,bx+bdx, az,az+adz,bz,bz+bdz, "y");
-      agregarSiSolapa(contactoEnEje(az,az+adz,bz,bz+bdz), ax,ax+adx,bx,bx+bdx, ay,ay+ady,by,by+bdy, "z");
+      agregarSiSolapa(contactoEnEje(ax,ax+adx,bx,bx+bdx), ay,ay+ady,by,by+bdy, az,az+adz,bz,bz+bdz, "x", A.nombre, B.nombre);
+      agregarSiSolapa(contactoEnEje(ay,ay+ady,by,by+bdy), ax,ax+adx,bx,bx+bdx, az,az+adz,bz,bz+bdz, "y", A.nombre, B.nombre);
+      agregarSiSolapa(contactoEnEje(az,az+adz,bz,bz+bdz), ax,ax+adx,bx,bx+bdx, ay,ay+ady,by,by+bdy, "z", A.nombre, B.nombre);
     }
   }
   return puntos;
@@ -1561,11 +1597,29 @@ function pintarMarcadoresTornillo(nombres) {
   marcadoresTornilloMeshes = [];
   if (pestanaActiva !== "armado" || !nombres || !nombres.length) return;
   const esc = 0.001;
-  for (const [x,y,z] of calcularMarcadoresTornillo(nombres)) {
-    const esf = new THREE.Mesh(new THREE.SphereGeometry(0.013, 14, 14),
-      new THREE.MeshBasicMaterial({ color: 0xffc400 }));
-    esf.position.set(x*esc, z*esc, y*esc);
-    escena.add(esf); marcadoresTornilloMeshes.push(esf);
+  const box = bboxDePiezas(nombres);
+  if (!box) return;
+  const centroGrupo = { x:(box.minX+box.maxX)/2, y:(box.minY+box.maxY)/2, z:(box.minZ+box.maxZ)/2 };
+  const aEscena = (x,y,z) => new THREE.Vector3(x*esc, z*esc, y*esc);
+  for (const pt of calcularMarcadoresTornillo(nombres)) {
+    const piezaA = mueble.piezas.find(p => p.nombre === pt.piezaA);
+    const piezaB = mueble.piezas.find(p => p.nombre === pt.piezaB);
+    const vA = vectorExplode(piezaA, centroGrupo), vB = vectorExplode(piezaB, centroGrupo);
+    const posA = [pt.x+vA.x*EXPLODE_MM, pt.y+vA.y*EXPLODE_MM, pt.z+vA.z*EXPLODE_MM];
+    const posB = [pt.x+vB.x*EXPLODE_MM, pt.y+vB.y*EXPLODE_MM, pt.z+vB.z*EXPLODE_MM];
+    for (const [x,y,z] of [posA, posB]) {
+      const esf = new THREE.Mesh(new THREE.SphereGeometry(0.013, 14, 14),
+        new THREE.MeshBasicMaterial({ color: 0xffc400 }));
+      esf.position.set(x*esc, z*esc, y*esc);
+      escena.add(esf); marcadoresTornilloMeshes.push(esf);
+    }
+    const geoLinea = new THREE.BufferGeometry().setFromPoints([
+      aEscena(...posA), aEscena(...posB),
+    ]);
+    const linea = new THREE.Line(geoLinea,
+      new THREE.LineDashedMaterial({ color: 0xffc400, dashSize: 0.01, gapSize: 0.007 }));
+    linea.computeLineDistances();
+    escena.add(linea); marcadoresTornilloMeshes.push(linea);
   }
 }
 

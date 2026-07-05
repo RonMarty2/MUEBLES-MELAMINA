@@ -336,6 +336,34 @@ Formato de cada entrada:
 
 ---
 
+## D-021 — Vista "explotada" tipo IKEA en el armado 3D
+
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** con las piezas del paso activo tocándose/superpuestas en la vista 3D en
+  perspectiva, el marcador amarillo de tornillo se veía ambiguo — el usuario reportó que
+  "parece que la perforación está en el medio de la unión", y pidió algo parecido a los
+  manuales de armado de IKEA (piezas separadas, agujero claramente visible en cada una).
+- **Decisión:** en vez de migrar a diagramas 2D planos (un renderer nuevo, mucho trabajo),
+  se agrega una vista explotada **dentro del motor 3D actual**: al entrar a un paso, las
+  piezas de ese paso se desplazan ~70 mm desde el centro común del grupo, a lo largo del
+  vector que va del centro del grupo al centro de cada pieza (`vectorExplode` +
+  `explotarPiezas`). Cada punto de tornillo (`calcularMarcadoresTornillo`, ahora con
+  `{x,y,z,piezaA,piezaB}`) se dibuja **dos veces** — una en la cara de cada pieza ya
+  separada — unidas por una línea punteada, dejando claro que es la misma unión vista
+  desde los dos lados. `enfocarPiezas` amplió el margen de zoom (×2.9) para que las piezas
+  separadas no queden cortadas fuera de cámara. `limpiarResaltado()` restaura todas las
+  piezas a su posición original (`posBase`) al salir de la pestaña Armado.
+- **Descartadas:** diagramas 2D estilo manual real de IKEA — requeriría un renderer nuevo
+  separado del motor 3D existente, duplicando lógica de posicionamiento de piezas; se
+  posterga indefinidamente a menos que la vista explotada resulte insuficiente.
+- **Consecuencias:** cambio puramente visual — no toca ninguna cifra de despiece, precios
+  ni validaciones (confirmado con la suite Python de 81 pruebas y la suite JS embebida de
+  47 pruebas, ambas en verde sin cambios). Vive solo en `app_fuente.html` (JS); no aplica
+  al generador Python de instrucciones en texto plano.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
