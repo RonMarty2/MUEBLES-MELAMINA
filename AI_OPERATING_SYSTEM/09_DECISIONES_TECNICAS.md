@@ -102,6 +102,30 @@ Formato de cada entrada:
   preferida cuando esté disponible. `three.min.js` (r128, licencia MIT) vive versionado
   en `software/salidas/recursos/`.
 
+## D-010 — Interfaz principal: app de un solo archivo HTML (doble clic)
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** el usuario rechazó terminantemente el flujo por terminal ("NO QUIERO NADA
+  DE .PY, ABRIR CMD"). Necesita abrir un archivo con doble clic y usar controles visuales.
+- **Decisión:** la interfaz principal es **`ESCRITORIO_GAMER.html`** en la raíz del repo:
+  un único archivo autocontenido (three.js incrustada) con panel de controles (sliders,
+  selectores), vista 3D en vivo y pestañas de Cortes / Compras / Presupuesto /
+  Perforaciones / Precios. Todo se recalcula al instante, sin instalar nada, sin internet.
+  El motor de despiece está **portado 1:1 a JavaScript** dentro del archivo.
+- **Descartadas:** (a) empaquetar el Python como .exe — pesado, antivirus lo bloquean, un
+  binario por sistema operativo; (b) app de escritorio (Electron) — cientos de MB;
+  (c) servidor web local — obliga a "levantar" algo, justo lo que el usuario no quiere.
+- **Consecuencias / control de divergencia:** ahora hay DOS motores (Python y JS). El
+  Python queda como referencia y para automatización futura (IA por API, CNC, más muebles).
+  Para que no diverjan: ambos usan las mismas constantes, nombres de pieza y códigos de
+  regla, y la app trae pruebas de paridad embebidas (abrir `ESCRITORIO_GAMER.html?test=1`)
+  con los MISMOS números canónicos que `software/tests/test_sistema.py` (piezas 27,
+  lateral 714×650, piso 364, frente 396×229, caja 550/199, 40 confirmats, total $620.90).
+  Si se cambia una fórmula, se cambia en los dos motores en el mismo commit.
+- **Build:** `ESCRITORIO_GAMER.html` se genera con `python software/app/construir.py`
+  a partir de `software/app/app_fuente.html` + `software/salidas/recursos/three.min.js`.
+  Editar SIEMPRE el fuente, nunca el archivo generado.
+
 ---
 
 ## Plantilla para nuevas decisiones
