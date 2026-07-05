@@ -274,6 +274,44 @@ Formato de cada entrada:
   el usuario puede tener presupuesto ajustado en un mueble de menor uso; se deja disponible
   con su aviso de durabilidad explícito.
 
+## D-019 — Armado con cámara enfocada, marcadores de tornillo y panel expandible
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** con la guía de armado ya en uso, el usuario reportó tres problemas
+  concretos: el panel de armado era muy chico; no entendía bien el texto de los pasos; y
+  sobre todo "no veo dónde se ponen los tornillos, bisagras, etc." — necesitaba algo
+  mucho más visual, mostrando cada pieza individualmente y sus puntos de fijación.
+- **Decisión:**
+  1. **Botón "Agrandar/Achicar"** en la barra de pestañas: expande `#paneles` a 52vh
+     (probado; 78vh dejaba muy chica la vista 3D — el balance importa más que el tamaño
+     máximo). Persistido en localStorage.
+  2. **Cámara que se enfoca en la pieza del paso activo** (`enfocarPiezas`): calcula la
+     caja delimitadora (bounding box) en mm de las piezas del paso y centra/acerca la
+     cámara ahí — reemplaza la vista del mueble completo mientras se sigue un paso.
+  3. **Marcadores de tornillo geométricos** (`calcularMarcadoresTornillo`): en vez de
+     depender del texto libre de `perforaciones` (pensado para lectura, no para
+     coordenadas exactas por instancia), se calculan por **adyacencia real de las cajas
+     delimitadoras** de las piezas del paso — dos piezas que comparten una cara con
+     tolerancia de 3 mm reciben 1 o 2 marcadores (según R-09: 2 si la unión supera 300 mm)
+     exactamente en el plano de contacto. Esto ubica los puntos donde realmente va la
+     fijación, sin importar el tipo de mueble o el texto del paso.
+  4. **Resaltado de cantos con tapacanto**: los bordes (`LineSegments`) de las piezas del
+     paso activo se pintan naranja si esa pieza tiene `cantos` no vacío, dejando el resto
+     en gris — responde directamente "¿se toma en cuenta el tapacanto?".
+  5. La pieza activa se vuelve semitransparente (82% opacidad, `depthWrite: false`) para
+     que los marcadores que caen en caras internas/traseras se vean "a través" de la
+     pieza en vez de quedar completamente ocultos.
+  6. Los avisos amarillos se ocultan mientras se usa la pestaña Armado (ya está toda esa
+     información integrada en el panel), liberando espacio para el 3D.
+- **Descartada:** usar las coordenadas de `perforaciones` (que son texto pensado para
+  humanos, con etiquetas de pieza combinadas como "Laterales de cajonera") para ubicar
+  marcadores — habría requerido reescribir esa estructura a algo estrictamente
+  geométrico por instancia; el enfoque de adyacencia por bounding box da resultados
+  correctos reutilizando los datos que ya existen (`pos`/`dim` de cada `Pieza`).
+- **Consecuencias:** esta mejora vive solo en la app (JS); el generador Python de
+  instrucciones no tiene contraparte visual 3D y no se tocó — sigue siendo la versión de
+  texto para quien use el CLI o abra el proyecto generado.
+
 ---
 
 ## Plantilla para nuevas decisiones

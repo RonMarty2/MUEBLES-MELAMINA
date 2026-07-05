@@ -41,11 +41,14 @@
            padding: 6px 10px; border-radius: 6px; font-size: 12.5px; margin-bottom: 5px; }
   .error { background: #fee2e2; border-color: #dc2626; color: #7f1d1d; }
   #paneles { height: 285px; background: #fff; border-top: 1px solid #ddd;
-             display: flex; flex-direction: column; }
-  #pestanas { display: flex; gap: 2px; background: #e9e8e5; padding: 4px 8px 0; }
+             display: flex; flex-direction: column; transition: height 0.15s ease; }
+  #paneles.expandido { height: 52vh; }
+  #pestanas { display: flex; gap: 2px; background: #e9e8e5; padding: 4px 8px 0; align-items: center; }
   #pestanas div { padding: 7px 14px; font-size: 13px; cursor: pointer;
                   border-radius: 7px 7px 0 0; color: #555; }
   #pestanas div.activa { background: #fff; color: #111; font-weight: 600; }
+  #btn-expandir { margin-left: auto; margin-right: 8px; background: #4b5563; color: #fff;
+                  border: 0; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
   #contenido { flex: 1; overflow: auto; padding: 10px 14px; }
   table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
   th, td { border: 1px solid #e2e0dc; padding: 4px 8px; text-align: left; }
@@ -86,6 +89,15 @@
   .armado-detalle h3 { margin: 0 0 6px; font-size: 15px; }
   .paso-tip { background: #fef3c7; border: 1px solid #f59e0b; color: #7c4a03;
               padding: 6px 10px; border-radius: 6px; font-size: 12.5px; margin-top: 6px; }
+  .armado-detalle .texto-paso { font-size: 14.5px; line-height: 1.6; }
+  .leyenda-3d { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #444;
+                margin: 8px 0; }
+  .leyenda-3d span { display: inline-flex; align-items: center; gap: 5px; }
+  .punto { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .btn-paso-grande { font-size: 14px !important; padding: 10px 18px !important; }
+  #paneles.expandido .armado-cols { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
+  #paneles.expandido .armado-detalle h3 { font-size: 19px; }
+  #paneles.expandido .armado-detalle .texto-paso { font-size: 16px; }
 </style>
 </head>
 <body>
@@ -262,6 +274,7 @@
     <div data-p="perforaciones">🔩 Tornillos y perforaciones</div>
     <div data-p="precios">⚙️ Mis precios</div>
     <div data-p="ayuda">❓ Ayuda</div>
+    <button id="btn-expandir" title="Agrandar/achicar este panel">⤢ Agrandar</button>
   </div>
   <div id="contenido"></div>
 </div>
@@ -1145,6 +1158,11 @@ function pintarArmado(c) {
   const pasos = instruccionesArmadoJS(mueble, recetaActual);
   if (pasoArmadoActivo >= pasos.length) pasoArmadoActivo = 0;
   const p = pasos[pasoArmadoActivo];
+  const tieneCantos = p.piezas.some(n => {
+    const real = mueble.piezas.find(pp => pp.nombre.startsWith(n));
+    return real && real.cantos;
+  });
+  const nMarcadores = calcularMarcadoresTornillo(p.piezas).length;
   let lista = "";
   pasos.forEach((s, i) => {
     lista += `<div class="paso-item ${i === pasoArmadoActivo ? "activo" : ""}" data-paso="${i}">
@@ -1152,18 +1170,25 @@ function pintarArmado(c) {
   });
   c.innerHTML = `
     ${cajaExplica("🔧 Guía de armado paso a paso",
-      "Tocá cada paso: la pieza de ese paso se <b>ilumina en el dibujo 3D</b> de arriba (las demás se aclaran). Seguí el orden de arriba hacia abajo.")}
+      "Tocá cada paso de la lista: la app <b>gira y acerca la cámara</b> a esa pieza y te muestra en el dibujo dónde va cada tornillo (puntos amarillos) y qué cantos llevan cinta (líneas naranjas). Usá “⤢ Agrandar” arriba a la derecha para ver todo más grande.")}
+    <div class="leyenda-3d">
+      <span><span class="punto" style="background:#ffc400"></span> Tornillo / fijación (aproximado)</span>
+      <span><span class="punto" style="background:#ff8c1a"></span> Canto con tapacanto (cinta de borde)</span>
+      <span><span class="punto" style="background:#3b82f6"></span> Pieza de este paso (resaltada, el resto se atenúa)</span>
+    </div>
     <div class="armado-cols">
       <div class="armado-lista">${lista}</div>
       <div class="armado-detalle">
-        <h3>Paso ${p.n}: ${p.titulo}</h3>
-        <p>${convAvisos(p.texto)}</p>
-        ${p.piezas.length ? `<p class="nota">🧩 Piezas de este paso (iluminadas en el 3D): <b>${p.piezas.join(", ")}</b></p>` : ""}
-        ${p.herraje ? `<p class="nota">🔩 Herraje: ${p.herraje}</p>` : ""}
+        <h3>Paso ${p.n} de ${pasos.length}: ${p.titulo}</h3>
+        <p class="texto-paso">${convAvisos(p.texto)}</p>
+        ${p.piezas.length ? `<p class="nota">🧩 <b>Piezas de este paso</b> (resaltadas y enfocadas en el 3D de arriba): <b>${p.piezas.join(", ")}</b></p>` : ""}
+        ${nMarcadores ? `<p class="nota">🟡 Se marcaron <b>${nMarcadores} punto(s) amarillo(s)</b> en el dibujo: ahí van los tornillos/fijaciones entre estas piezas.</p>` : ""}
+        ${tieneCantos ? `<p class="nota">🟠 Los bordes <b>naranjas</b> de estas piezas llevan tapacanto (cinta de terminación) — no van tornillos ahí.</p>` : ""}
+        ${p.herraje ? `<p class="nota">🔩 <b>Herraje que necesitás:</b> ${p.herraje}</p>` : ""}
         ${p.tip ? `<div class="paso-tip">💡 ${convAvisos(p.tip)}</div>` : ""}
-        <div style="margin-top:10px">
-          <button id="paso-ant" ${pasoArmadoActivo === 0 ? "disabled" : ""}>◀ Anterior</button>
-          <button id="paso-sig" ${pasoArmadoActivo === pasos.length - 1 ? "disabled" : ""}>Siguiente ▶</button>
+        <div style="margin-top:12px">
+          <button id="paso-ant" class="btn-paso-grande gris" ${pasoArmadoActivo === 0 ? "disabled" : ""}>◀ Anterior</button>
+          <button id="paso-sig" class="btn-paso-grande" ${pasoArmadoActivo === pasos.length - 1 ? "disabled" : ""}>Siguiente ▶</button>
         </div>
       </div>
     </div>`;
@@ -1179,11 +1204,16 @@ function aplicarResaltadoPaso() {
   if (pestanaActiva !== "armado" || !mueble) { limpiarResaltado(); return; }
   const pasos = instruccionesArmadoJS(mueble, recetaActual);
   const p = pasos[pasoArmadoActivo];
-  resaltarPiezas(p ? p.piezas : []);
+  const nombres = p ? p.piezas : [];
+  resaltarPiezas(nombres);
+  resaltarCantos(nombres);
+  enfocarPiezas(nombres);
+  pintarMarcadoresTornillo(nombres);
 }
 
 function pintarPestana() {
   const c = $("contenido");
+  $("avisos").style.display = pestanaActiva === "armado" ? "none" : "";
   if (pestanaActiva !== "armado") limpiarResaltado();
   document.querySelectorAll("#pestanas div").forEach(d =>
     d.classList.toggle("activa", d.dataset.p === pestanaActiva));
@@ -1327,10 +1357,13 @@ function render3D() {
       color: new THREE.Color(r/255,g/255,b/255) }));
     m.position.set((x+dx/2)*esc,(z+dz/2)*esc,(y+dy/2)*esc);
     m.userData.pieza = p.nombre;
+    m.userData.p = p;  // datos crudos (mm): pos/dim/cantos, para marcadores y cámara
     escena.add(m); mallas.push(m);
     const borde = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
       new THREE.LineBasicMaterial({ color: 0x555555 }));
     borde.position.copy(m.position);
+    borde.userData.pieza = p.nombre;
+    borde.userData.esBorde = true;
     escena.add(borde); mallas.push(borde);
   }
   aplicarResaltadoPaso();
@@ -1347,15 +1380,115 @@ function render3D() {
 function resaltarPiezas(nombres) {
   const activos = nombres && nombres.length;
   for (const m of mallas) {
-    if (!m.material || m.userData.pieza === undefined) continue;  // bordes/piso: saltar
+    if (!m.material || m.userData.pieza === undefined) continue;
     m.material.transparent = true;
     const match = activos && nombres.some(n => m.userData.pieza.startsWith(n));
-    m.material.opacity = !activos ? 1 : (match ? 1 : 0.15);
+    m.material.opacity = !activos ? 1 : (match ? 0.82 : 0.12);
+    m.material.depthWrite = !(activos && match);  // deja ver los tornillos "a través" de la pieza activa
   }
 }
 function limpiarResaltado() {
   for (const m of mallas) {
-    if (m.material && m.userData.pieza !== undefined) { m.material.opacity = 1; m.material.transparent = false; }
+    if (m.material && m.userData.pieza !== undefined) {
+      m.material.opacity = 1; m.material.transparent = false; m.material.depthWrite = true;
+    }
+    if (m.userData.esBorde) m.material.color.set(0x555555);
+  }
+  pintarMarcadoresTornillo([]);
+}
+
+/* ------------------------------------------------ resaltado de cantos con tapacanto */
+function resaltarCantos(nombres) {
+  const activos = nombres && nombres.length;
+  for (const m of mallas) {
+    if (!m.userData.esBorde) continue;
+    const p = mueble && mueble.piezas.find(pp => pp.nombre === m.userData.pieza);
+    const match = activos && nombres.some(n => m.userData.pieza.startsWith(n));
+    const llevaTapacanto = p && p.cantos;
+    m.material.color.set(match && llevaTapacanto ? 0xff8c1a : 0x555555);
+  }
+}
+
+/* ------------------------------------------------ cámara: enfocar piezas de un paso (D-019) */
+function bboxDePiezas(nombres) {
+  if (!mueble || !nombres || !nombres.length) return null;
+  const piezas = mueble.piezas.filter(p => nombres.some(n => p.nombre.startsWith(n)));
+  if (!piezas.length) return null;
+  let minX=Infinity,minY=Infinity,minZ=Infinity,maxX=-Infinity,maxY=-Infinity,maxZ=-Infinity;
+  for (const p of piezas) {
+    const [x,y,z] = p.pos, [dx,dy,dz] = p.dim;
+    minX=Math.min(minX,x); maxX=Math.max(maxX,x+dx);
+    minY=Math.min(minY,y); maxY=Math.max(maxY,y+dy);
+    minZ=Math.min(minZ,z); maxZ=Math.max(maxZ,z+dz);
+  }
+  return { minX,maxX,minY,maxY,minZ,maxZ,piezas };
+}
+function enfocarMuebleCompleto() {
+  if (!recetaActual) return;
+  const esc = 0.001, d = recetaActual.dimensiones;
+  centro = { x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 };
+  dist = Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1);
+}
+function enfocarPiezas(nombres) {
+  const box = bboxDePiezas(nombres);
+  if (!box) { enfocarMuebleCompleto(); return; }
+  const esc = 0.001;
+  centro = {
+    x: (box.minX+box.maxX)/2*esc,
+    y: (box.minZ+box.maxZ)/2*esc,
+    z: (box.minY+box.maxY)/2*esc,
+  };
+  const extent = Math.max(box.maxX-box.minX, box.maxZ-box.minZ, box.maxY-box.minY) * esc;
+  dist = Math.max(extent * 2.4, 0.3);
+}
+
+/* ------------------------------------------------ marcadores de tornillo (aprox. geométrica) */
+let marcadoresTornilloMeshes = [];
+function calcularMarcadoresTornillo(nombres) {
+  const box = bboxDePiezas(nombres);
+  if (!box || box.piezas.length < 2) return [];
+  const TOL = 3, puntos = [];
+  const piezas = box.piezas;
+  const contactoEnEje = (min0,max0,min1,max1) => {
+    if (Math.abs(max0-min1) <= TOL) return min1;
+    if (Math.abs(max1-min0) <= TOL) return min0;
+    return null;
+  };
+  const agregarSiSolapa = (contacto, uA0,uA1,uB0,uB1, vA0,vA1,vB0,vB1, eje) => {
+    if (contacto === null) return;
+    const uIni = Math.max(uA0,uB0), uFin = Math.min(uA1,uB1);
+    const vIni = Math.max(vA0,vB0), vFin = Math.min(vA1,vB1);
+    if (uFin - uIni < 10 || vFin - vIni < 10) return;
+    const vCentro = (vIni+vFin)/2;
+    const us = (uFin - uIni > 300) ? [uIni+50, uFin-50] : [(uIni+uFin)/2];
+    for (const u of us) {
+      if (eje === "x") puntos.push([contacto, u, vCentro]);
+      else if (eje === "y") puntos.push([u, contacto, vCentro]);
+      else puntos.push([u, vCentro, contacto]);
+    }
+  };
+  for (let i = 0; i < piezas.length; i++) {
+    for (let j = i+1; j < piezas.length; j++) {
+      const A = piezas[i], B = piezas[j];
+      const [ax,ay,az] = A.pos, [adx,ady,adz] = A.dim;
+      const [bx,by,bz] = B.pos, [bdx,bdy,bdz] = B.dim;
+      agregarSiSolapa(contactoEnEje(ax,ax+adx,bx,bx+bdx), ay,ay+ady,by,by+bdy, az,az+adz,bz,bz+bdz, "x");
+      agregarSiSolapa(contactoEnEje(ay,ay+ady,by,by+bdy), ax,ax+adx,bx,bx+bdx, az,az+adz,bz,bz+bdz, "y");
+      agregarSiSolapa(contactoEnEje(az,az+adz,bz,bz+bdz), ax,ax+adx,bx,bx+bdx, ay,ay+ady,by,by+bdy, "z");
+    }
+  }
+  return puntos;
+}
+function pintarMarcadoresTornillo(nombres) {
+  for (const mk of marcadoresTornilloMeshes) escena.remove(mk);
+  marcadoresTornilloMeshes = [];
+  if (pestanaActiva !== "armado" || !nombres || !nombres.length) return;
+  const esc = 0.001;
+  for (const [x,y,z] of calcularMarcadoresTornillo(nombres)) {
+    const esf = new THREE.Mesh(new THREE.SphereGeometry(0.013, 14, 14),
+      new THREE.MeshBasicMaterial({ color: 0xffc400 }));
+    esf.position.set(x*esc, z*esc, y*esc);
+    escena.add(esf); marcadoresTornilloMeshes.push(esf);
   }
 }
 
@@ -1606,6 +1739,20 @@ window.addEventListener("DOMContentLoaded", () => {
   $("u-cm").onclick = () => cambiarUnidad("cm");
   $("u-mm").onclick = () => cambiarUnidad("mm");
   pintarUnidad();
+
+  // Agrandar/achicar el panel inferior (más lugar para la guía de Armado)
+  let panelExpandido = localStorage.getItem("panel_expandido") === "1";
+  function pintarExpandido() {
+    $("paneles").classList.toggle("expandido", panelExpandido);
+    $("btn-expandir").textContent = panelExpandido ? "⤡ Achicar" : "⤢ Agrandar";
+  }
+  $("btn-expandir").onclick = () => {
+    panelExpandido = !panelExpandido;
+    localStorage.setItem("panel_expandido", panelExpandido ? "1" : "0");
+    pintarExpandido();
+    setTimeout(() => window.dispatchEvent(new Event("resize")), 160);
+  };
+  pintarExpandido();
 
   inyectarAyudas();
   iniciar3D();
