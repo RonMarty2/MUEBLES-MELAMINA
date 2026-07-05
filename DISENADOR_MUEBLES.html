@@ -106,7 +106,7 @@
   .colocacion-card { background: #fff; border: 1px solid #d6d3ce; border-radius: 8px;
                      padding: 10px 12px; margin: 8px 0; font-size: 12.5px; }
   .colocacion-card h4 { margin: 0 0 6px; font-size: 13.5px; }
-  .colocacion-card svg { width: 100%; max-width: 620px; height: auto; display: block; }
+  .colocacion-card svg { width: 100%; max-width: 980px; height: auto; display: block; }
   .colocacion-nota { color: #555; line-height: 1.45; margin-top: 6px; }
 </style>
 </head>
@@ -872,13 +872,30 @@ function fmtCota(mm) {
   const mmTxt = fmtMmCrudo(redondeado);
   return unidad === "cm" ? `${fmtNum(redondeado)} cm (${mmTxt})` : mmTxt;
 }
+function codigoHerraje(clave) {
+  return ({
+    corredera_rodillo_par: "H-05e",
+    corredera_par: "H-05",
+    corredera_softclose_par: "H-18",
+    bisagra: "H-13",
+    bisagra_softclose: "H-19"
+  })[clave] || "";
+}
 
 function datosBisagra(m) {
   const puertas = (m?.piezas || []).filter(p => p.nombre.startsWith("Puerta batiente"));
   if (!puertas.length) return null;
   const puerta = puertas[0];
   const alto = Math.round(puerta.dim[2]), ancho = Math.round(puerta.dim[0]);
-  return { alto, ancho, posiciones: posicionesBisagras(alto), cantidadPuertas: puertas.length };
+  const herraje = (m.herrajes || []).find(h => /bisagra/i.test(h.nombre));
+  return {
+    alto,
+    ancho,
+    posiciones: posicionesBisagras(alto),
+    cantidadPuertas: puertas.length,
+    tipo: herraje?.nombre || "Bisagra cazoleta 35 mm",
+    codigo: codigoHerraje(herraje?.clave)
+  };
 }
 
 function datosCorredera(m) {
@@ -891,85 +908,148 @@ function datosCorredera(m) {
   const ejeMueble = Math.round(lateralCaja.pos[2] + ejeCaja);
   const piso = piezas.find(p => p.nombre === "Piso cajonera") || piezas.find(p => p.nombre === "Piso");
   const pisoInterior = piso ? Math.round(piso.pos[2] + piso.dim[2]) : 0;
+  const herraje = (m.herrajes || []).find(h => /corredera/i.test(h.nombre));
   return {
     altoCaja,
     ejeCaja,
     ejeMueble,
     desdePisoInterior: Math.max(0, ejeMueble - pisoInterior),
-    largo: Math.round(lateralCaja.dim[1])
+    largo: Math.round(lateralCaja.dim[1]),
+    tipo: herraje?.nombre || "Corredera telescópica 45 mm (par)",
+    codigo: codigoHerraje(herraje?.clave)
   };
 }
 
 function svgColocacionBisagra(datos) {
-  const x = 105, y = 34, w = 72, h = 180;
+  const x = 88, y = 82, w = 96, h = 300;
   const marca = pos => y + (pos / datos.alto) * h;
   const bisagras = datos.posiciones.map((pos, i) => {
     const yy = marca(pos);
-    return `<circle cx="${x + 14}" cy="${yy}" r="8" fill="#fff" stroke="#111" stroke-width="1.5"/>
-      <circle cx="${x + 14}" cy="${yy}" r="3" fill="#111"/>
-      <line x1="${x}" y1="${yy}" x2="${x - 18}" y2="${yy}" stroke="#111" stroke-width="1.5"/>
-      <text x="${x + w + 14}" y="${yy + 4}" font-size="10" fill="#333">bisagra ${i + 1}: ${fmtCota(pos)} desde arriba</text>`;
+    return `<circle cx="${x + 24}" cy="${yy}" r="13" fill="#fff" stroke="#111" stroke-width="2"/>
+      <circle cx="${x + 24}" cy="${yy}" r="8" fill="#e5e7eb" stroke="#777"/>
+      <rect x="${x + 39}" y="${yy - 8}" width="44" height="16" rx="4" fill="#d8d8d8" stroke="#111"/>
+      <circle cx="${x + 52}" cy="${yy}" r="3" fill="#111"/><circle cx="${x + 72}" cy="${yy}" r="3" fill="#111"/>
+      <text x="${x + w + 28}" y="${yy + 4}" font-size="12" fill="#111">bisagra ${i + 1}: ${fmtCota(pos)} desde arriba</text>`;
   }).join("");
   const primera = datos.posiciones[0];
   const ultimaDesdeAbajo = datos.alto - datos.posiciones[datos.posiciones.length - 1];
-  return `<svg class="plano-bisagra" viewBox="0 0 620 260" role="img" aria-label="Plano acotado de colocación de bisagras">
-    <rect x="1" y="1" width="618" height="258" rx="8" fill="#fff" stroke="#d6d3ce"/>
-    <text x="20" y="24" font-size="14" font-weight="700" fill="#111">Bisagra cazoleta Ø35 - cara interna de la puerta</text>
+  return `<svg class="plano-bisagra" viewBox="0 0 980 460" role="img" aria-label="Plano acotado de colocación de bisagras">
+    <rect x="1" y="1" width="978" height="458" rx="8" fill="#fff" stroke="#d6d3ce"/>
+    <text x="22" y="28" font-size="18" font-weight="700" fill="#111">Bisagra cazoleta Ø35 - ${datos.tipo}${datos.codigo ? " (" + datos.codigo + ")" : ""}</text>
+    <text x="22" y="51" font-size="13" fill="#444">Puerta vista desde la CARA INTERNA. El brazo de la bisagra sale hacia el lateral/divisor del mueble.</text>
+
+    <text x="88" y="74" font-size="13" font-weight="700" fill="#111">1. Marcar la puerta</text>
     <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fafafa" stroke="#111" stroke-width="1.5"/>
     <line x1="${x}" y1="${y}" x2="${x + w}" y2="${y}" stroke="#111"/>
     <line x1="${x}" y1="${y + h}" x2="${x + w}" y2="${y + h}" stroke="#111"/>
-    <text x="${x + w/2}" y="${y - 8}" text-anchor="middle" font-size="10" fill="#444">borde superior</text>
-    <text x="${x + w/2}" y="${y + h + 18}" text-anchor="middle" font-size="10" fill="#444">borde inferior</text>
+    <text x="${x + w/2}" y="${y - 8}" text-anchor="middle" font-size="11" fill="#444">borde superior</text>
+    <text x="${x + w/2}" y="${y + h + 18}" text-anchor="middle" font-size="11" fill="#444">borde inferior</text>
     ${bisagras}
-    <line x1="66" y1="${y}" x2="66" y2="${marca(primera)}" stroke="#111"/>
-    <path d="M60 ${y} L72 ${y} M60 ${marca(primera)} L72 ${marca(primera)}" stroke="#111"/>
-    <text x="18" y="${(y + marca(primera)) / 2}" font-size="10" fill="#111" transform="rotate(-90 18 ${(y + marca(primera)) / 2})">${fmtCota(primera)}</text>
-    <line x1="66" y1="${marca(datos.posiciones[datos.posiciones.length - 1])}" x2="66" y2="${y + h}" stroke="#111"/>
-    <path d="M60 ${marca(datos.posiciones[datos.posiciones.length - 1])} L72 ${marca(datos.posiciones[datos.posiciones.length - 1])} M60 ${y + h} L72 ${y + h}" stroke="#111"/>
-    <text x="42" y="${(marca(datos.posiciones[datos.posiciones.length - 1]) + y + h) / 2}" font-size="10" fill="#111" transform="rotate(-90 42 ${(marca(datos.posiciones[datos.posiciones.length - 1]) + y + h) / 2})">${fmtCota(ultimaDesdeAbajo)}</text>
-    <circle cx="390" cy="103" r="62" fill="#f8f7f4" stroke="#111" stroke-width="1.2"/>
-    <rect x="354" y="52" width="16" height="102" fill="#fff" stroke="#111"/>
-    <circle cx="394" cy="103" r="25" fill="#fff" stroke="#111" stroke-width="1.6"/>
-    <circle cx="394" cy="103" r="17" fill="#e5e7eb" stroke="#777"/>
-    <line x1="370" y1="168" x2="394" y2="168" stroke="#111"/>
-    <line x1="370" y1="160" x2="370" y2="176" stroke="#111"/>
-    <line x1="394" y1="160" x2="394" y2="176" stroke="#111"/>
-    <text x="382" y="187" text-anchor="middle" font-size="11" fill="#111">${fmtCota(DISTANCIA_CAZOLETA_CANTO)} al canto</text>
-    <text x="390" y="37" text-anchor="middle" font-size="10" fill="#444">detalle de la cazoleta</text>
-    <path d="M448 100 L522 100 M508 88 L522 100 L508 112" fill="none" stroke="#111" stroke-width="2"/>
-    <text x="462" y="84" font-size="11" fill="#111">brazo de la bisagra</text>
-    <text x="462" y="119" font-size="11" fill="#111">apunta hacia el lateral del mueble</text>
-    <text x="220" y="226" font-size="11" fill="#444">Puertas del lado derecho: espejar este dibujo al canto contrario.</text>
-    <text x="220" y="243" font-size="11" fill="#444">Perforar Ø35 solo 12-13 mm de profundidad. No atravesar la puerta.</text>
+    <line x1="52" y1="${y}" x2="52" y2="${marca(primera)}" stroke="#111"/>
+    <path d="M44 ${y} L60 ${y} M44 ${marca(primera)} L60 ${marca(primera)}" stroke="#111"/>
+    <text x="25" y="${(y + marca(primera)) / 2}" font-size="11" fill="#111" transform="rotate(-90 25 ${(y + marca(primera)) / 2})">${fmtCota(primera)}</text>
+    <line x1="52" y1="${marca(datos.posiciones[datos.posiciones.length - 1])}" x2="52" y2="${y + h}" stroke="#111"/>
+    <path d="M44 ${marca(datos.posiciones[datos.posiciones.length - 1])} L60 ${marca(datos.posiciones[datos.posiciones.length - 1])} M44 ${y + h} L60 ${y + h}" stroke="#111"/>
+    <text x="25" y="${(marca(datos.posiciones[datos.posiciones.length - 1]) + y + h) / 2}" font-size="11" fill="#111" transform="rotate(-90 25 ${(marca(datos.posiciones[datos.posiciones.length - 1]) + y + h) / 2})">${fmtCota(ultimaDesdeAbajo)}</text>
+
+    <text x="430" y="78" font-size="13" font-weight="700" fill="#111">2. Detalle de cazoleta en la puerta</text>
+    <circle cx="510" cy="177" r="94" fill="#f8f7f4" stroke="#111" stroke-width="1.5"/>
+    <rect x="440" y="105" width="24" height="144" fill="#fff" stroke="#111" stroke-width="1.5"/>
+    <text x="452" y="96" text-anchor="middle" font-size="11" fill="#444">canto</text>
+    <circle cx="523" cy="177" r="35" fill="#fff" stroke="#111" stroke-width="2"/>
+    <circle cx="523" cy="177" r="24" fill="#e5e7eb" stroke="#777"/>
+    <circle cx="488" cy="177" r="3.5" fill="#111"/><circle cx="558" cy="177" r="3.5" fill="#111"/>
+    <line x1="464" y1="285" x2="523" y2="285" stroke="#111"/>
+    <line x1="464" y1="276" x2="464" y2="294" stroke="#111"/>
+    <line x1="523" y1="276" x2="523" y2="294" stroke="#111"/>
+    <text x="493" y="307" text-anchor="middle" font-size="12" fill="#111">${fmtCota(DISTANCIA_CAZOLETA_CANTO)} al canto</text>
+    <text x="414" y="338" font-size="12" fill="#111">Broca copa / Forstner Ø35</text>
+    <text x="414" y="357" font-size="12" fill="#111">Profundidad 12-13 mm, NO pasante</text>
+    <path d="M640 151 L760 151 L760 203 L640 203 Z" fill="#fff" stroke="#111"/>
+    <circle cx="665" cy="177" r="6" fill="#fff" stroke="#111"/><circle cx="735" cy="177" r="6" fill="#fff" stroke="#111"/>
+    <text x="700" y="142" text-anchor="middle" font-size="12" fill="#111">placa base en lateral/divisor</text>
+    <path d="M558 177 C600 177 608 177 640 177" fill="none" stroke="#111" stroke-width="4"/>
+    <path d="M612 163 L640 177 L612 191" fill="none" stroke="#111" stroke-width="2"/>
+    <text x="610" y="220" font-size="12" fill="#111">brazo apunta hacia el mueble</text>
+    <text x="640" y="247" font-size="12" fill="#111">Tornillos cortos 3,5×16 o 4×16</text>
+    <text x="640" y="266" font-size="12" fill="#111">en los 2 agujeros de la placa base</text>
+
+    <rect x="790" y="92" width="154" height="92" fill="#fff7ed" stroke="#f59e0b"/>
+    <text x="805" y="115" font-size="12" font-weight="700" fill="#111">Orden correcto</text>
+    <text x="805" y="136" font-size="11" fill="#111">1 marcar centros</text>
+    <text x="805" y="154" font-size="11" fill="#111">2 perforar cazoleta</text>
+    <text x="805" y="172" font-size="11" fill="#111">3 atornillar bisagra</text>
+    <rect x="790" y="202" width="154" height="84" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="805" y="225" font-size="12" font-weight="700" fill="#111">No hacer</text>
+    <text x="805" y="246" font-size="11" fill="#111">no atravesar la puerta</text>
+    <text x="805" y="264" font-size="11" fill="#111">no ponerla en la cara vista</text>
+
+    <text x="88" y="425" font-size="12" fill="#444">Puerta izquierda: cazoletas al canto izquierdo. Puerta derecha: espejar al canto derecho. Ajustar altura/profundidad con los tornillos de regulación de la bisagra.</text>
   </svg>`;
 }
 
 function svgColocacionCorredera(datos) {
-  const x = 110, y = 44, w = 360, h = 138;
+  const mx = 62, my = 92, mw = 392, mh = 142;
+  const cx = 62, cy = 282, cw = 392, ch = 96;
   const altoRef = Math.max(250, datos.desdePisoInterior + 90, datos.altoCaja + 80);
-  const ejeY = y + h - (datos.desdePisoInterior / altoRef) * h;
-  return `<svg class="plano-corredera" viewBox="0 0 620 250" role="img" aria-label="Plano acotado de colocación de corredera">
-    <rect x="1" y="1" width="618" height="248" rx="8" fill="#fff" stroke="#d6d3ce"/>
-    <text x="20" y="25" font-size="14" font-weight="700" fill="#111">Corredera - lateral interior del mueble</text>
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fafafa" stroke="#111" stroke-width="1.5"/>
-    <text x="${x}" y="${y + h + 20}" font-size="10" fill="#444">frente del mueble</text>
-    <text x="${x + w - 28}" y="${y + h + 20}" font-size="10" fill="#444">fondo</text>
-    <line x1="${x}" y1="${ejeY}" x2="${x + w}" y2="${ejeY}" stroke="#111" stroke-width="2"/>
-    <line x1="${x}" y1="${ejeY - 7}" x2="${x + w}" y2="${ejeY - 7}" stroke="#9ca3af" stroke-dasharray="5 5"/>
-    ${[45, 150, 255].map(dx => `<circle cx="${x + dx}" cy="${ejeY}" r="4" fill="#fff" stroke="#111" stroke-width="1.3"/>`).join("")}
-    <path d="M${x + 20} ${ejeY - 24} L${x + w - 36} ${ejeY - 24} M${x + w - 50} ${ejeY - 35} L${x + w - 36} ${ejeY - 24} L${x + w - 50} ${ejeY - 13}" fill="none" stroke="#111" stroke-width="1.6"/>
-    <text x="${x + 80}" y="${ejeY - 31}" font-size="11" fill="#111">dirección de salida del cajón</text>
-    <line x1="72" y1="${y + h}" x2="72" y2="${ejeY}" stroke="#111"/>
-    <path d="M64 ${y + h} L80 ${y + h} M64 ${ejeY} L80 ${ejeY}" stroke="#111"/>
-    <text x="38" y="${(y + h + ejeY) / 2}" font-size="10" fill="#111" transform="rotate(-90 38 ${(y + h + ejeY) / 2})">${fmtCota(datos.desdePisoInterior)} desde piso interior</text>
-    <line x1="${x}" y1="${y + h + 32}" x2="${x}" y2="${y + h + 48}" stroke="#111"/>
-    <text x="${x + 12}" y="${y + h + 45}" font-size="11" fill="#111">frente a ras: 0 mm, no retranquear</text>
-    <rect x="390" y="55" width="88" height="58" fill="#f8f7f4" stroke="#111"/>
-    <line x1="400" y1="84" x2="466" y2="84" stroke="#111" stroke-width="2"/>
-    <text x="490" y="76" font-size="11" fill="#111">en la caja del cajón:</text>
-    <text x="490" y="93" font-size="11" fill="#111">centro a ${fmtCota(datos.ejeCaja)}</text>
-    <text x="490" y="110" font-size="11" fill="#111">del canto inferior</text>
-    <text x="20" y="226" font-size="11" fill="#444">Usar tornillos 4×16 en las ranuras de la corredera. Primero presentá, probá deslizamiento y recién ahí apretá.</text>
+  const ejeMuebleY = my + mh - (datos.desdePisoInterior / altoRef) * mh;
+  const ejeCajaY = cy + ch - (datos.ejeCaja / Math.max(datos.altoCaja, 1)) * ch;
+  const screwXs = [72, 190, 322];
+  const tornillosMueble = screwXs.map((dx, i) => `<circle cx="${mx + dx}" cy="${ejeMuebleY}" r="6" fill="#fff" stroke="#111" stroke-width="1.6"/>
+    <text x="${mx + dx}" y="${ejeMuebleY + 4}" text-anchor="middle" font-size="10" fill="#111">${i + 1}</text>`).join("");
+  const tornillosCaja = screwXs.map((dx, i) => `<circle cx="${cx + dx}" cy="${ejeCajaY}" r="6" fill="#fff" stroke="#111" stroke-width="1.6"/>
+    <text x="${cx + dx}" y="${ejeCajaY + 4}" text-anchor="middle" font-size="10" fill="#111">${i + 1}</text>`).join("");
+  return `<svg class="plano-corredera" viewBox="0 0 980 430" role="img" aria-label="Plano acotado de colocación de corredera">
+    <rect x="1" y="1" width="978" height="428" rx="8" fill="#fff" stroke="#d6d3ce"/>
+    <text x="22" y="28" font-size="18" font-weight="700" fill="#111">Corredera de cajón - ${datos.tipo}${datos.codigo ? " (" + datos.codigo + ")" : ""}</text>
+    <text x="22" y="51" font-size="13" fill="#444">Largo de compra: ${fmtCota(datos.largo)}. Comprar 1 par por cajón. Tornillos: 4×16 en los agujeros/ranuras de la corredera.</text>
+
+    <text x="${mx}" y="82" font-size="13" font-weight="700" fill="#111">1. Riel fijo en el MUEBLE (cara interior del lateral)</text>
+    <rect x="${mx}" y="${my}" width="${mw}" height="${mh}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
+    <text x="${mx + 8}" y="${my + mh + 20}" font-size="11" fill="#444">FRENTE del mueble</text>
+    <text x="${mx + mw - 36}" y="${my + mh + 20}" font-size="11" fill="#444">FONDO</text>
+    <rect x="${mx + 34}" y="${ejeMuebleY - 10}" width="${mw - 68}" height="20" rx="3" fill="#d8d8d8" stroke="#111" stroke-width="1.4"/>
+    <line x1="${mx + 42}" y1="${ejeMuebleY}" x2="${mx + mw - 46}" y2="${ejeMuebleY}" stroke="#6b7280" stroke-width="3"/>
+    ${tornillosMueble}
+    <line x1="${mx - 28}" y1="${my + mh}" x2="${mx - 28}" y2="${ejeMuebleY}" stroke="#111"/>
+    <path d="M${mx - 38} ${my + mh} L${mx - 18} ${my + mh} M${mx - 38} ${ejeMuebleY} L${mx - 18} ${ejeMuebleY}" stroke="#111"/>
+    <text x="${mx - 48}" y="${(my + mh + ejeMuebleY) / 2}" font-size="11" fill="#111" transform="rotate(-90 ${mx - 48} ${(my + mh + ejeMuebleY) / 2})">${fmtCota(datos.desdePisoInterior)} desde piso interior</text>
+    <path d="M${mx + 8} ${my + mh + 34} L${mx + 8} ${my + mh + 52}" stroke="#111"/>
+    <text x="${mx + 22}" y="${my + mh + 48}" font-size="12" fill="#111">frente del riel a ras: 0 mm</text>
+    <text x="${mx + 42}" y="${ejeMuebleY - 18}" font-size="11" fill="#111">línea central del riel</text>
+
+    <text x="${cx}" y="272" font-size="13" font-weight="700" fill="#111">2. Riel móvil en la CAJA del cajón (lateral del cajón)</text>
+    <rect x="${cx}" y="${cy}" width="${cw}" height="${ch}" fill="#fff" stroke="#111" stroke-width="1.6"/>
+    <text x="${cx + 8}" y="${cy + ch + 19}" font-size="11" fill="#444">FRENTE del cajón</text>
+    <text x="${cx + cw - 36}" y="${cy + ch + 19}" font-size="11" fill="#444">FONDO</text>
+    <rect x="${cx + 34}" y="${ejeCajaY - 10}" width="${cw - 68}" height="20" rx="3" fill="#e5e7eb" stroke="#111" stroke-width="1.4"/>
+    <line x1="${cx + 42}" y1="${ejeCajaY}" x2="${cx + cw - 46}" y2="${ejeCajaY}" stroke="#6b7280" stroke-width="3"/>
+    ${tornillosCaja}
+    <line x1="${cx - 28}" y1="${cy + ch}" x2="${cx - 28}" y2="${ejeCajaY}" stroke="#111"/>
+    <path d="M${cx - 38} ${cy + ch} L${cx - 18} ${cy + ch} M${cx - 38} ${ejeCajaY} L${cx - 18} ${ejeCajaY}" stroke="#111"/>
+    <text x="${cx - 48}" y="${(cy + ch + ejeCajaY) / 2}" font-size="11" fill="#111" transform="rotate(-90 ${cx - 48} ${(cy + ch + ejeCajaY) / 2})">${fmtCota(datos.ejeCaja)} desde canto inferior</text>
+    <text x="${cx + 42}" y="${ejeCajaY - 18}" font-size="11" fill="#111">misma línea central que el riel del mueble</text>
+
+    <text x="535" y="82" font-size="13" font-weight="700" fill="#111">3. Dónde atornillar</text>
+    <rect x="535" y="96" width="400" height="120" fill="#f8f7f4" stroke="#111"/>
+    <rect x="565" y="136" width="310" height="24" rx="4" fill="#d8d8d8" stroke="#111"/>
+    ${[610,720,830].map((xx,i)=>`<circle cx="${xx}" cy="148" r="8" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="${xx}" y="152" text-anchor="middle" font-size="11">${i+1}</text>`).join("")}
+    <text x="555" y="187" font-size="12" fill="#111">Poner mínimo 2 tornillos por riel: delantero y trasero.</text>
+    <text x="555" y="205" font-size="12" fill="#111">Si la corredera trae agujero central, usarlo como tercer tornillo.</text>
+    <path d="M585 126 L585 112 L650 112" fill="none" stroke="#111"/><text x="654" y="116" font-size="11">tornillo 4×16</text>
+
+    <text x="535" y="250" font-size="13" font-weight="700" fill="#111">4. Cómo debe quedar</text>
+    <rect x="535" y="265" width="176" height="86" fill="#fff" stroke="#111"/>
+    <rect x="558" y="286" width="118" height="16" fill="#d8d8d8" stroke="#111"/>
+    <rect x="580" y="302" width="118" height="16" fill="#e5e7eb" stroke="#111"/>
+    <path d="M600 333 L670 333 M656 322 L670 333 L656 344" fill="none" stroke="#111" stroke-width="2"/>
+    <text x="730" y="285" font-size="12" fill="#111">Los dos rieles quedan enfrentados, paralelos</text>
+    <text x="730" y="305" font-size="12" fill="#111">y a la misma altura. El cajón sale hacia el frente.</text>
+    <text x="730" y="325" font-size="12" fill="#111">Primero presentá, probá que deslice, recién ahí apretá.</text>
+
+    <rect x="535" y="366" width="400" height="42" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="552" y="392" font-size="12" font-weight="700" fill="#111">NO:</text>
+    <text x="584" y="392" font-size="12" fill="#111">no inclinar el riel, no dejar uno más alto que el otro, no retranquear el frente.</text>
   </svg>`;
 }
 
@@ -982,7 +1062,7 @@ function tarjetasColocacionHerrajes(texto, m) {
     if (datos) html += `<div class="colocacion-card">
       <h4>Plano acotado de colocación - bisagras</h4>
       ${svgColocacionBisagra(datos)}
-      <div class="colocacion-nota">Comprá ${datos.posiciones.length * datos.cantidadPuertas} bisagra(s) cazoleta Ø35. Para marcar: cinta métrica, lápiz y escuadra; para perforar: broca copa/Forstner Ø35 con tope de profundidad.</div>
+      <div class="colocacion-nota">Comprá ${datos.posiciones.length * datos.cantidadPuertas} bisagra(s) cazoleta Ø35. El plano muestra cazoleta, brazo, placa base, tornillos y lado de apertura. Para marcar: cinta métrica, lápiz y escuadra; para perforar: broca copa/Forstner Ø35 con tope de profundidad.</div>
     </div>`;
   }
   if (/corredera/.test(t)) {
@@ -990,7 +1070,7 @@ function tarjetasColocacionHerrajes(texto, m) {
     if (datos) html += `<div class="colocacion-card">
       <h4>Plano acotado de colocación - correderas</h4>
       ${svgColocacionCorredera(datos)}
-      <div class="colocacion-nota">Comprá un par de correderas por cajón, de ${fmtCota(datos.largo)} de largo. Para instalar: cinta métrica, lápiz, escuadra, broca Ø2 mm y punta PH2.</div>
+      <div class="colocacion-nota">Comprá un par de correderas por cajón, de ${fmtCota(datos.largo)} de largo. El plano separa riel fijo del mueble, riel móvil del cajón y puntos de tornillo. Para instalar: cinta métrica, lápiz, escuadra, broca Ø2 mm y punta PH2.</div>
     </div>`;
   }
   return html;
@@ -1987,7 +2067,15 @@ function correrTests() {
   ok("glosario: reconoce confirmat", tarjetasHerrajes("Confirmat / excéntrico + clavos").includes("broca escalonada"));
   ok("glosario: reconoce corredera", tarjetasHerrajes("Corredera (según calidad)", m).includes("Corredera telescópica para cajón"));
   ok("plano: corredera acotada", tarjetasHerrajes("Corredera (según calidad)", m).includes("plano-corredera"));
+  ok("plano: corredera muestra riel fijo/móvil y tornillos",
+     tarjetasHerrajes("Corredera (según calidad)", m).includes("Riel fijo en el MUEBLE")
+     && tarjetasHerrajes("Corredera (según calidad)", m).includes("Riel móvil en la CAJA")
+     && tarjetasHerrajes("Corredera (según calidad)", m).includes("Dónde atornillar")
+     && tarjetasHerrajes("Corredera (según calidad)", m).includes("tornillo 4×16"));
   ok("plano: bisagra acotada", tarjetasHerrajes("Bisagra cazoleta", mr).includes("plano-bisagra"));
+  ok("plano: bisagra muestra cazoleta, placa base y no pasante",
+     tarjetasHerrajes("Bisagra cazoleta", mr).includes("placa base")
+     && tarjetasHerrajes("Bisagra cazoleta", mr).includes("NO pasante"));
   ok("glosario: no repite herraje si aparece dos veces", (tarjetasHerrajes("Tornillo 4×30 + Tornillo 4×30").match(/herraje-card/g) || []).length === 1);
   ok("glosario: sin texto no rompe", tarjetasHerrajes("") === "");
 

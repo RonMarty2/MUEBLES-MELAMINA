@@ -385,6 +385,10 @@ Formato de cada entrada:
   y textos de corredera más explícitos. JS dibuja los planos y tiene pruebas de paridad para
   bisagras/correderas. `DISENADOR_MUEBLES.html` debe reconstruirse siempre que cambie
   `app_fuente.html`.
+- **Ajuste posterior:** el primer SVG resultó demasiado esquemático. Se amplió el formato a
+  página ancha tipo manual: corredera separada en riel fijo del mueble y riel móvil del cajón,
+  puntos de tornillo 4×16 numerados, frente/fondo, advertencias de no retranquear/no inclinar;
+  bisagra con cazoleta, brazo, placa base, tornillos, profundidad y errores comunes.
 
 ---
 
