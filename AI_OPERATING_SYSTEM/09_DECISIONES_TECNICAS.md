@@ -312,6 +312,28 @@ Formato de cada entrada:
   instrucciones no tiene contraparte visual 3D y no se tocó — sigue siendo la versión de
   texto para quien use el CLI o abra el proyecto generado.
 
+## D-020 — Glosario visual de herrajes (qué tornillo es, con qué broca)
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** viendo "Tornillo 4×30" en la guía de armado, el usuario no entendió la
+  notación (pensó que podía ser un error tipográfico por "4×3"), preguntó si era "cualquier
+  tornillo", y si hacía falta un agujero guía y con qué broca — dudas legítimas de alguien
+  sin experiencia en ferretería.
+- **Decisión:** cada vez que un paso de armado menciona un herraje, la app busca
+  coincidencias en un **glosario visual** (`GLOSARIO_HERRAJES`, por patrón de texto) y
+  muestra una tarjeta con: nombre completo del herraje, una **ilustración SVG** (tornillo
+  con diámetro y largo acotados, o un ícono de broca para herrajes sin medida simple como
+  bisagras/confirmat/excéntrico), el **tamaño de broca exacto para el agujero guía**, y una
+  nota aclarando qué lo hace distinto de un herraje "genérico" de ferretería.
+- **Cobertura inicial:** tornillo aglomerado 4×30 y 4×16, confirmat 7×50, herraje
+  excéntrico + espiga, bisagra cazoleta 35 mm, tarugo Ø8, clavo 1½". Ampliable agregando
+  entradas al arreglo `GLOSARIO_HERRAJES` en `app_fuente.html`.
+- **Descartada:** imágenes reales (fotos) de cada herraje — requeriría archivos externos,
+  rompiendo la Decisión D-010 (un solo archivo autocontenido, sin depender de assets).
+  Un dibujo SVG generado en código cumple el mismo propósito ilustrativo sin ese costo.
+- **Consecuencias:** vive solo en la app (JS); no tiene contraparte en el generador Python
+  de instrucciones (que es texto plano para el CLI).
+
 ---
 
 ## Plantilla para nuevas decisiones
