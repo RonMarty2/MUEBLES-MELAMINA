@@ -18,6 +18,7 @@ import math
 from .modelos import Pieza, Herraje, Perforacion, Mueble
 from .validador_escritorio import espesor_tapa, vano_libre
 from .uniones import herraje_union
+from .herrajes_calidad import corredera as corredera_calidad, union_sugerida
 
 RETRANQUEO_FRONTAL = 50      # las patas/paneles entran 50 mm respecto del frente
 ALTURA_BANDEJA_CPU = 100     # M-06
@@ -52,11 +53,18 @@ def despiece_escritorio(receta):
 
     mat = f"Melamina {e}mm {color}"
     mat_fondo = f"Fibrofácil {ef}mm"
+    mat_crudo = f"Aglomerado crudo {e}mm"  # capa oculta de la tapa doble (no se ve)
+    nivel = receta["calidad"]["nivel"]
 
     mueble = Mueble(nombre=receta["nombre"], receta=receta)
     piezas, herrajes, perfs, avisos = (
         mueble.piezas, mueble.herrajes, mueble.perforaciones, mueble.avisos,
     )
+
+    # Nivel premium sugiere unión excéntrica aunque el usuario haya dejado confirmat.
+    tipo_union, aviso_union = union_sugerida(nivel, receta["uniones"]["tipo"])
+    if aviso_union:
+        avisos.append(aviso_union)
 
     confirmats = 0
     escuadras_mm = 0          # mm de unión oculta que llevan escuadras (H-11)
@@ -68,17 +76,20 @@ def despiece_escritorio(receta):
 
     # ------------------------------------------------------------------ Tapa
     if receta["tapa"]["tipo"] == "doble_18":
-        piezas.append(Pieza("Tapa capa inferior", A, P, 18, mat,
+        # Capa de abajo en aglomerado CRUDO (no se ve, es más barato) y solo la
+        # capa de arriba lleva melamina decorativa + tapacanto visible.
+        piezas.append(Pieza("Tapa capa inferior (oculta)", A, P, 18, mat_crudo,
                             (0, 0, H - 36), (A, P, 18),
-                            notas="Se encola y atornilla desde abajo a la capa superior"))
-        piezas.append(Pieza("Tapa capa superior", A, P, 18, mat,
+                            notas="Aglomerado crudo: va escondida abajo, no necesita ser decorativa"))
+        piezas.append(Pieza("Tapa capa superior (visible)", A, P, 18, mat,
                             (0, 0, H - 18), (A, P, 18),
-                            cantos="4 cantos visibles (banda de 2 mm, doble corrida)"))
-        tapacanto_grueso_mm += 2 * (2 * (A + P))
+                            cantos="4 cantos visibles (banda de 2 mm)"))
+        tapacanto_grueso_mm += 2 * (A + P)  # solo la capa visible lleva tapacanto
         avisos.append(
-            "La tapa doble de 18 mm se arma encolando las dos placas y atornillando "
-            "desde abajo con tornillos 4×30 en grilla de ~300 mm (la capa de abajo "
-            "puede ser melamina económica o la misma)."
+            "Tapa doble: la capa de arriba es melamina decorativa (la que ves) y la de "
+            "abajo es aglomerado crudo más barato (va escondida). Se encolan y atornillan "
+            "desde abajo con 4×30 en grilla de ~300 mm. Así tenés una tapa rígida de 36 mm "
+            "pagando una sola cara decorativa."
         )
         tornillos_frente += math.ceil(A / 300) * math.ceil(P / 300)
     else:
@@ -288,14 +299,12 @@ def despiece_escritorio(receta):
         avisos.append("Mueble espejado: cajonera a la izquierda, soporte CPU a la derecha.")
 
     # ------------------------------------------------- Herrajes (07)
-    herrajes.append(herraje_union(receta["uniones"]["tipo"], confirmats))
+    herrajes.append(herraje_union(tipo_union, confirmats))
     herrajes.append(Herraje("H-04", "Tornillo aglomerado 4×30",
                             tornillos_frente, "unidades",
                             "fijar frentes de cajón desde adentro y laminar tapa doble"))
     if con_cajonera:
-        herrajes.append(Herraje("H-05", f"Corredera telescópica {largo_corr} mm (par)",
-                                caj["cantidad_cajones"], "pares",
-                                "un par por cajón (R-08); incluye tornillos 4×16"))
+        herrajes.append(corredera_calidad(nivel, largo_corr, caj["cantidad_cajones"]))
     if pas["cantidad"] > 0:
         herrajes.append(Herraje("H-06", f"Grommet pasacables Ø{pas['diametro']}",
                                 pas["cantidad"], "unidades",

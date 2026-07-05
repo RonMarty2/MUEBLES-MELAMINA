@@ -26,10 +26,13 @@ COLORES = {
 COLOR_DEFECTO = (200, 190, 170)
 COLOR_FONDO = (170, 140, 105)
 COLOR_METAL = (190, 195, 200)
+COLOR_CRUDO = (198, 180, 150)  # aglomerado crudo: marrón claro sin revestir
 
 
 def _color_para(material):
     m = material.lower()
+    if "crudo" in m or "aglomerado" in m:
+        return COLOR_CRUDO
     if "fibrof" in m:
         return COLOR_FONDO
     if "tubo" in m or "cromado" in m:

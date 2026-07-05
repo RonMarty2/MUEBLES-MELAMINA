@@ -24,6 +24,9 @@
   "uniones": {
     "tipo": "confirmat"
   },
+  "calidad": {
+    "nivel": "estandar"
+  },
   "estante_inferior": {
     "incluir": false
   }

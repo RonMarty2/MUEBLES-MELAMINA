@@ -10,8 +10,8 @@
 # Cada pieza es un componente con material asignado: OpenCutList los lee tal cual.
 
 PIEZAS = [
-  { nombre: "Tapa capa inferior", pos: [0, 0, 714], dim: [1600, 700, 18], material: "Melamina 18mm Negro", color: [45, 45, 48] },
-  { nombre: "Tapa capa superior", pos: [0, 0, 732], dim: [1600, 700, 18], material: "Melamina 18mm Negro", color: [45, 45, 48] },
+  { nombre: "Tapa capa inferior (oculta)", pos: [0, 0, 714], dim: [1600, 700, 18], material: "Aglomerado crudo 18mm", color: [198, 180, 150] },
+  { nombre: "Tapa capa superior (visible)", pos: [0, 0, 732], dim: [1600, 700, 18], material: "Melamina 18mm Negro", color: [45, 45, 48] },
   { nombre: "Lateral izquierdo (pata panel)", pos: [0, 50, 0], dim: [18, 650, 714], material: "Melamina 18mm Negro", color: [45, 45, 48] },
   { nombre: "Parante soporte CPU", pos: [268, 50, 0], dim: [18, 650, 714], material: "Melamina 18mm Negro", color: [45, 45, 48] },
   { nombre: "Bandeja CPU", pos: [18, 50, 100], dim: [250, 650, 18], material: "Melamina 18mm Negro", color: [45, 45, 48] },

@@ -24,26 +24,48 @@ MAPA_PRECIOS = {
     "H-15": "tirador",
     "H-16": "rinconera",
     "H-17": "herraje_excentrico",
+    "H-05e": "corredera_rodillo_par",
+    "H-18": "corredera_softclose_par",
+    "H-19": "bisagra_softclose",
 }
 
 AREA_PLACA_M2 = 2.6 * 1.83  # placa comercial 2600×1830 (M-10)
 
 
-def _estimar_placas(mueble, factor_desperdicio):
-    """Placas necesarias por espesor: área de piezas × desperdicio / placa.
+# categoría de placa -> (clave de precio, etiqueta legible)
+CATEGORIAS_PLACA = {
+    "melamina_18": ("placa_melamina_18", "Placa melamina 18 mm"),
+    "crudo_18": ("placa_crudo_18", "Placa aglomerado crudo 18 mm (capa oculta)"),
+    "fondo_3": ("placa_fondo_3", "Placa fibrofácil 3 mm"),
+}
 
-    Es una ESTIMACIÓN para presupuestar; el diagrama exacto lo da OpenCutList.
+
+def _categoria_placa(pieza):
+    """Clasifica una pieza en una categoría comprable, o None si no es placa."""
+    m = pieza.material.lower()
+    if "fibrof" in m:
+        return "fondo_3"
+    if "crudo" in m or "aglomerado" in m:
+        return "crudo_18"
+    if "melamina" in m:
+        return "melamina_18"
+    return None  # herrajes tipo barral (tubo) no son piezas de placa
+
+
+def _estimar_placas(mueble, factor_desperdicio):
+    """Placas necesarias por CATEGORÍA de material (melamina, crudo, fondo):
+    área de piezas × desperdicio / placa. Estimación para presupuestar.
     """
     areas = {}
     for p in mueble.piezas:
-        m = p.material.lower()
-        if "melamina" not in m and "fibrof" not in m:
-            continue  # herrajes tipo barral (tubo) no son piezas de placa
-        areas.setdefault(p.espesor, 0.0)
-        areas[p.espesor] += (p.largo / 1000) * (p.ancho / 1000)
+        cat = _categoria_placa(p)
+        if cat is None:
+            continue
+        areas.setdefault(cat, 0.0)
+        areas[cat] += (p.largo / 1000) * (p.ancho / 1000)
     placas = {}
-    for espesor, area in areas.items():
-        placas[espesor] = max(1, math.ceil(area * factor_desperdicio / AREA_PLACA_M2))
+    for cat, area in areas.items():
+        placas[cat] = max(1, math.ceil(area * factor_desperdicio / AREA_PLACA_M2))
     return areas, placas
 
 
@@ -56,15 +78,15 @@ def generar_compras_y_presupuesto(mueble, precios, ruta_compras, ruta_presupuest
     total = 0.0
     faltantes = []
 
-    # --- Placas -------------------------------------------------------------
-    for espesor, cant in sorted(placas.items(), reverse=True):
-        clave = "placa_melamina_18" if espesor >= 15 else "placa_fondo_3"
+    # --- Placas (por categoría: melamina, crudo, fondo) ---------------------
+    orden = ["melamina_18", "crudo_18", "fondo_3"]
+    for cat in sorted(placas, key=lambda c: orden.index(c) if c in orden else 99):
+        cant = placas[cat]
+        clave, nombre = CATEGORIAS_PLACA[cat]
         item = precios.get(clave, {})
         precio = item.get("precio")
-        nombre = (f"Placa melamina {espesor} mm" if espesor >= 15
-                  else f"Placa fibrofácil {espesor} mm")
         costo = precio * cant if precio is not None else None
-        detalle = (f"{areas[espesor]:.2f} m² de piezas + {int((factor - 1) * 100)}% "
+        detalle = (f"{areas[cat]:.2f} m² de piezas + {int((factor - 1) * 100)}% "
                    "de desperdicio estimado (el diagrama exacto lo da OpenCutList)")
         filas.append((nombre, f"{cant} placa(s) {item.get('unidad_venta', '')}", detalle, costo))
         if costo is None:

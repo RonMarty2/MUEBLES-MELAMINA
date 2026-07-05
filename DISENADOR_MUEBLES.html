@@ -59,6 +59,33 @@
                          border-radius: 4px; text-align: right; }
   #resultado-tests { padding: 20px; font-family: monospace; white-space: pre-wrap; }
   input[type=file] { display: none; }
+  #sel-unidad { display: inline-flex; border-radius: 6px; overflow: hidden; }
+  #sel-unidad button { background: #4b5563; border-radius: 0; padding: 7px 10px; }
+  #sel-unidad button.activa { background: #22c55e; }
+  .explica { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+             padding: 8px 12px; border-radius: 8px; font-size: 12.5px; margin-bottom: 10px;
+             line-height: 1.5; }
+  .ayuda-btn { display: inline-flex; align-items: center; justify-content: center;
+               width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; color: #fff;
+               font-size: 11px; cursor: pointer; margin-left: 5px; vertical-align: middle;
+               user-select: none; }
+  .ayuda-txt { display: none; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f;
+               padding: 6px 9px; border-radius: 6px; font-size: 12px; margin: 4px 0 2px;
+               line-height: 1.45; }
+  .ayuda-txt.abierta { display: block; }
+  .armado-cols { display: flex; gap: 14px; align-items: flex-start; }
+  .armado-lista { width: 280px; flex-shrink: 0; }
+  .paso-item { padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12.5px;
+               display: flex; align-items: center; gap: 7px; margin-bottom: 2px; }
+  .paso-item:hover { background: #f0efec; }
+  .paso-item.activo { background: #dbeafe; font-weight: 600; }
+  .paso-num { display: inline-flex; align-items: center; justify-content: center;
+              width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; color: #fff;
+              font-size: 11px; flex-shrink: 0; }
+  .armado-detalle { flex: 1; }
+  .armado-detalle h3 { margin: 0 0 6px; font-size: 15px; }
+  .paso-tip { background: #fef3c7; border: 1px solid #f59e0b; color: #7c4a03;
+              padding: 6px 10px; border-radius: 6px; font-size: 12.5px; margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -69,6 +96,9 @@
     <button id="ia-boton" class="gris">Pedir a la IA</button>
   </div>
   <div class="botones">
+    <span id="sel-unidad" title="Cambiar unidad de medida">
+      <button id="u-cm">cm</button><button id="u-mm">mm</button>
+    </span>
     <button id="btn-csv">⬇ Cortes CSV</button>
     <button id="btn-rb">⬇ SketchUp</button>
     <button id="btn-guardar" class="gris">💾 Guardar</button>
@@ -146,8 +176,14 @@
         <div class="fila"><input type="range" id="esc-elev-prof" min="200" max="350" step="10">
         <input type="number" id="esc-elev-prof-n" min="200" max="350"></div></div>
 
-      <h2>Uniones estructurales</h2>
-      <div class="campo"><label>Tipo</label>
+      <h2>Calidad y durabilidad</h2>
+      <div class="campo"><label>Nivel de herrajes</label>
+        <select id="esc-calidad">
+          <option value="economico">Económico (correderas de rodillo)</option>
+          <option value="estandar" selected>Estándar (telescópicas)</option>
+          <option value="premium">Premium (soft-close, no se afloja)</option>
+        </select></div>
+      <div class="campo"><label>Uniones estructurales</label>
         <select id="esc-uniones">
           <option value="confirmat">Tornillo confirmat (más económico)</option>
           <option value="excentrica">Excéntrica/cam-lock (si vas a mover el mueble)</option>
@@ -196,8 +232,14 @@
       <h2>Extras</h2>
       <div class="campo"><label><input type="checkbox" id="rop-estante-inf"> Estante inferior (zapatos)</label></div>
 
-      <h2>Uniones estructurales</h2>
-      <div class="campo"><label>Tipo</label>
+      <h2>Calidad y durabilidad</h2>
+      <div class="campo"><label>Nivel de herrajes</label>
+        <select id="rop-calidad">
+          <option value="economico">Económico (correderas de rodillo)</option>
+          <option value="estandar" selected>Estándar (telescópicas)</option>
+          <option value="premium">Premium (soft-close, bisagras que no se descuelgan)</option>
+        </select></div>
+      <div class="campo"><label>Uniones estructurales</label>
         <select id="rop-uniones">
           <option value="confirmat">Tornillo confirmat (más económico)</option>
           <option value="excentrica">Excéntrica/cam-lock (si vas a mover el mueble)</option>
@@ -213,6 +255,7 @@
 
 <div id="paneles">
   <div id="pestanas">
+    <div data-p="armado">🔧 Armado</div>
     <div data-p="cortes" class="activa">📏 Cortes</div>
     <div data-p="compras">🛒 Compras</div>
     <div data-p="presupuesto">💰 Presupuesto</div>
@@ -246,15 +289,17 @@ const COLORES = { blanco:[245,245,240], negro:[45,45,48], gris:[150,150,150],
   cedro:[165,115,80], wengue:[75,55,45] };
 const COLOR_FONDO_MDF = [170,140,105];
 const COLOR_METAL = [190,195,200];
+const COLOR_CRUDO = [198,180,150];
 
 const PRECIOS_DEFECTO = {
   moneda: "$",
-  placa_melamina_18: 200, placa_fondo_3: 60,
+  placa_melamina_18: 200, placa_crudo_18: 130, placa_fondo_3: 60,
   confirmat_7x50_caja50: 8, tornillo_4x30_caja100: 6, clavos_caja100: 3,
   corredera_par: 12, grommet: 4, tapacanto_045_m: 0.8, tapacanto_2_m: 2.5,
   regaton: 1.5, escuadra: 1, servicio_corte_placa: 15, desperdicio_pct: 25,
   bisagra: 3, riel_corredizo_juego: 25, tirador: 2, barral_juego: 15, rinconera: 0.8,
   herraje_excentrico: 1.2,
+  corredera_rodillo_par: 6, corredera_softclose_par: 22, bisagra_softclose: 5,
 };
 const ETIQUETAS_PRECIO = {
   placa_melamina_18: "Placa melamina 18 mm (2600×1830)",
@@ -276,10 +321,15 @@ const ETIQUETAS_PRECIO = {
   barral_juego: "Barral + soportes (juego)",
   rinconera: "Rinconera/taco de estante",
   herraje_excentrico: "Herraje excéntrico (cam-lock) + espiga",
+  placa_crudo_18: "Placa aglomerado crudo 18 mm (capa oculta)",
+  corredera_rodillo_par: "Corredera de rodillo (par, económica)",
+  corredera_softclose_par: "Corredera soft-close (par, premium)",
+  bisagra_softclose: "Bisagra soft-close (premium)",
 };
 
 function colorPara(material) {
   const m = material.toLowerCase();
+  if (m.includes("crudo") || m.includes("aglomerado")) return COLOR_CRUDO;
   if (m.includes("fibrof")) return COLOR_FONDO_MDF;
   if (m.includes("tubo") || m.includes("cromado")) return COLOR_METAL;
   for (const [n, rgb] of Object.entries(COLORES)) if (m.includes(n)) return rgb;
@@ -299,6 +349,30 @@ function herrajeUnion(tipoUnion, cantidad) {                                    
              paraQue: "uniones estructurales, no se afloja al mover el mueble (R-26)" };
   return { clave: "confirmat_7x50_caja50", nombre: "Confirmat 7×50", cant: cantidad,
            porVenta: 50, unidad: "unid.", paraQue: "uniones estructurales (R-09)" };
+}
+
+/* Calidad de herrajes (D-018): mismo criterio que nucleo/herrajes_calidad.py */
+function correderaCalidad(nivel, largo, cant) {
+  if (nivel === "economico")
+    return { clave: "corredera_rodillo_par", nombre: `Corredera de rodillo ${largo} mm (par, media extensión)`,
+             cant, porVenta: 1, unidad: "pares", paraQue: "económica; se desgasta y el cajón baila con el tiempo" };
+  if (nivel === "premium")
+    return { clave: "corredera_softclose_par", nombre: `Corredera telescópica soft-close ${largo} mm (par, acero 40 kg)`,
+             cant, porVenta: 1, unidad: "pares", paraQue: "extracción total + cierre suave; no se afloja ni baila, dura años (R-08)" };
+  return { clave: "corredera_par", nombre: `Corredera telescópica ${largo} mm (par, extracción total)`,
+           cant, porVenta: 1, unidad: "pares", paraQue: "un par por cajón (R-08)" };
+}
+function bisagraCalidad(nivel, cant) {
+  if (nivel === "premium")
+    return { clave: "bisagra_softclose", nombre: "Bisagra cazoleta 35 mm con cierre suave (soft-close)",
+             cant, porVenta: 1, unidad: "unid.", paraQue: "cierra sola sin golpe; no se descuelga con el uso (R-22)" };
+  return { clave: "bisagra", nombre: "Bisagra cazoleta 35 mm", cant, porVenta: 1, unidad: "unid.",
+           paraQue: "cantidad según el alto de la puerta (R-22)" };
+}
+function unionSugerida(nivel, tipoElegido) {                                              // R-26/D-018
+  if (nivel === "premium" && tipoElegido === "confirmat")
+    return ["excentrica", "Nivel premium: se usan uniones excéntricas (cam-lock) en vez de tornillo confirmat, porque no se aflojan al mover el mueble (R-26/D-018)."];
+  return [tipoElegido, null];
 }
 const LARGOS_CORREDERA = [250, 300, 350, 400, 450, 500, 550, 600];
 
@@ -351,9 +425,14 @@ function despieceEscritorio(r, tapaTipo) {
   const e = 18, ef = 3, t = espesorTapa(tapaTipo);
   const altoApoyo = H - t, profPanel = P - RETRANQUEO;
   const mat = `Melamina 18mm ${r.material.color}`, matFondo = "Fibrofácil 3mm";
+  const matCrudo = "Aglomerado crudo 18mm";
+  const nivel = r.calidad.nivel;
   const piezas = [], perfs = [], avisos = [];
   let confirmats = 0, escuadrasMm = 0, clavos = 0, tcFino = 0, tcGrueso = 0,
       regatones = 0, torn30 = 0, largoCorr = 0;
+
+  const [tipoUnion, avisoUnion] = unionSugerida(nivel, r.uniones.tipo);
+  if (avisoUnion) avisos.push(avisoUnion);
 
   const pieza = (nombre, cortA, cortB, esp, material, pos, dim, cantos = "", notas = "") => {
     const [largo, ancho] = cortA >= cortB ? [cortA, cortB] : [cortB, cortA];
@@ -361,11 +440,11 @@ function despieceEscritorio(r, tapaTipo) {
   };
 
   if (tapaTipo === "doble_18") {
-    pieza("Tapa capa inferior", A, P, 18, mat, [0,0,H-36], [A,P,18], "", "Encolada y atornillada a la superior");
-    pieza("Tapa capa superior", A, P, 18, mat, [0,0,H-18], [A,P,18], "4 cantos (banda 2 mm doble)");
-    tcGrueso += 2 * 2 * (A + P);
+    pieza("Tapa capa inferior (oculta)", A, P, 18, matCrudo, [0,0,H-36], [A,P,18], "", "Aglomerado crudo: va escondida abajo, no necesita ser decorativa");
+    pieza("Tapa capa superior (visible)", A, P, 18, mat, [0,0,H-18], [A,P,18], "4 cantos (banda 2 mm)");
+    tcGrueso += 2 * (A + P);
     torn30 += Math.ceil(A/300) * Math.ceil(P/300);
-    avisos.push("Tapa doble: encolar las dos placas y atornillar desde abajo con 4×30 en grilla de ~300 mm.");
+    avisos.push("Tapa doble: la capa de arriba es melamina decorativa (la que ves) y la de abajo es aglomerado crudo más barato (escondido). Tapa rígida de 36 mm pagando una sola cara decorativa.");
   } else {
     pieza("Tapa", A, P, t, mat, [0,0,H-t], [A,P,t], "4 cantos (banda 2 mm)");
     tcGrueso += 2 * (A + P);
@@ -476,10 +555,10 @@ function despieceEscritorio(r, tapaTipo) {
   }
 
   const herrajes = [
-    herrajeUnion(r.uniones.tipo, confirmats),
+    herrajeUnion(tipoUnion, confirmats),
     { clave: "tornillo_4x30_caja100", nombre: "Tornillo 4×30", cant: torn30, porVenta: 100, unidad: "unid.", paraQue: "frentes de cajón y tapa doble (H-04)" },
   ];
-  if (conCaj) herrajes.push({ clave: "corredera_par", nombre: `Corredera telescópica ${largoCorr} mm`, cant: caj.cantidad_cajones, porVenta: 1, unidad: "pares", paraQue: "un par por cajón (R-08)" });
+  if (conCaj) herrajes.push(correderaCalidad(nivel, largoCorr, caj.cantidad_cajones));
   if (pasN > 0) herrajes.push({ clave: "grommet", nombre: `Grommet Ø${pasD}`, cant: pasN, porVenta: 1, unidad: "unid.", paraQue: "terminación pasacables (R-16)" });
   herrajes.push(
     { clave: "clavos_caja100", nombre: "Clavos 1½\"", cant: clavos, porVenta: 100, unidad: "unid.", paraQue: "fijar fondos de 3 mm (R-10)" },
@@ -532,11 +611,15 @@ function despieceRopero(r) {
   const d = r.dimensiones, A = d.ancho, P = d.profundidad, H = d.alto;
   const e = 18, ef = 3, color = r.material.color;
   const mat = `Melamina 18mm ${color}`, matFondo = "Fibrofácil 3mm";
+  const nivel = r.calidad.nivel;
   const altoEstructura = H - ZOCALO, altoInterior = altoEstructura - 2*e;
   const interiorAncho = A - 2*e;
 
   const piezas = [], perfs = [], avisos = [];
   let confirmats = 0, clavos = 0, tcFino = 0, bisagras = 0, rinconeras = 4;
+
+  const [tipoUnion, avisoUnion] = unionSugerida(nivel, r.uniones.tipo);
+  if (avisoUnion) avisos.push(avisoUnion);
 
   const pieza = (nombre, cortA, cortB, esp, material, pos, dim, cantos = "", notas = "") => {
     const [largo, ancho] = cortA >= cortB ? [cortA, cortB] : [cortB, cortA];
@@ -625,7 +708,7 @@ function despieceRopero(r) {
     }
     const nBis = altoHoja <= 1500 ? 2 : (altoHoja <= 2100 ? 3 : 4);
     bisagras = n * nBis;
-    herrajes.push({ clave: "bisagra", nombre: "Bisagra cazoleta 35 mm", cant: bisagras, porVenta: 1, unidad: "unid.", paraQue: `${nBis} por puerta según su alto (R-22)` });
+    herrajes.push(bisagraCalidad(nivel, bisagras));
     herrajes.push({ clave: "tirador", nombre: "Tirador", cant: n, porVenta: 1, unidad: "unid.", paraQue: "uno por puerta" });
     avisos.push(`${n} puertas batientes de ${anchoHoja}×${altoHoja} mm, ${nBis} bisagras c/u (R-21/R-22).`);
   } else if (puertas.tipo === "corrediza") {
@@ -646,11 +729,11 @@ function despieceRopero(r) {
   }
 
   if (caj.incluir) {
-    herrajes.push({ clave: "corredera_par", nombre: `Corredera telescópica ${elegirCorredera(P-e-20)} mm`, cant: caj.cantidad_cajones, porVenta: 1, unidad: "pares", paraQue: "un par por cajón (R-08)" });
+    herrajes.push(correderaCalidad(nivel, elegirCorredera(P-e-20), caj.cantidad_cajones));
     herrajes.push({ clave: "tirador", nombre: "Tirador", cant: caj.cantidad_cajones, porVenta: 1, unidad: "unid.", paraQue: "uno por frente de cajón" });
   }
 
-  herrajes.unshift(herrajeUnion(r.uniones.tipo, confirmats));
+  herrajes.unshift(herrajeUnion(tipoUnion, confirmats));
   herrajes.push({ clave: "clavos_caja100", nombre: "Clavos 1½\"", cant: clavos, porVenta: 100, unidad: "unid.", paraQue: "fijar el fondo (R-10)" });
   herrajes.push({ clave: "tapacanto_045_m", nombre: "Tapacanto PVC 0,45 mm", cant: Math.ceil(tcFino*1.1/1000*10)/10, porVenta: 1, unidad: "m", paraQue: "cantos visibles (R-11)" });
   herrajes.push({ clave: "rinconera", nombre: "Rinconera/taco de estante", cant: rinconeras, porVenta: 1, unidad: "unid.", paraQue: "sostener el techo/estante superior" });
@@ -659,22 +742,36 @@ function despieceRopero(r) {
 }
 
 /* ===================================================================== COMPRAS/PRESUPUESTO */
+const CATEGORIAS_PLACA = {
+  melamina_18: ["placa_melamina_18", "Placa melamina 18 mm"],
+  crudo_18: ["placa_crudo_18", "Placa aglomerado crudo 18 mm (capa oculta)"],
+  fondo_3: ["placa_fondo_3", "Placa fibrofácil 3 mm"],
+};
+function categoriaPlaca(material) {
+  const m = material.toLowerCase();
+  if (m.includes("fibrof")) return "fondo_3";
+  if (m.includes("crudo") || m.includes("aglomerado")) return "crudo_18";
+  if (m.includes("melamina")) return "melamina_18";
+  return null; // barral (tubo) no es placa
+}
+
 function presupuestar(m, precios) {
   const filas = [];
   const areas = {};
   for (const p of m.piezas) {
-    const mat = p.material.toLowerCase();
-    if (!mat.includes("melamina") && !mat.includes("fibrof")) continue; // barral: no es placa
-    areas[p.espesor] = (areas[p.espesor] || 0) + (p.largo/1000)*(p.ancho/1000);
+    const cat = categoriaPlaca(p.material);
+    if (!cat) continue;
+    areas[cat] = (areas[cat] || 0) + (p.largo/1000)*(p.ancho/1000);
   }
   const factor = 1 + (precios.desperdicio_pct || 25)/100, AREA = 2.6*1.83;
   let totalPlacas = 0;
-  for (const esp of Object.keys(areas).map(Number).sort((a,b)=>b-a)) {
-    const n = Math.max(1, Math.ceil(areas[esp]*factor/AREA));
+  const orden = ["melamina_18", "crudo_18", "fondo_3"];
+  for (const cat of Object.keys(areas).sort((a,b) => orden.indexOf(a) - orden.indexOf(b))) {
+    const n = Math.max(1, Math.ceil(areas[cat]*factor/AREA));
     totalPlacas += n;
-    const clave = esp >= 15 ? "placa_melamina_18" : "placa_fondo_3";
-    filas.push({ nombre: esp >= 15 ? `Placa melamina ${esp} mm` : `Placa fibrofácil ${esp} mm`,
-      cantidad: `${n} placa(s)`, paraQue: `${areas[esp].toFixed(2)} m² de piezas + ${precios.desperdicio_pct}% desperdicio`,
+    const [clave, nombre] = CATEGORIAS_PLACA[cat];
+    filas.push({ nombre,
+      cantidad: `${n} placa(s)`, paraQue: `${areas[cat].toFixed(2)} m² de piezas + ${precios.desperdicio_pct}% desperdicio`,
       costo: n * (precios[clave] ?? 0) });
   }
   filas.push({ nombre: "Servicio de corte en tienda", cantidad: `${totalPlacas} placa(s)`,
@@ -687,6 +784,114 @@ function presupuestar(m, precios) {
     filas.push({ nombre: h.nombre, cantidad, paraQue: h.paraQue, costo: ventas * (precios[h.clave] ?? 0) });
   }
   return filas;
+}
+
+/* ===================================================================== GUÍA DE ARMADO (D-015)
+   Espejo de software/salidas/generador_instrucciones.py */
+function hayPieza(m, prefijo) { return m.piezas.some(p => p.nombre.startsWith(prefijo)); }
+
+function instruccionesArmadoJS(m, receta) {
+  const pasos = [];
+  const paso = (titulo, texto, piezas = [], herraje = "", tip = "") =>
+    pasos.push({ n: pasos.length + 1, titulo, texto, piezas, herraje, tip });
+
+  if (receta.tipo_mueble === "ropero") {
+    paso("Entendé las placas y ordená los cortes",
+      "Separá y etiquetá todas las piezas según la lista de cortes. Verificá las medidas antes de empezar.",
+      [], "", "Trabajá en un piso parejo y con espacio: el ropero es grande.");
+    paso("Armá la base y el zócalo",
+      "El zócalo va más adentro del frente (retranqueado), para que no se vea al agacharse y separe la melamina del piso.",
+      ["Zócalo frontal"], "Confirmat / excéntrico", "La melamina nunca debe apoyar directo al piso (humedad).");
+    paso("Parás los laterales y armá la caja",
+      "Uní los dos laterales con el piso y el techo, formando la caja principal. Pre-perforá antes de atornillar.",
+      ["Lateral izquierdo", "Lateral derecho", "Piso", "Techo (estante superior)"], "Confirmat / excéntrico",
+      "Medí las dos diagonales: deben dar igual (así queda en escuadra).");
+    paso("Cerrá el fondo",
+      "El fondo de 3 mm va clavado por detrás. No lo selles hermético: dejá que ventile para que la ropa no tome humedad.",
+      ["Fondo"], "Clavos 1½\"");
+    if (hayPieza(m, "Divisor cajones"))
+      paso("Armá la cajonera interior",
+        "Colocá el divisor y armá el bloque de cajones (cajas + correderas + frentes), igual que en un escritorio.",
+        ["Divisor cajones", "Tapa de cajonera", "Lateral caja cajón", "Frente cajón"], "Corredera (según calidad) + tirador");
+    if (hayPieza(m, "Barral"))
+      paso("Colocá el barral para colgar la ropa",
+        "Atornillá los soportes a los laterales a la altura indicada y apoyá el tubo. Si es ancho, lleva un soporte en el medio.",
+        ["Barral colgador"], "Barral tubular + soportes");
+    if (hayPieza(m, "Estante inferior"))
+      paso("Colocá el estante inferior",
+        "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras.",
+        ["Estante inferior (zapatos)"], "Rinconera/taco");
+    if (hayPieza(m, "Puerta batiente"))
+      paso("Colocá las puertas batientes",
+        "Perforá las cazoletas de las bisagras en cada puerta, atornillá las bisagras y colgá las puertas. Regulá hasta que cierren parejas.",
+        ["Puerta batiente 1", "Puerta batiente 2"], "Bisagra cazoleta (según calidad) + tirador",
+        "Si elegiste soft-close, cierran solas sin golpe.");
+    else if (hayPieza(m, "Puerta corrediza"))
+      paso("Colocá los rieles y las puertas corredizas",
+        "Atornillá el riel de arriba y el de abajo. Colgá cada hoja; se solapan un poco. Probá que deslicen suave.",
+        ["Puerta corrediza 1", "Puerta corrediza 2"], "Riel corredizo (juego) + tirador");
+    paso("Terminación final",
+      "Repasá tapacantos, apretá todas las uniones y nivelá el mueble en su lugar. Un ropero cargado pesa mucho: ubicalo antes de llenarlo.",
+      [], "", "Si es alto, fijalo a la pared con un ángulo para que no se vuelque.");
+    return pasos;
+  }
+
+  // Escritorio
+  paso("Entendé las placas y ordená los cortes",
+    "Separá y etiquetá los cortes según la lista. Todas las piezas salieron de tableros grandes (placas). Verificá medidas.",
+    [], "", "Apoyá las piezas sobre cartón o goma para no rayar la melamina.");
+  if (hayPieza(m, "Tapa capa inferior"))
+    paso("Armá la tapa doble (refuerzo anti-pandeo)",
+      "La tapa lleva dos capas: abajo el aglomerado crudo (no se ve) y arriba la melamina decorativa. Poné cola en toda la capa de abajo, apoyá la de arriba alineada y atornillá desde abajo con 4×30 cada ~30 cm. Dejá secar con peso encima.",
+      ["Tapa capa inferior (oculta)", "Tapa capa superior (visible)"], "Tornillo 4×30 + cola",
+      "La cara linda va PARA ARRIBA. La capa cruda queda escondida abajo.");
+  if (hayPieza(m, "Lateral cajonera"))
+    paso("Armá el cajón de la cajonera (caja estructural)",
+      "Uní los dos laterales de la cajonera con el piso, formando una U. Cerrá por atrás con el fondo. Pre-perforá SIEMPRE.",
+      ["Lateral cajonera interno", "Lateral cajonera externo", "Piso cajonera", "Fondo cajonera"],
+      "Confirmat / excéntrico + clavos", "Verificá la escuadra midiendo las dos diagonales.");
+  if (hayPieza(m, "Lateral caja cajón")) {
+    paso("Armá las cajas de los cajones",
+      "Cada cajón es una caja: dos laterales, frente interno y contrafrente, más un fondo de 3 mm por debajo. Armá todas primero.",
+      ["Lateral caja cajón", "Frente interno cajón", "Contrafrente cajón", "Fondo cajón"], "Confirmat + clavos",
+      "Todas las cajas iguales para que los cajones corran parejos.");
+    paso("Colocá las correderas y meté los cajones",
+      "Atornillá una guía a cada lado del cajón y la otra al mueble, a la misma altura. Probá que corra suave.",
+      [], "Corredera (según el nivel de calidad que elegiste)",
+      "Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.");
+    paso("Atornillá los frentes de los cajones",
+      "El frente visible (con el tirador) se atornilla desde ADENTRO del cajón. Dejá 3 mm de luz entre frentes.",
+      ["Frente cajón"], "Tornillo 4×30 + tirador");
+  }
+  const apoyos = ["Lateral izquierdo (pata panel)"];
+  let textoApoyo = "Parás el lateral izquierdo, que es una de las patas del escritorio.";
+  if (hayPieza(m, "Parante soporte CPU")) {
+    apoyos.push("Parante soporte CPU", "Bandeja CPU");
+    textoApoyo = "Parás el lateral izquierdo y, al lado, el parante del soporte de CPU. Entre ambos va la bandeja, a 10 cm del piso para que ventile.";
+  }
+  paso("Parás los apoyos verticales", textoApoyo, apoyos, "Confirmat / excéntrico",
+    "Todavía no aprietes del todo: primero presentá todo, después ajustás.");
+  paso("Colocá la tapa sobre los apoyos",
+    "Apoyá la tapa sobre la cajonera y el lateral (o parante). Fijala desde abajo con escuadras o tornillos, sin que asomen arriba.",
+    [hayPieza(m, "Tapa capa superior") ? "Tapa capa superior (visible)" : "Tapa"], "Escuadra metálica 25 mm",
+    "Revisá que no se hamaque: si se mueve, revisá la escuadra.");
+  if (hayPieza(m, "Viga trasera"))
+    paso("Poné la viga trasera (rigidez)",
+      "Tu escritorio es ancho: lleva una viga atrás, de canto, que evita que se hamaque. Atornillala a los apoyos y a la tapa.",
+      ["Viga trasera"], "Confirmat / excéntrico");
+  if ((m.grommets || []).length)
+    paso("Hacé los agujeros de pasacables",
+      "Marcá y perforá los agujeros de la tapa con una broca copa del diámetro del grommet. Colocá los grommets.",
+      [], "", "Perforá con la cara buena hacia arriba y apoyo abajo, sin astillar.");
+  if (hayPieza(m, "Tapa elevación monitor"))
+    paso("Montá la elevación para el monitor",
+      "Sobre la tapa, parás las dos patitas y encima la bandeja elevada. El monitor va arriba y el teclado se guarda deslizándolo abajo.",
+      ["Pata elevación monitor (izq)", "Pata elevación monitor (der)", "Tapa elevación monitor"], "Confirmat / excéntrico");
+  paso("Niveladores y terminación final",
+    "Colocá los regatones en la base para que no toque el piso y quede nivelado. Repasá que los cantos visibles tengan tapacanto. Apretá todo.",
+    [], "Regatón + tapacanto",
+    "Nunca arrastres el escritorio armado: movelo entre dos, levantándolo (R-26).");
+  return pasos;
 }
 
 /* ===================================================================== GENERADOR SKETCHUP */
@@ -745,6 +950,56 @@ puts "Listo: #{PIEZAS.length} piezas. Extensiones > OpenCutList para los cortes.
 const $ = id => document.getElementById(id);
 let tipoActual = "escritorio_gamer";
 
+/* Explicaciones de cada control (D-016). Clave = id del control. */
+const AYUDAS = {
+  "tipo-mueble": "Elegí qué mueble querés diseñar. Cada uno tiene sus propios controles.",
+  "esc-ancho": "Cuánto mide el escritorio de lado a lado. 160 cm = 2 monitores cómodos; 180–200 cm para 3 monitores.",
+  "esc-profundidad": "De adelante hacia atrás. 70 cm es cómodo para gamer (el monitor queda a buena distancia de los ojos).",
+  "esc-alto": "Del piso a la tapa. 75 cm es la altura estándar para escribir con los codos a 90°.",
+  "esc-color": "El color de la melamina que se va a ver. Es solo estético, no cambia la resistencia.",
+  "esc-tapa": "La tapa es la superficie de arriba. 'Automática' elige sola: si el escritorio es ancho, la refuerza (doble capa) para que no se hunda con el peso de los monitores.",
+  "esc-caj-pos": "De qué lado va la cajonera (el bloque de cajones), o 'sin cajonera' si no querés cajones.",
+  "esc-caj-ancho": "Qué tan ancho es el bloque de cajones. Más ancho = cajones más grandes, pero menos lugar para las piernas.",
+  "esc-caj-n": "Cuántos cajones. Más cajones = cada uno más bajito. El sistema te avisa si quedan demasiado chicos.",
+  "esc-cpu": "Un soporte lateral elevado para apoyar la torre de la PC, separada del piso para que ventile y no junte polvo.",
+  "esc-cpu-ancho": "El ancho del hueco para la CPU. Una torre común mide 21–23 cm; dejá un poco más para que entre holgada.",
+  "esc-pas-n": "Los agujeros en la tapa por donde pasan los cables (con un aro plástico llamado grommet). Elegí cuántos y de qué diámetro.",
+  "esc-elev": "Una tarima elevada sobre la tapa: el monitor va arriba (a la altura de los ojos) y el teclado se guarda deslizándolo en el hueco de abajo.",
+  "esc-elev-ancho": "El ancho de la tarima elevada del monitor. Debe entrar en la tapa dejando un margen a los costados.",
+  "esc-elev-prof": "La profundidad de la tarima. 25 cm alcanza para la base de casi cualquier monitor.",
+  "esc-uniones": "Cómo se unen las piezas. Confirmat = tornillo grueso (más barato). Excéntrica/cam-lock = como los muebles de fábrica desarmables: NO se afloja al mover el mueble.",
+  "esc-calidad": "El nivel de los herrajes. Económico = correderas de rodillo (baratas, se gastan). Estándar = telescópicas. Premium = soft-close de acero, que no se aflojan ni bailan y duran años.",
+  "rop-ancho": "Ancho del ropero. Hasta 120 cm por módulo; si necesitás más, se hacen varios módulos juntos.",
+  "rop-profundidad": "Fondo del ropero. 58 cm entra una percha de hombro a hombro más la puerta.",
+  "rop-alto": "Alto total, de piso a techo. Ajustalo al alto de tu habitación.",
+  "rop-color": "Color de la melamina visible. Solo estético.",
+  "rop-puertas-tipo": "Batientes = se abren hacia afuera con bisagras (necesitan espacio adelante). Corredizas = se deslizan (ideal si hay poco lugar). Sin puertas = tipo vestidor abierto.",
+  "rop-puertas-n": "Cuántas hojas de puerta. Más hojas = cada una más angosta y liviana.",
+  "rop-cajones": "Agregar un bloque de cajones adentro del ropero, en un costado, dejando el resto para colgar ropa.",
+  "rop-caj-ancho": "Ancho del bloque de cajones. Cuidá que quede lugar suficiente para el barral de colgar.",
+  "rop-caj-n": "Cuántos cajones interiores.",
+  "rop-estante-inf": "Un estante abajo (a ~25 cm del piso) para guardar zapatos.",
+  "rop-uniones": "Igual que en el escritorio: confirmat (económico) o excéntrica (no se afloja al mover).",
+  "rop-calidad": "Nivel de herrajes: económico / estándar / premium (soft-close, bisagras que no se descuelgan con el uso).",
+};
+
+function inyectarAyudas() {
+  for (const id of Object.keys(AYUDAS)) {
+    const control = $(id);
+    if (!control) continue;
+    const campo = control.closest(".campo") || control.closest("#selector-mueble");
+    const label = campo && campo.querySelector("label");
+    if (!label || label.querySelector(".ayuda-btn")) continue;
+    const btn = document.createElement("span");
+    btn.className = "ayuda-btn"; btn.textContent = "?"; btn.title = "¿Qué es esto?";
+    const txt = document.createElement("div");
+    txt.className = "ayuda-txt"; txt.textContent = AYUDAS[id];
+    btn.onclick = e => { e.preventDefault(); txt.classList.toggle("abierta"); };
+    label.appendChild(btn);
+    (campo.querySelector(".fila") || label).insertAdjacentElement("afterend", txt);
+  }
+}
+
 const CAMPOS_RANGO_ESC = [["esc-ancho",1600],["esc-profundidad",700],["esc-alto",750],
                           ["esc-caj-ancho",400],["esc-cpu-ancho",250],
                           ["esc-elev-ancho",800],["esc-elev-prof",250]];
@@ -763,6 +1018,7 @@ function leerRecetaEscritorio() {
     pasacables: { cantidad:+$("esc-pas-n").value, diametro:+$("esc-pas-d").value },
     elevacion_monitor: { incluir: $("esc-elev").checked, ancho:+$("esc-elev-ancho").value, profundidad:+$("esc-elev-prof").value },
     uniones: { tipo: $("esc-uniones").value },
+    calidad: { nivel: $("esc-calidad").value },
   };
 }
 
@@ -783,6 +1039,7 @@ function aplicarRecetaEscritorio(r) {
   $("esc-elev-ancho").value = $("esc-elev-ancho-n").value = r.elevacion_monitor?.ancho ?? 800;
   $("esc-elev-prof").value = $("esc-elev-prof-n").value = r.elevacion_monitor?.profundidad ?? 250;
   $("esc-uniones").value = r.uniones?.tipo ?? "confirmat";
+  $("esc-calidad").value = r.calidad?.nivel ?? "estandar";
 }
 
 function leerRecetaRopero() {
@@ -795,6 +1052,7 @@ function leerRecetaRopero() {
     cajones: { incluir: $("rop-cajones").checked, ancho:+$("rop-caj-ancho").value, cantidad_cajones:+$("rop-caj-n").value },
     estante_inferior: { incluir: $("rop-estante-inf").checked },
     uniones: { tipo: $("rop-uniones").value },
+    calidad: { nivel: $("rop-calidad").value },
   };
 }
 
@@ -810,6 +1068,7 @@ function aplicarRecetaRopero(r) {
   $("rop-caj-n").value = r.cajones?.cantidad_cajones ?? 3;
   $("rop-estante-inf").checked = r.estante_inferior?.incluir ?? false;
   $("rop-uniones").value = r.uniones?.tipo ?? "confirmat";
+  $("rop-calidad").value = r.calidad?.nivel ?? "estandar";
 }
 
 function leerReceta() {
@@ -830,6 +1089,23 @@ function mostrarControlesDelTipo() {
 
 let mueble = null, recetaActual = null, precios = null;
 let pestanaActiva = "cortes";
+let pasoArmadoActivo = 0;
+
+/* --------- Unidades (cm por defecto; el motor SIEMPRE trabaja en mm) --------- */
+let unidad = localStorage.getItem("unidad") || "cm";
+function fmtNum(mm) {  // solo el número, para celdas de tabla
+  if (unidad === "cm") {
+    const cm = mm / 10;
+    return (Math.round(cm * 10) / 10).toString().replace(".", ",");
+  }
+  return String(mm);
+}
+function fmtMedida(mm) { return `${fmtNum(mm)} ${unidad}`; }
+function fmtEspesor(mm) { return `${mm} mm`; }  // el espesor SIEMPRE se dice en mm (convención de carpintería)
+function convAvisos(texto) {  // convierte "1600 mm" dentro de una frase a la unidad elegida
+  if (unidad === "mm") return texto;
+  return texto.replace(/(\d+)\s*mm/g, (_, n) => fmtNum(+n) + " cm");
+}
 
 function cargarPrecios() {
   try { precios = { ...PRECIOS_DEFECTO, ...JSON.parse(localStorage.getItem("precios") || "{}") }; }
@@ -845,13 +1121,13 @@ function recalcular() {
   const cont = $("avisos");
   cont.innerHTML = "";
   for (const err of v.errores) {
-    const d = document.createElement("div"); d.className = "aviso error"; d.textContent = "✖ " + err;
+    const d = document.createElement("div"); d.className = "aviso error"; d.textContent = "✖ " + convAvisos(err);
     cont.appendChild(d);
   }
   if (v.errores.length) { mueble = null; render3D(); pintarPestana(); return; }
   mueble = tipoActual === "ropero" ? despieceRopero(recetaActual) : despieceEscritorio(recetaActual, v.tapaTipo);
   for (const a of [...v.avisos, ...mueble.avisos]) {
-    const d = document.createElement("div"); d.className = "aviso"; d.textContent = "💡 " + a;
+    const d = document.createElement("div"); d.className = "aviso"; d.textContent = "💡 " + convAvisos(a);
     cont.appendChild(d);
   }
   render3D();
@@ -860,15 +1136,62 @@ function recalcular() {
 
 /* ------------------------------------------------ pestañas */
 function fmtDinero(x) { return `${precios.moneda} ${x.toFixed(2)}`; }
+function cajaExplica(titulo, html) {
+  return `<div class="explica"><b>${titulo}</b><br>${html}</div>`;
+}
+
+/* ------------------------------------------------ pestaña Armado (D-015) */
+function pintarArmado(c) {
+  const pasos = instruccionesArmadoJS(mueble, recetaActual);
+  if (pasoArmadoActivo >= pasos.length) pasoArmadoActivo = 0;
+  const p = pasos[pasoArmadoActivo];
+  let lista = "";
+  pasos.forEach((s, i) => {
+    lista += `<div class="paso-item ${i === pasoArmadoActivo ? "activo" : ""}" data-paso="${i}">
+      <span class="paso-num">${s.n}</span> ${s.titulo}</div>`;
+  });
+  c.innerHTML = `
+    ${cajaExplica("🔧 Guía de armado paso a paso",
+      "Tocá cada paso: la pieza de ese paso se <b>ilumina en el dibujo 3D</b> de arriba (las demás se aclaran). Seguí el orden de arriba hacia abajo.")}
+    <div class="armado-cols">
+      <div class="armado-lista">${lista}</div>
+      <div class="armado-detalle">
+        <h3>Paso ${p.n}: ${p.titulo}</h3>
+        <p>${convAvisos(p.texto)}</p>
+        ${p.piezas.length ? `<p class="nota">🧩 Piezas de este paso (iluminadas en el 3D): <b>${p.piezas.join(", ")}</b></p>` : ""}
+        ${p.herraje ? `<p class="nota">🔩 Herraje: ${p.herraje}</p>` : ""}
+        ${p.tip ? `<div class="paso-tip">💡 ${convAvisos(p.tip)}</div>` : ""}
+        <div style="margin-top:10px">
+          <button id="paso-ant" ${pasoArmadoActivo === 0 ? "disabled" : ""}>◀ Anterior</button>
+          <button id="paso-sig" ${pasoArmadoActivo === pasos.length - 1 ? "disabled" : ""}>Siguiente ▶</button>
+        </div>
+      </div>
+    </div>`;
+  c.querySelectorAll(".paso-item").forEach(el => el.onclick = () => {
+    pasoArmadoActivo = +el.dataset.paso; pintarArmado(c); aplicarResaltadoPaso();
+  });
+  const sig = $("paso-sig"), ant = $("paso-ant");
+  if (sig) sig.onclick = () => { pasoArmadoActivo++; pintarArmado(c); aplicarResaltadoPaso(); };
+  if (ant) ant.onclick = () => { pasoArmadoActivo--; pintarArmado(c); aplicarResaltadoPaso(); };
+  aplicarResaltadoPaso();
+}
+function aplicarResaltadoPaso() {
+  if (pestanaActiva !== "armado" || !mueble) { limpiarResaltado(); return; }
+  const pasos = instruccionesArmadoJS(mueble, recetaActual);
+  const p = pasos[pasoArmadoActivo];
+  resaltarPiezas(p ? p.piezas : []);
+}
 
 function pintarPestana() {
   const c = $("contenido");
+  if (pestanaActiva !== "armado") limpiarResaltado();
   document.querySelectorAll("#pestanas div").forEach(d =>
     d.classList.toggle("activa", d.dataset.p === pestanaActiva));
   if (!mueble && pestanaActiva !== "precios" && pestanaActiva !== "ayuda") {
     c.innerHTML = "<p class='nota'>Corregí los errores marcados en rojo para ver los resultados.</p>";
     return;
   }
+  if (pestanaActiva === "armado") { pintarArmado(c); return; }
   if (pestanaActiva === "cortes") {
     let filas = "";
     const grupos = new Map();
@@ -879,30 +1202,37 @@ function pintarPestana() {
       grupos.get(k).cant++;
     }
     for (const g of grupos.values())
-      filas += `<tr><td>${g.nombre}</td><td class="num">${g.cant}</td><td class="num">${g.largo}</td><td class="num">${g.ancho}</td><td class="num">${g.espesor}</td><td>${g.material}</td><td>${g.cantos}</td><td>${g.notas}</td></tr>`;
-    c.innerHTML = `<p class="nota">Esta lista se la das a la tienda que corta placas (o descargala con el botón ⬇ Cortes CSV de arriba).</p>
-      <table><tr><th>Pieza</th><th>Cant.</th><th>Largo</th><th>Ancho</th><th>Esp.</th><th>Material</th><th>Tapacanto</th><th>Notas</th></tr>${filas}</table>`;
+      filas += `<tr><td>${g.nombre}</td><td class="num">${g.cant}</td><td class="num">${fmtNum(g.largo)}</td><td class="num">${fmtNum(g.ancho)}</td><td class="num">${fmtEspesor(g.espesor)}</td><td>${g.material}</td><td>${g.cantos}</td><td>${g.notas}</td></tr>`;
+    const hayDoble = mueble.piezas.some(p => p.nombre.includes("capa inferior"));
+    c.innerHTML = `${cajaExplica("📦 ¿Qué es esta lista? ¿Por qué tantas piezas?",
+      `Tu mueble NO es una sola tabla: son varias <b>piezas</b> (laterales, piso, cajones, tapa…), y todas se cortan de <b>tableros grandes</b> ("placas") que vienen de un tamaño fijo: <b>${fmtNum(2600)} × ${fmtNum(1830)} ${unidad}</b> (como una puerta grande). Vos comprás el tablero entero y la tienda lo corta según esta lista. ${hayDoble ? `<br><br>Si ves <b>"Tapa capa inferior/superior"</b>: son las <b>2 capas de la tapa reforzada</b> (arriba melamina que ves, abajo aglomerado crudo escondido y más barato), <u>no</u> dos muebles.` : ""}`)}
+      <p class="nota">Medidas en <b>${unidad}</b> (cambialo arriba). Esta lista se la das a la tienda que corta placas, o descargala con ⬇ Cortes CSV.</p>
+      <div style="overflow-x:auto"><table><tr><th>Pieza</th><th>Cant.</th><th>Largo</th><th>Ancho</th><th>Esp.</th><th>Material</th><th>Tapacanto</th><th>Notas</th></tr>${filas}</table></div>`;
   } else if (pestanaActiva === "compras" || pestanaActiva === "presupuesto") {
     const filas = presupuestar(mueble, precios);
     let html = "", total = 0;
+    const placas = filas.filter(f => f.nombre.startsWith("Placa"));
     for (const f of filas) {
       total += f.costo;
       html += pestanaActiva === "compras"
         ? `<tr><td>${f.nombre}</td><td>${f.cantidad}</td><td>${f.paraQue}</td></tr>`
         : `<tr><td>${f.nombre}</td><td>${f.cantidad}</td><td class="num">${fmtDinero(f.costo)}</td></tr>`;
     }
+    const totalPlacas = placas.reduce((s, f) => s + (parseInt(f.cantidad) || 0), 0);
+    const explicaCompras = cajaExplica("🛒 ¿Por qué comprar varios tableros?",
+      `Necesitás <b>${totalPlacas} tablero(s)</b> porque la suma de todas las piezas no entra en uno solo (cada placa mide ${fmtNum(2600)}×${fmtNum(1830)} ${unidad}, unos 4,75 m²). Comprás el tablero entero y la tienda lo corta. Los tableros <b>crudos</b> (si aparecen) son la capa oculta de la tapa: más baratos porque no se ven.`);
     if (pestanaActiva === "compras")
-      c.innerHTML = `<table><tr><th>Artículo</th><th>Cantidad a comprar</th><th>Para qué</th></tr>${html}</table>`;
+      c.innerHTML = `${explicaCompras}<div style="overflow-x:auto"><table><tr><th>Artículo</th><th>Cantidad a comprar</th><th>Para qué</th></tr>${html}</table></div>`;
     else
-      c.innerHTML = `<p class="nota">Editá tus precios en la pestaña “⚙️ Mis precios”. No incluye mano de obra ni flete.</p>
-        <table><tr><th>Artículo</th><th>Cantidad</th><th>Costo</th></tr>${html}
-        <tr class="totalfila"><td>TOTAL estimado</td><td></td><td class="num">${fmtDinero(total)}</td></tr></table>`;
+      c.innerHTML = `${explicaCompras}<p class="nota">Editá tus precios en la pestaña “⚙️ Mis precios”. No incluye mano de obra ni flete.</p>
+        <div style="overflow-x:auto"><table><tr><th>Artículo</th><th>Cantidad</th><th>Costo</th></tr>${html}
+        <tr class="totalfila"><td>TOTAL estimado</td><td></td><td class="num">${fmtDinero(total)}</td></tr></table></div>`;
   } else if (pestanaActiva === "perforaciones") {
     let filas = "";
     for (const pf of mueble.perforaciones)
-      filas += `<tr><td>${pf.pieza}</td><td>${pf.cara}</td><td>${pf.detalle}</td></tr>`;
-    c.innerHTML = `<p class="nota">Regla de oro: <b>pre-perforar SIEMPRE</b> antes de atornillar melamina (R-09).</p>
-      <table><tr><th>Pieza</th><th>Cara</th><th>Detalle</th></tr>${filas}</table>`;
+      filas += `<tr><td>${pf.pieza}</td><td>${pf.cara}</td><td>${convAvisos(pf.detalle)}</td></tr>`;
+    c.innerHTML = `${cajaExplica("🔩 ¿Qué es esto?", "Acá va dónde perforar y atornillar cada pieza. <b>Regla de oro:</b> pre-perforá SIEMPRE antes de atornillar melamina, así el canto no se rompe (R-09).")}
+      <div style="overflow-x:auto"><table><tr><th>Pieza</th><th>Cara</th><th>Detalle</th></tr>${filas}</table></div>`;
   } else if (pestanaActiva === "precios") {
     let filas = "";
     for (const [k, etiqueta] of Object.entries(ETIQUETAS_PRECIO))
@@ -996,18 +1326,36 @@ function render3D() {
     const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({
       color: new THREE.Color(r/255,g/255,b/255) }));
     m.position.set((x+dx/2)*esc,(z+dz/2)*esc,(y+dy/2)*esc);
+    m.userData.pieza = p.nombre;
     escena.add(m); mallas.push(m);
     const borde = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
       new THREE.LineBasicMaterial({ color: 0x555555 }));
     borde.position.copy(m.position);
     escena.add(borde); mallas.push(borde);
   }
+  aplicarResaltadoPaso();
   for (const gr of (mueble.grommets || [])) {
     const marca = new THREE.Mesh(
       new THREE.CylinderGeometry(gr.d/2*esc, gr.d/2*esc, 0.006, 24),
       new THREE.MeshLambertMaterial({ color: 0xdc2828 }));
     marca.position.set(gr.x*esc, d.alto*esc+0.003, gr.y*esc);
     escena.add(marca); mallas.push(marca);
+  }
+}
+
+/* ------------------------------------------------ resaltado de piezas (armado) */
+function resaltarPiezas(nombres) {
+  const activos = nombres && nombres.length;
+  for (const m of mallas) {
+    if (!m.material || m.userData.pieza === undefined) continue;  // bordes/piso: saltar
+    m.material.transparent = true;
+    const match = activos && nombres.some(n => m.userData.pieza.startsWith(n));
+    m.material.opacity = !activos ? 1 : (match ? 1 : 0.15);
+  }
+}
+function limpiarResaltado() {
+  for (const m of mallas) {
+    if (m.material && m.userData.pieza !== undefined) { m.material.opacity = 1; m.material.transparent = false; }
   }
 }
 
@@ -1020,7 +1368,8 @@ function descargar(nombre, contenido, tipo) {
 }
 
 function csvCortes() {
-  let out = "﻿Pieza;Cantidad;Largo (mm);Ancho (mm);Espesor (mm);Material;Tapacanto;Notas\n";
+  const u = unidad;
+  let out = `﻿Pieza;Cantidad;Largo (${u});Ancho (${u});Espesor (mm);Material;Tapacanto;Notas\n`;
   const grupos = new Map();
   for (const p of mueble.piezas) {
     const base = p.nombre.replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
@@ -1029,7 +1378,7 @@ function csvCortes() {
     grupos.get(k).cant++;
   }
   for (const g of grupos.values())
-    out += `${g.nombre};${g.cant};${g.largo};${g.ancho};${g.espesor};${g.material};${g.cantos};${g.notas}\n`;
+    out += `${g.nombre};${g.cant};${fmtNum(g.largo)};${fmtNum(g.ancho)};${g.espesor};${g.material};${g.cantos};${g.notas}\n`;
   return out;
 }
 
@@ -1077,7 +1426,8 @@ function correrTests() {
     material:{color:"Negro",espesor:18,espesor_fondo:3},
     cajonera:{posicion:"derecha",ancho:400,cantidad_cajones:3},
     soporte_cpu:{incluir:true,ancho:250}, pasacables:{cantidad:2,diametro:60},
-    elevacion_monitor:{incluir:false,ancho:800,profundidad:250}, uniones:{tipo:"confirmat"} };
+    elevacion_monitor:{incluir:false,ancho:800,profundidad:250}, uniones:{tipo:"confirmat"},
+    calidad:{nivel:"estandar"} };
   const v = validarEscritorio(R);
   ok("escritorio: tapa auto → doble_18 (R-04)", v.tapaTipo === "doble_18");
   const m = despieceEscritorio(R, v.tapaTipo);
@@ -1121,7 +1471,7 @@ function correrTests() {
 
   // --- Ropero ---
   const RR = { version:"1.0", tipo_mueble:"ropero", nombre:"Test Ropero",
-    uniones:{tipo:"confirmat"},
+    uniones:{tipo:"confirmat"}, calidad:{nivel:"estandar"},
     dimensiones:{ancho:900,profundidad:580,alto:2400}, material:{color:"Blanco",espesor:18,espesor_fondo:3},
     puertas:{tipo:"batiente",cantidad:2}, cajones:{incluir:false,ancho:400,cantidad_cajones:3},
     estante_inferior:{incluir:false} };
@@ -1149,6 +1499,47 @@ function correrTests() {
   const RRexc = JSON.parse(JSON.stringify(RR)); RRexc.uniones.tipo = "excentrica";
   const mRRexc = despieceRopero(RRexc);
   ok("ropero uniones excéntrica: usa H-17", mRRexc.herrajes.some(h => h.clave === "herraje_excentrico"));
+
+  // --- Calidad (D-018) ---
+  const Reco = JSON.parse(JSON.stringify(R)); Reco.calidad.nivel = "economico";
+  ok("económico → corredera de rodillo",
+     despieceEscritorio(Reco, "doble_18").herrajes.some(h => h.clave === "corredera_rodillo_par"));
+  const Rpre = JSON.parse(JSON.stringify(R)); Rpre.calidad.nivel = "premium";
+  const mPre = despieceEscritorio(Rpre, "doble_18");
+  ok("premium → corredera soft-close", mPre.herrajes.some(h => h.clave === "corredera_softclose_par"));
+  ok("premium → unión excéntrica automática", mPre.herrajes.some(h => h.clave === "herraje_excentrico"));
+  ok("premium ropero → bisagra soft-close",
+     despieceRopero({ ...RR, calidad:{nivel:"premium"} }).herrajes.some(h => h.clave === "bisagra_softclose"));
+
+  // --- Tapa cruda (capa oculta más barata) ---
+  ok("tapa doble: capa inferior es aglomerado crudo",
+     m.piezas.some(p => p.nombre.includes("capa inferior") && p.material.toLowerCase().includes("crudo")));
+  ok("presupuesto separa placa cruda de melamina",
+     presupuestar(m, PRECIOS_DEFECTO).some(f => f.nombre.toLowerCase().includes("crudo")));
+
+  // --- Unidades ---
+  unidad = "cm";
+  ok("fmtNum: 1600 mm → 160 (cm)", fmtNum(1600) === "160");
+  ok("fmtMedida cm", fmtMedida(1600) === "160 cm");
+  ok("convAvisos convierte mm a cm", convAvisos("vano de 1600 mm").includes("160 cm"));
+  unidad = "mm";
+  ok("fmtNum en mm", fmtNum(1600) === "1600");
+  ok("convAvisos en mm no cambia", convAvisos("vano de 1600 mm") === "vano de 1600 mm");
+  unidad = "cm";
+
+  // --- Instrucciones de armado (D-015) ---
+  const pasosEsc = instruccionesArmadoJS(m, R);
+  ok("escritorio: genera pasos de armado", pasosEsc.length >= 6, `(${pasosEsc.length})`);
+  const nombresEsc = new Set(m.piezas.map(p => p.nombre));
+  const citadas = new Set(pasosEsc.flatMap(p => p.piezas));
+  ok("armado: piezas citadas existen (para resaltar)",
+     [...citadas].every(cit => [...nombresEsc].some(real => real.startsWith(cit))),
+     `(${[...citadas].filter(cit => ![...nombresEsc].some(r => r.startsWith(cit)))})`);
+  ok("ropero: genera pasos de armado", instruccionesArmadoJS(mr, RR).length >= 5);
+
+  // --- AYUDAS cubre los controles clave ---
+  const controlesClave = ["esc-ancho","esc-tapa","esc-uniones","esc-calidad","rop-puertas-tipo","rop-calidad"];
+  ok("AYUDAS cubre los controles clave", controlesClave.every(id => AYUDAS[id]));
 
   const fallas = res.filter(l => l.startsWith("✖")).length;
   document.body.innerHTML = `<div id="resultado-tests"><h2>${fallas === 0 ? "✔ TODAS LAS PRUEBAS PASAN" : "✖ " + fallas + " FALLAS"}</h2>${res.join("\n")}</div>`;
@@ -1183,9 +1574,9 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
   for (const id of ["esc-color","esc-tapa","esc-caj-pos","esc-caj-n","esc-cpu","esc-pas-n","esc-pas-d",
-                    "esc-elev","esc-uniones",
+                    "esc-elev","esc-uniones","esc-calidad",
                     "rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf",
-                    "rop-uniones"])
+                    "rop-uniones","rop-calidad"])
     $(id).addEventListener("change", recalcular);
 
   document.querySelectorAll("#pestanas div").forEach(d =>
@@ -1206,6 +1597,17 @@ window.addEventListener("DOMContentLoaded", () => {
   $("ia-boton").onclick = pedirIA;
   $("ia-texto").addEventListener("keydown", e => { if (e.key === "Enter") pedirIA(); });
 
+  // Toggle de unidades cm/mm
+  function pintarUnidad() {
+    $("u-cm").classList.toggle("activa", unidad === "cm");
+    $("u-mm").classList.toggle("activa", unidad === "mm");
+  }
+  function cambiarUnidad(u) { unidad = u; localStorage.setItem("unidad", u); pintarUnidad(); pintarPestana(); }
+  $("u-cm").onclick = () => cambiarUnidad("cm");
+  $("u-mm").onclick = () => cambiarUnidad("mm");
+  pintarUnidad();
+
+  inyectarAyudas();
   iniciar3D();
   recalcular();
 });

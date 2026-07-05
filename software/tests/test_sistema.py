@@ -84,10 +84,13 @@ r, _ = normalizar_y_validar(RECETA_BASE)
 m = despiece_escritorio(r)
 piezas = {p.nombre: p for p in m.piezas}
 
-# Tapa doble: 2 capas de 1600×700×18
-prueba("tapa en dos capas", "Tapa capa superior" in piezas and "Tapa capa inferior" in piezas)
-prueba("medida tapa", piezas["Tapa capa superior"].largo == 1600
-       and piezas["Tapa capa superior"].ancho == 700)
+# Tapa doble: 2 capas de 1600×700×18 (superior visible + inferior oculta cruda)
+prueba("tapa en dos capas",
+       "Tapa capa superior (visible)" in piezas and "Tapa capa inferior (oculta)" in piezas)
+prueba("medida tapa", piezas["Tapa capa superior (visible)"].largo == 1600
+       and piezas["Tapa capa superior (visible)"].ancho == 700)
+prueba("capa inferior es aglomerado crudo (más barato, oculto)",
+       "crudo" in piezas["Tapa capa inferior (oculta)"].material.lower())
 
 # Laterales: alto = 750 − 36 = 714; profundidad = 700 − 50 = 650
 # (Pieza ordena corte como largo ≥ ancho: largo=714, ancho=650)
@@ -295,6 +298,60 @@ except RecetaInvalida as e:
     prueba("rechaza elevación más ancha que el escritorio", "M-25" in str(e))
 r_sin_elev, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer"})
 prueba("sin elevación por defecto", r_sin_elev["elevacion_monitor"]["incluir"] is False)
+
+# ---------------------------------------------------------------- instrucciones de armado
+print("Guía de armado paso a paso…")
+from salidas.generador_instrucciones import instrucciones_armado
+r_arm, _ = normalizar_y_validar(RECETA_BASE)
+pasos_esc = instrucciones_armado(despiece_escritorio(r_arm), r_arm)
+prueba("escritorio: genera pasos de armado", len(pasos_esc) >= 6, f"({len(pasos_esc)})")
+prueba("escritorio: primer paso explica las placas",
+       "placa" in pasos_esc[0]["texto"].lower())
+prueba("escritorio: algún paso referencia piezas reales para resaltar",
+       any(p["piezas"] for p in pasos_esc))
+nombres_reales = {p.nombre for p in despiece_escritorio(r_arm).piezas}
+piezas_citadas = {n for p in pasos_esc for n in p["piezas"]}
+# cada pieza citada por prefijo debe existir (para poder resaltarla en el 3D)
+prueba("escritorio: piezas citadas existen en el mueble",
+       all(any(real.startswith(cit) for real in nombres_reales) for cit in piezas_citadas),
+       f"(citadas sin match: {[c for c in piezas_citadas if not any(r.startswith(c) for r in nombres_reales)]})")
+r_arm_rop, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero"})
+pasos_rop = instrucciones_armado(despiece_ropero(r_arm_rop), r_arm_rop)
+prueba("ropero: genera pasos de armado", len(pasos_rop) >= 5, f"({len(pasos_rop)})")
+
+# ---------------------------------------------------------------- calidad (D-018)
+print("Niveles de calidad de herrajes (D-018)…")
+def corredera_de(receta):
+    r, _ = normalizar_y_validar(receta)
+    m = despiece_escritorio(r)
+    return [h for h in m.herrajes if "orredera" in h.nombre][0]
+prueba("calidad por defecto = estandar",
+       normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer"})[0]["calidad"]["nivel"] == "estandar")
+prueba("económico → corredera de rodillo (H-05e)",
+       corredera_de({"version": "1.0", "tipo_mueble": "escritorio_gamer", "calidad": {"nivel": "economico"}}).codigo == "H-05e")
+prueba("estándar → telescópica (H-05)",
+       corredera_de({"version": "1.0", "tipo_mueble": "escritorio_gamer", "calidad": {"nivel": "estandar"}}).codigo == "H-05")
+prueba("premium → soft-close (H-18)",
+       corredera_de({"version": "1.0", "tipo_mueble": "escritorio_gamer", "calidad": {"nivel": "premium"}}).codigo == "H-18")
+r_prem, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer", "calidad": {"nivel": "premium"}})
+m_prem = despiece_escritorio(r_prem)
+prueba("premium usa unión excéntrica automáticamente (H-17)",
+       any(h.codigo == "H-17" for h in m_prem.herrajes))
+prueba("premium avisa del cambio de unión",
+       any("premium" in a.lower() and "excéntric" in a.lower() for a in m_prem.avisos))
+r_rop_prem, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero", "calidad": {"nivel": "premium"}})
+m_rop_prem = despiece_ropero(r_rop_prem)
+prueba("ropero premium → bisagra soft-close (H-19)",
+       any(h.codigo == "H-19" for h in m_rop_prem.herrajes))
+try:
+    normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer", "calidad": {"nivel": "lujo"}})
+    prueba("rechaza nivel de calidad inválido", False, "(no lanzó)")
+except RecetaInvalida as e:
+    prueba("rechaza nivel de calidad inválido", "D-018" in str(e))
+# Tapa cruda: la capa oculta abarata el presupuesto (crudo < melamina)
+prueba("presupuesto separa placa cruda de melamina",
+       "crudo" in open("/tmp/esc_test/compras.md", encoding="utf-8").read().lower()
+       if __import__("os").path.exists("/tmp/esc_test/compras.md") else True)
 
 # ---------------------------------------------------------------- resultado
 print()

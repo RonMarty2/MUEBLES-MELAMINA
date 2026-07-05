@@ -17,6 +17,8 @@ from .validador_ropero import (ZOCALO, ALTO_BARRAL, RETRANQUEO_BARRAL,
                                ANCHO_MAX_PUERTA_BATIENTE, SOLAPE_CORREDIZA)
 from .despiece_escritorio import confirmats_por_union, elegir_corredera
 from .uniones import herraje_union
+from .herrajes_calidad import (corredera as corredera_calidad,
+                               bisagra as bisagra_calidad, union_sugerida)
 
 ALTO_FRENTE_OBJETIVO = 250  # M-24: frente cómodo (rango real 120-350, R-07) para la
                              # cajonera del ropero, que NO reparte toda la altura del
@@ -31,6 +33,7 @@ def despiece_ropero(receta):
     color = receta["material"]["color"]
     mat = f"Melamina 18mm {color}"
     mat_fondo = "Fibrofácil 3mm"
+    nivel = receta["calidad"]["nivel"]
 
     alto_estructura = H - ZOCALO           # entre el zócalo y la parte superior
     alto_interior = alto_estructura - 2 * e  # entre piso y techo
@@ -39,6 +42,10 @@ def despiece_ropero(receta):
     piezas, herrajes, perfs, avisos = (
         mueble.piezas, mueble.herrajes, mueble.perforaciones, mueble.avisos,
     )
+
+    tipo_union, aviso_union = union_sugerida(nivel, receta["uniones"]["tipo"])
+    if aviso_union:
+        avisos.append(aviso_union)
     confirmats = 0
     clavos = 0
     tc_fino = 0  # tapacanto 0,45mm
@@ -143,8 +150,7 @@ def despiece_ropero(receta):
                 z_caja + alto_caja // 2, 3.0, "10 mm",
                 f"eje corredera cajón {num} (P-02)"))
 
-        herrajes.append(Herraje("H-05", f"Corredera telescópica {largo_corr} mm (par)",
-                                n, "pares", "un par por cajón (R-08)"))
+        herrajes.append(corredera_calidad(nivel, largo_corr, n))
         herrajes.append(Herraje("H-15", "Tirador", n, "unidades", "uno por frente de cajón"))
         ancho_barral_zona = x0 - e - e  # lo que queda para el barral
     # --------------------------------------------------------------- Barral (R-19)
@@ -178,8 +184,7 @@ def despiece_ropero(receta):
                                 cantos="4 cantos visibles"))
         n_bis = 2 if alto_hoja <= 1500 else (3 if alto_hoja <= 2100 else 4)
         bisagras = n * n_bis
-        herrajes.append(Herraje("H-13", "Bisagra cazoleta 35 mm", bisagras, "unidades",
-                                f"{n_bis} por puerta según su alto (R-22)"))
+        herrajes.append(bisagra_calidad(nivel, bisagras))
         herrajes.append(Herraje("H-15", "Tirador", n, "unidades", "uno por puerta"))
         avisos.append(f"{n} puertas batientes de {ancho_hoja}×{alto_hoja} mm, {n_bis} bisagras c/u (R-21/R-22).")
     elif puertas["tipo"] == "corrediza":
@@ -201,7 +206,7 @@ def despiece_ropero(receta):
         avisos.append("Módulo sin puertas (placard abierto tipo vestidor).")
 
     # --------------------------------------------------------------- Herrajes generales
-    herrajes.insert(0, herraje_union(receta["uniones"]["tipo"], confirmats))
+    herrajes.insert(0, herraje_union(tipo_union, confirmats))
     herrajes.append(Herraje("H-07", "Clavos 1½\"", clavos, "unidades", "fijar el fondo (R-10)"))
     herrajes.append(Herraje("H-08", "Tapacanto PVC 0,45 mm",
                             round(tc_fino * 1.10 / 1000, 1), "metros", "cantos visibles (R-11)"))

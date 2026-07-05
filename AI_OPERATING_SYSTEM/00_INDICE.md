@@ -26,6 +26,7 @@ determinista en Python hace todo lo demás.
 | 09 | [09_DECISIONES_TECNICAS.md](09_DECISIONES_TECNICAS.md) | Registro de decisiones (ADR): qué se decidió, por qué, qué se descartó | quieras cambiar algo ya decidido — leé primero si ya se discutió |
 | 10 | [10_HOJA_DE_RUTA.md](10_HOJA_DE_RUTA.md) | Fases futuras: más muebles, UI, planos 2D, CNC, docs pendientes | planifiques trabajo nuevo |
 | 11 | [11_REGLAS_Y_MEDIDAS_ROPERO.md](11_REGLAS_Y_MEDIDAS_ROPERO.md) | Reglas y medidas propias del ropero/placard (barral, puertas, zócalo) | calcules o valides un ropero |
+| 12 | [12_GUIA_DE_ARMADO.md](12_GUIA_DE_ARMADO.md) | Orden de armado paso a paso por mueble, conceptos para principiantes (qué es una placa, tapa doble, unidades, niveles de calidad) | expliques algo a un usuario sin experiencia o generes instrucciones |
 
 ## Reglas de mantenimiento de esta memoria
 

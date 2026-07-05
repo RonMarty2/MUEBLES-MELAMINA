@@ -208,6 +208,72 @@ Formato de cada entrada:
   (no sobre el piso/zócalo) — el patrón queda disponible para reutilizar en otros
   "accesorios apoyados" futuros (bandeja de teclado corrediza, organizador, etc.)
 
+## D-015 — Guía de armado paso a paso con resaltado 3D
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** el usuario, sin experiencia en carpintería, pidió instrucciones de armado
+  y dijo textualmente "no sé nada y no quiero cometer errores".
+- **Decisión:** nueva pestaña **🔧 Armado** en la app: pasos numerados en lenguaje simple;
+  al tocar un paso, las piezas de ese paso se **iluminan en el 3D** (el resto se atenúa a
+  15% de opacidad). Espejo en Python (`generador_instrucciones.py` →
+  `instrucciones_armado.md`) para quien use el CLI o abra el proyecto generado.
+- **Implementación:** cada mesh 3D se etiqueta con `userData.pieza`; `resaltarPiezas()` /
+  `limpiarResaltado()` ajustan opacidad. El orden de pasos vive en
+  `12_GUIA_DE_ARMADO.md` como fuente de verdad única.
+- **Descartada:** dibujos 2D esquemáticos por paso — mucho más trabajo; queda para una
+  fase futura si el resaltado 3D no alcanza.
+
+## D-016 — Explicaciones en la app (íconos "?") y tapa con capa oculta cruda
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** el usuario no entendía qué significaba cada control, y al ver "2 placas"
+  y "tapa capa inferior/superior" en la lista de cortes pensó que eran dos muebles. Además
+  señaló, acertadamente, que no tiene sentido pagar una placa decorativa para esconderla
+  abajo en la tapa doble.
+- **Decisión:** (a) mapa `AYUDAS` con un ícono "?" junto a cada control que abre una
+  explicación en lenguaje simple; (b) cajas explicativas arriba de las pestañas Cortes y
+  Compras que explican qué es una placa (2600×1830 mm) y por qué se necesitan varias;
+  (c) la capa oculta de la tapa doble ahora es **aglomerado crudo** (`mat_crudo` en Python,
+  `matCrudo` en JS), separado en el presupuesto de la melamina decorativa — más barato,
+  sin perder resistencia.
+- **Consecuencias:** `generador_presupuesto.py` pasó de clasificar placas por *espesor* a
+  clasificarlas por *categoría de material* (melamina/crudo/fondo), porque ahora dos
+  piezas del mismo espesor (18 mm) pueden ser de materiales distintos y precios distintos.
+
+## D-017 — Unidades cm/mm en la app (motor siempre en mm)
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** el usuario pidió ver las medidas en centímetros por resultarle más
+  intuitivo que milímetros.
+- **Decisión:** la app muestra **cm por defecto** con un botón para cambiar a mm
+  (persistido en localStorage). El motor de cálculo (Python y JS) **sigue trabajando
+  siempre en mm puertas adentro** — la unidad es puramente de presentación
+  (`fmtNum`/`fmtMedida` en JS). **Excepción:** el espesor de las placas (18/25/36 mm)
+  siempre se muestra en mm, incluso en modo cm, porque así se habla en el oficio (nadie
+  dice "1,8 cm de espesor").
+- **Descartada:** convertir el motor entero a trabajar en cm — perdería precisión en
+  cálculos con decimales y complicaría la paridad con la tienda de corte (que siempre
+  factura y corta en mm).
+
+## D-018 — Niveles de calidad/durabilidad de herrajes
+**Fecha:** 2026-07-05 · **Estado:** vigente
+
+- **Contexto:** el usuario relató una mala experiencia real: muebles de melamina baratos
+  cuyos rieles de cajón se salían o hacían bailar el cajón con el tiempo, y aclaró que
+  construye para uso propio, no para vender, y necesita que dure.
+- **Decisión:** campo común `calidad.nivel` ("economico" | "estandar" | "premium",
+  defecto "estandar") en ambos tipos de mueble. Cambia el ARTÍCULO de corredera y bisagra
+  especificado (no la geometría): económico = rodillo/PVC (H-05e, se desgasta); estándar =
+  telescópica extracción total (H-05, la que ya existía); premium = soft-close de acero
+  (H-18/H-19). El nivel premium además sugiere automáticamente unión excéntrica (R-26) si
+  el usuario había dejado confirmat.
+- **Implementación:** `nucleo/herrajes_calidad.py` centraliza la elección para Python;
+  espejo `correderaCalidad()`/`bisagraCalidad()`/`unionSugerida()` en JS. Documentado en
+  `12_GUIA_DE_ARMADO.md` con la tabla de qué gana cada nivel.
+- **Descartada:** ocultar el nivel económico — aunque no se recomienda para uso propio,
+  el usuario puede tener presupuesto ajustado en un mueble de menor uso; se deja disponible
+  con su aviso de durabilidad explícito.
+
 ---
 
 ## Plantilla para nuevas decisiones

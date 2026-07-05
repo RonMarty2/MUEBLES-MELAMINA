@@ -9,7 +9,7 @@ valores de tu zona**; los iniciales son de ejemplo).
 | Placa fibrofácil 3 mm | 1 placa(s) placa 2600×1830×3 | $ 60.00 |
 | Servicio de corte en tienda | 4 placa(s) | $ 60.00 |
 | Confirmat 7×50 | 2 × caja ×50 (necesitás 52 unidades) | $ 16.00 |
-| Corredera telescópica 500 mm (par) | 3 pares | $ 36.00 |
+| Corredera telescópica 500 mm (par, extracción total) | 3 pares | $ 36.00 |
 | Tirador | 3 unidades | $ 6.00 |
 | Barral tubular cromado Ø25 + soportes | 1 juego | $ 15.00 |
 | Bisagra cazoleta 35 mm | 8 unidades | $ 24.00 |

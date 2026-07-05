@@ -23,6 +23,13 @@
       "properties": {
         "tipo": { "type": "string", "enum": ["confirmat", "excentrica"] }
       }
+    },
+    "calidad": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nivel": { "type": "string", "enum": ["economico", "estandar", "premium"] }
+      }
     }
   },
   "oneOf": [

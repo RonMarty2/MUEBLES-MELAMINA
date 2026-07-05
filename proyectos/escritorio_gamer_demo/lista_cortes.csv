@@ -1,6 +1,6 @@
 ﻿Pieza;Cantidad;Largo (mm);Ancho (mm);Espesor (mm);Material;Tapacanto;Notas
-Tapa capa inferior;1;1600;700;18;Melamina 18mm Negro;;Se encola y atornilla desde abajo a la capa superior
-Tapa capa superior;1;1600;700;18;Melamina 18mm Negro;4 cantos visibles (banda de 2 mm, doble corrida);
+Tapa capa inferior (oculta);1;1600;700;18;Aglomerado crudo 18mm;;Aglomerado crudo: va escondida abajo, no necesita ser decorativa
+Tapa capa superior (visible);1;1600;700;18;Melamina 18mm Negro;4 cantos visibles (banda de 2 mm);
 Lateral izquierdo (pata panel);1;714;650;18;Melamina 18mm Negro;canto frontal visible;
 Parante soporte CPU;1;714;650;18;Melamina 18mm Negro;canto frontal visible;
 Bandeja CPU;1;650;250;18;Melamina 18mm Negro;canto frontal visible;A 100 mm del piso (M-06): ventilación y limpieza

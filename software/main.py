@@ -37,6 +37,7 @@ from salidas.generador_sketchup import generar_script_sketchup
 from salidas.generador_visor_html import generar_visor_html
 from salidas.generador_cortes import generar_lista_cortes, generar_perforaciones
 from salidas.generador_presupuesto import generar_compras_y_presupuesto
+from salidas.generador_instrucciones import generar_instrucciones
 
 RAIZ = Path(__file__).parent
 REPO = RAIZ.parent
@@ -101,6 +102,7 @@ def main():
     generar_visor_html(mueble, salida / "visor_3d.html")
     generar_lista_cortes(mueble, salida / "lista_cortes.csv")
     generar_perforaciones(mueble, salida / "perforaciones.md")
+    generar_instrucciones(mueble, receta, salida / "instrucciones_armado.md")
     with open(RAIZ / "nucleo" / "precios.json", encoding="utf-8") as f:
         precios = json.load(f)
     generar_compras_y_presupuesto(
@@ -114,8 +116,9 @@ def main():
         for a in avisos:
             print(f"  • {a}")
     print(f"\nArchivos generados en {salida}/:")
-    print("  visor_3d.html       → doble clic: ver el mueble en 3D (gratis, sin instalar nada)")
-    print("  mueble_sketchup.rb  → cargar en SketchUp (consola Ruby) y usar OpenCutList")
+    print("  visor_3d.html          → doble clic: ver el mueble en 3D (gratis, sin instalar nada)")
+    print("  instrucciones_armado.md → guía paso a paso para armarlo")
+    print("  mueble_sketchup.rb     → cargar en SketchUp (consola Ruby) y usar OpenCutList")
     print("  lista_cortes.csv    → llevar a la tienda que corta placas")
     print("  perforaciones.md    → dónde va cada tornillo y perforación")
     print("  compras.md          → qué comprar")

@@ -18,10 +18,21 @@ sin internet.
 > exactamente la misma app.
 
 Arriba a la izquierda elegís el **tipo de mueble** (Escritorio gamer / Ropero-placard).
-Adentro vas a ver: controles para configurar el mueble, el 3D **en vivo** que se
-actualiza solo, y pestañas con la **lista de cortes**, **lista de compras**,
-**presupuesto** y **dónde va cada tornillo**. Botones para descargar la lista de cortes
-(CSV) y el script para SketchUp cuando quieras construirlo de verdad.
+Adentro vas a ver: controles para configurar el mueble (cada uno con un ícono **"?"** que
+explica qué es, en palabras simples), el 3D **en vivo** que se actualiza solo, y pestañas
+con:
+
+- **🔧 Armado**: pasos numerados para construirlo; al tocar un paso, esa pieza se
+  **ilumina en el dibujo 3D** para que sepas exactamente cuál es.
+- **📏 Cortes**: la lista de piezas, con una explicación de qué es una "placa" y por qué
+  el mueble necesita varias.
+- **🛒 Compras** y **💰 Presupuesto**: qué comprar y cuánto sale, con tus propios precios.
+- **🔩 Tornillos y perforaciones**: dónde va cada uno.
+
+Medidas en **centímetros por defecto** (botón arriba para cambiar a milímetros). Hay un
+selector de **calidad de herrajes** (económico / estándar / premium) para elegir qué tan
+duradero querés el mueble — premium usa correderas y bisagras soft-close que no se aflojan
+ni bailan con el tiempo.
 
 ---
 

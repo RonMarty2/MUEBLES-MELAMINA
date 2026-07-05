@@ -31,6 +31,9 @@
   "uniones": {
     "tipo": "confirmat"
   },
+  "calidad": {
+    "nivel": "estandar"
+  },
   "elevacion_monitor": {
     "incluir": false,
     "ancho": 800,

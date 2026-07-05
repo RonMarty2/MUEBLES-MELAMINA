@@ -14,6 +14,7 @@ DEFECTOS = {
     "tapa": {"tipo": None},  # se decide por R-04 según el vano
     "material": {"color": "Blanco", "espesor": 18, "espesor_fondo": 3},
     "uniones": {"tipo": "confirmat"},  # R-26: "excentrica" si se va a mover/mudar
+    "calidad": {"nivel": "estandar"},  # D-018: economico | estandar | premium
     "cajonera": {"posicion": "derecha", "ancho": 400, "cantidad_cajones": 3},
     "soporte_cpu": {"incluir": True, "ancho": 250},
     "pasacables": {"cantidad": 2, "diametro": 60},
@@ -37,17 +38,19 @@ OPCIONES = {
     ("material", "espesor"): ([15, 18], "R-01"),
     ("material", "espesor_fondo"): ([3], "R-01"),
     ("uniones", "tipo"): (["confirmat", "excentrica"], "R-26"),
+    ("calidad", "nivel"): (["economico", "estandar", "premium"], "D-018"),
     ("cajonera", "posicion"): (["derecha", "izquierda", "ninguna"], "R-14"),
     ("pasacables", "diametro"): ([60, 80], "H-06"),
 }
 
 CAMPOS_CONOCIDOS = {
     "": ["version", "tipo_mueble", "nombre", "dimensiones", "tapa", "material", "uniones",
-         "cajonera", "soporte_cpu", "pasacables", "elevacion_monitor"],
+         "calidad", "cajonera", "soporte_cpu", "pasacables", "elevacion_monitor"],
     "dimensiones": ["ancho", "profundidad", "alto"],
     "tapa": ["tipo"],
     "material": ["color", "espesor", "espesor_fondo"],
     "uniones": ["tipo"],
+    "calidad": ["nivel"],
     "cajonera": ["posicion", "ancho", "cantidad_cajones"],
     "soporte_cpu": ["incluir", "ancho"],
     "pasacables": ["cantidad", "diametro"],

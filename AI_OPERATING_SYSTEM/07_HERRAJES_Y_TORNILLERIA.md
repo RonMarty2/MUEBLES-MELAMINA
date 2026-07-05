@@ -23,6 +23,9 @@ siguiendo exactamente estas reglas; los precios unitarios viven en
 | H-10 | **Regatón/nivelador atornillable** | Base de laterales y cajonera | 2 por lateral-panel, 4 por cajonera |
 | H-11 | **Escuadra metálica 25 mm** | Refuerzo tapa↔viga y tapa↔laterales donde no conviene tornillo pasante | 1 cada 300 mm de unión oculta |
 | H-17 | **Herraje excéntrico (cam-lock/minifix) + espiga metálica Ø8** | Alternativa a H-01 para uniones estructurales de muebles que se van a mover/desarmar (R-26) | 2 por unión hasta 300 mm, +1 cada 150–200 mm extra (misma regla de cantidad que H-01) |
+| H-05e | **Corredera de rodillo (par, media extensión)** | Cajones, nivel de calidad **económico** (D-018) | 1 par por cajón; se desgasta y con el tiempo el cajón puede bailar |
+| H-18 | **Corredera telescópica soft-close (par, acero 40 kg)** | Cajones, nivel de calidad **premium** (D-018) | 1 par por cajón; extracción total + cierre suave, no se afloja ni baila |
+| H-19 | **Bisagra cazoleta 35 mm soft-close** | Puertas del ropero, nivel de calidad **premium** (D-018) | Misma cantidad que H-13 según R-22; cierra sola sin golpe |
 
 ## Criterios de elección (los "por qué")
 
