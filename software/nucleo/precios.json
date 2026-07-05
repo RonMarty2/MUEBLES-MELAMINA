@@ -1,0 +1,17 @@
+{
+  "_ayuda": "EDITÁ ESTE ARCHIVO con los precios de tu zona. 'moneda' es solo el símbolo que se muestra. Los precios son POR UNIDAD DE VENTA (caja, par, metro, placa). Valores iniciales de ejemplo: NO son precios reales.",
+  "moneda": "$",
+  "placa_melamina_18": { "precio": 200.0, "unidad_venta": "placa 2600×1830×18" },
+  "placa_fondo_3": { "precio": 60.0, "unidad_venta": "placa 2600×1830×3" },
+  "confirmat_7x50": { "precio": 8.0, "unidad_venta": "caja ×50", "unidades_por_venta": 50 },
+  "tornillo_4x30": { "precio": 6.0, "unidad_venta": "caja ×100", "unidades_por_venta": 100 },
+  "clavos": { "precio": 3.0, "unidad_venta": "caja ×100", "unidades_por_venta": 100 },
+  "corredera_telescopica_par": { "precio": 12.0, "unidad_venta": "par" },
+  "grommet_60": { "precio": 4.0, "unidad_venta": "unidad" },
+  "tapacanto_045": { "precio": 0.8, "unidad_venta": "metro" },
+  "tapacanto_2": { "precio": 2.5, "unidad_venta": "metro" },
+  "regaton": { "precio": 1.5, "unidad_venta": "unidad" },
+  "escuadra_25": { "precio": 1.0, "unidad_venta": "unidad con tornillos" },
+  "factor_desperdicio_placa": 1.25,
+  "servicio_corte_por_placa": 15.0
+}

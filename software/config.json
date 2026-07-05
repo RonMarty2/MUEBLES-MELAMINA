@@ -1,0 +1,7 @@
+{
+  "_ayuda": "Proveedor de IA para generar recetas. 'lmstudio' es gratis y local: abrí LM Studio, cargá un modelo (7B o más) y activá Developer → Start Server. Para OpenAI/Anthropic completá api_key. El sistema también funciona SIN IA: python main.py --receta archivo.json",
+  "proveedor": "lmstudio",
+  "url": "http://localhost:1234/v1",
+  "modelo": "",
+  "api_key": "lm-studio"
+}

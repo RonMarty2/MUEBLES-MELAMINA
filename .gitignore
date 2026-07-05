@@ -1,0 +1,11 @@
+# Muebles generados por el usuario (el demo de referencia SÍ se versiona)
+proyectos/*
+!proyectos/escritorio_gamer_demo/
+
+# Python
+__pycache__/
+*.pyc
+
+# Sistema
+.DS_Store
+Thumbs.db

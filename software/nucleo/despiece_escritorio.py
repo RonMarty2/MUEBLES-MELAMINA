@@ -1,0 +1,295 @@
+"""Motor de despiece del escritorio gamer.
+
+Frontera de módulo (02_ARQUITECTURA.md): matemática pura. Recibe una receta
+YA validada y normalizada, devuelve un Mueble con piezas, herrajes y
+perforaciones. No lee archivos, no habla con IAs, no formatea salidas.
+
+Reglas aplicadas: R-xx de 05_REGLAS_DE_CARPINTERIA.md, M-xx de
+06_MEDIDAS_ESTANDAR.md, H-xx/P-xx de 07_HERRAJES_Y_TORNILLERIA.md.
+
+Sistema de coordenadas (ver modelos.py): x = ancho, y = profundidad,
+z = alto. El mueble se calcula con la cajonera a la DERECHA y el soporte de
+CPU a la izquierda; si la receta pide cajonera a la izquierda, se espeja todo
+en x al final.
+"""
+
+import math
+
+from .modelos import Pieza, Herraje, Perforacion, Mueble
+from .validador import espesor_tapa, vano_libre
+
+RETRANQUEO_FRONTAL = 50      # las patas/paneles entran 50 mm respecto del frente
+ALTURA_BANDEJA_CPU = 100     # M-06
+LARGOS_CORREDERA = [250, 300, 350, 400, 450, 500, 550, 600]  # R-08
+VANO_MAXIMO_SIN_VIGA = 1200  # R-13
+
+
+def confirmats_por_union(largo_union):
+    """R-09: 2 confirmats hasta 300 mm de unión, luego 1 cada 200 mm."""
+    if largo_union <= 300:
+        return 2
+    return 2 + math.ceil((largo_union - 300) / 200)
+
+
+def elegir_corredera(profundidad_interior):
+    """R-08: la corredera comercial más larga que quepa con 20 mm de margen."""
+    candidatas = [l for l in LARGOS_CORREDERA if l <= profundidad_interior - 20]
+    return candidatas[-1] if candidatas else LARGOS_CORREDERA[0]
+
+
+def despiece_escritorio(receta):
+    """Receta validada de tipo escritorio_gamer -> Mueble completo."""
+    d = receta["dimensiones"]
+    A, P, H = d["ancho"], d["profundidad"], d["alto"]
+    e = receta["material"]["espesor"]
+    ef = receta["material"]["espesor_fondo"]
+    color = receta["material"]["color"]
+    t = espesor_tapa(receta)
+    alto_apoyo = H - t
+    prof_panel = P - RETRANQUEO_FRONTAL
+
+    mat = f"Melamina {e}mm {color}"
+    mat_fondo = f"Fibrofácil {ef}mm"
+
+    mueble = Mueble(nombre=receta["nombre"], receta=receta)
+    piezas, herrajes, perfs, avisos = (
+        mueble.piezas, mueble.herrajes, mueble.perforaciones, mueble.avisos,
+    )
+
+    confirmats = 0
+    escuadras_mm = 0          # mm de unión oculta que llevan escuadras (H-11)
+    clavos = 0
+    tapacanto_fino_mm = 0     # H-08 (0,45 mm)
+    tapacanto_grueso_mm = 0   # H-09 (2 mm)
+    regatones = 0
+    tornillos_frente = 0      # H-04 (4×30)
+
+    # ------------------------------------------------------------------ Tapa
+    if receta["tapa"]["tipo"] == "doble_18":
+        piezas.append(Pieza("Tapa capa inferior", A, P, 18, mat,
+                            (0, 0, H - 36), (A, P, 18),
+                            notas="Se encola y atornilla desde abajo a la capa superior"))
+        piezas.append(Pieza("Tapa capa superior", A, P, 18, mat,
+                            (0, 0, H - 18), (A, P, 18),
+                            cantos="4 cantos visibles (banda de 2 mm, doble corrida)"))
+        tapacanto_grueso_mm += 2 * (2 * (A + P))
+        avisos.append(
+            "La tapa doble de 18 mm se arma encolando las dos placas y atornillando "
+            "desde abajo con tornillos 4×30 en grilla de ~300 mm (la capa de abajo "
+            "puede ser melamina económica o la misma)."
+        )
+        tornillos_frente += math.ceil(A / 300) * math.ceil(P / 300)
+    else:
+        piezas.append(Pieza("Tapa", A, P, t, mat,
+                            (0, 0, H - t), (A, P, t),
+                            cantos="4 cantos visibles (banda de 2 mm)"))
+        tapacanto_grueso_mm += 2 * (A + P)
+
+    # ------------------------------------------------- Apoyos verticales
+    piezas.append(Pieza("Lateral izquierdo (pata panel)", prof_panel, alto_apoyo, e, mat,
+                        (0, RETRANQUEO_FRONTAL, 0), (e, prof_panel, alto_apoyo),
+                        cantos="canto frontal visible"))
+    tapacanto_fino_mm += alto_apoyo
+    regatones += 2
+    escuadras_mm += prof_panel  # unión tapa-lateral
+
+    x_izq_interior = e  # cara interna del apoyo izquierdo del vano
+
+    # ------------------------------------------------- Soporte de CPU (R-17)
+    cpu = receta["soporte_cpu"]
+    if cpu["incluir"]:
+        w_cpu = cpu["ancho"]
+        x_parante = e + w_cpu
+        piezas.append(Pieza("Parante soporte CPU", prof_panel, alto_apoyo, e, mat,
+                            (x_parante, RETRANQUEO_FRONTAL, 0),
+                            (e, prof_panel, alto_apoyo),
+                            cantos="canto frontal visible"))
+        piezas.append(Pieza("Bandeja CPU", prof_panel, w_cpu, e, mat,
+                            (e, RETRANQUEO_FRONTAL, ALTURA_BANDEJA_CPU),
+                            (w_cpu, prof_panel, e),
+                            cantos="canto frontal visible",
+                            notas=f"A {ALTURA_BANDEJA_CPU} mm del piso (M-06): ventilación y limpieza"))
+        tapacanto_fino_mm += alto_apoyo + w_cpu
+        regatones += 2
+        escuadras_mm += prof_panel
+        # Uniones bandeja ↔ lateral y bandeja ↔ parante (P-01)
+        n_conf = confirmats_por_union(prof_panel)
+        confirmats += 2 * n_conf
+        for lado, pieza_nombre in (("Lateral izquierdo (pata panel)", "lateral"),
+                                   ("Parante soporte CPU", "parante")):
+            for i in range(n_conf):
+                y_pos = 50 + i * max(1, (prof_panel - 100) // max(1, n_conf - 1)) if n_conf > 1 else prof_panel // 2
+                perfs.append(Perforacion(
+                    lado, "cara (por fuera)", y_pos, ALTURA_BANDEJA_CPU + e // 2,
+                    4.5, "pasante",
+                    f"confirmat bandeja CPU al {pieza_nombre} (P-01)"))
+        x_izq_interior = x_parante + e
+
+    # ------------------------------------------------- Cajonera (estructural)
+    caj = receta["cajonera"]
+    con_cajonera = caj["posicion"] != "ninguna"
+    if con_cajonera:
+        C = caj["ancho"]
+        PC = P - 100                       # M-09: retranqueo frontal + paso de cables
+        x0 = A - C
+        y0 = RETRANQUEO_FRONTAL
+        interior = C - 2 * e               # R-02
+
+        piezas.append(Pieza("Lateral cajonera interno", PC, alto_apoyo, e, mat,
+                            (x0, y0, 0), (e, PC, alto_apoyo),
+                            cantos="canto frontal visible"))
+        piezas.append(Pieza("Lateral cajonera externo", PC, alto_apoyo, e, mat,
+                            (A - e, y0, 0), (e, PC, alto_apoyo),
+                            cantos="canto frontal visible"))
+        piezas.append(Pieza("Piso cajonera", PC, interior, e, mat,
+                            (x0 + e, y0, 0), (interior, PC, e)))
+        piezas.append(Pieza("Fondo cajonera", alto_apoyo - 4, C - 4, ef, mat_fondo,
+                            (x0 + 2, y0 + PC, 2), (C - 4, ef, alto_apoyo - 4),
+                            notas="Clavado por detrás (R-10)"))
+        tapacanto_fino_mm += 2 * alto_apoyo + interior
+        regatones += 4
+        escuadras_mm += 2 * PC  # unión tapa ↔ laterales cajonera
+        clavos += math.ceil(2 * ((C - 4) + (alto_apoyo - 4)) / 150)
+
+        # Piso ↔ laterales (P-01)
+        n_conf = confirmats_por_union(PC)
+        confirmats += 2 * n_conf
+        for lado in ("Lateral cajonera interno", "Lateral cajonera externo"):
+            for i in range(n_conf):
+                y_pos = 50 + (i * (PC - 100) // (n_conf - 1) if n_conf > 1 else PC // 2)
+                perfs.append(Perforacion(
+                    lado, "cara (por fuera)", y_pos, e // 2, 4.5, "pasante",
+                    "confirmat piso cajonera (P-01)"))
+
+        # ---------------------------------------------------------- Cajones
+        n = caj["cantidad_cajones"]
+        alto_util = alto_apoyo - e                       # sobre el piso de la cajonera
+        alto_frente = (alto_util - 3 * n) // n           # R-06
+        largo_corr = elegir_corredera(PC)                # R-08
+        ancho_caja = interior - 26                       # R-05
+        alto_caja = alto_frente - 30                     # R-12
+        x_caja = x0 + e + 13
+
+        avisos.append(
+            f"Cajones: {n} frentes de {alto_frente} mm de alto (R-06), caja de "
+            f"{ancho_caja} × {largo_corr} × {alto_caja} mm, correderas telescópicas "
+            f"de {largo_corr} mm (R-05/R-08)."
+        )
+
+        for i in range(n):
+            z_frente = e + i * (alto_frente + 3)
+            z_caja = z_frente + 15
+            num = i + 1
+            piezas.append(Pieza(f"Frente cajón {num}", C - 4, alto_frente, e, mat,
+                                (x0 + 2, y0 - e, z_frente), (C - 4, e, alto_frente),
+                                cantos="4 cantos visibles",
+                                notas="Se fija desde adentro con 4 tornillos 4×30 (H-04)"))
+            piezas.append(Pieza(f"Lateral caja cajón {num} (izq)", largo_corr, alto_caja, e, mat,
+                                (x_caja, y0, z_caja), (e, largo_corr, alto_caja)))
+            piezas.append(Pieza(f"Lateral caja cajón {num} (der)", largo_corr, alto_caja, e, mat,
+                                (x_caja + ancho_caja - e, y0, z_caja),
+                                (e, largo_corr, alto_caja)))
+            piezas.append(Pieza(f"Frente interno cajón {num}", ancho_caja - 2 * e, alto_caja, e, mat,
+                                (x_caja + e, y0, z_caja),
+                                (ancho_caja - 2 * e, e, alto_caja)))
+            piezas.append(Pieza(f"Contrafrente cajón {num}", ancho_caja - 2 * e, alto_caja, e, mat,
+                                (x_caja + e, y0 + largo_corr - e, z_caja),
+                                (ancho_caja - 2 * e, e, alto_caja)))
+            piezas.append(Pieza(f"Fondo cajón {num}", largo_corr - 2, ancho_caja - 2, ef, mat_fondo,
+                                (x_caja + 1, y0 + 1, z_caja - ef),
+                                (ancho_caja - 2, largo_corr - 2, ef),
+                                notas="Clavado por debajo de la caja (R-10)"))
+            tapacanto_fino_mm += 2 * ((C - 4) + alto_frente)
+            confirmats += 4 * confirmats_por_union(alto_caja)
+            clavos += math.ceil(2 * ((ancho_caja - 2) + (largo_corr - 2)) / 150)
+            tornillos_frente += 4
+            eje = z_caja + alto_caja // 2
+            perfs.append(Perforacion(
+                "Lateral cajonera interno / externo", "cara interior", 0, eje, 3.0, "10 mm",
+                f"eje corredera cajón {num} a {eje} mm del piso del mueble (P-02); "
+                f"fijar con tornillos 4×16 en agujeros de la corredera"))
+
+    else:
+        piezas.append(Pieza("Lateral derecho (pata panel)", prof_panel, alto_apoyo, e, mat,
+                            (A - e, RETRANQUEO_FRONTAL, 0), (e, prof_panel, alto_apoyo),
+                            cantos="canto frontal visible"))
+        tapacanto_fino_mm += alto_apoyo
+        regatones += 2
+        escuadras_mm += prof_panel
+
+    # ------------------------------------------------- Viga trasera (R-13)
+    x_der_interior = (A - caj["ancho"]) if con_cajonera else (A - e)
+    vano = x_der_interior - x_izq_interior
+    if vano > VANO_MAXIMO_SIN_VIGA:
+        y_viga = P - RETRANQUEO_FRONTAL - e
+        piezas.append(Pieza("Viga trasera", vano, 300, e, mat,
+                            (x_izq_interior, y_viga, alto_apoyo - 300),
+                            (vano, e, 300),
+                            notas="De canto, unida a ambos apoyos y a la tapa (R-13)"))
+        confirmats += 2 * confirmats_por_union(300)
+        escuadras_mm += vano
+        avisos.append(
+            f"Se agregó viga trasera de {vano} × 300 mm: el vano libre supera los "
+            f"{VANO_MAXIMO_SIN_VIGA} mm (regla R-13) y sin ella el mueble cimbra."
+        )
+
+    # ------------------------------------------------- Pasacables (R-16)
+    pas = receta["pasacables"]
+    if pas["cantidad"] > 0:
+        zona_ini, zona_fin = x_izq_interior, x_der_interior
+        paso = (zona_fin - zona_ini) // (pas["cantidad"] + 1)
+        for k in range(pas["cantidad"]):
+            cx = zona_ini + paso * (k + 1)
+            perfs.append(Perforacion(
+                "Tapa" if receta["tapa"]["tipo"] != "doble_18" else "Tapa (ambas capas)",
+                "cara superior", cx, P - 60, pas["diametro"], "pasante",
+                f"pasacables {k + 1}: broca copa Ø{pas['diametro']} a 60 mm del borde "
+                "trasero (R-16); colocar grommet (H-06)"))
+
+    # ------------------------------------------------- Espejar si cajonera izquierda
+    if caj["posicion"] == "izquierda":
+        for p in piezas:
+            x, y, z = p.pos
+            dx, dy, dz = p.dim
+            p.pos = (A - x - dx, y, z)
+        avisos.append("Mueble espejado: cajonera a la izquierda, soporte CPU a la derecha.")
+
+    # ------------------------------------------------- Herrajes (07)
+    herrajes.append(Herraje("H-01", "Tornillo confirmat 7×50 (con broca escalonada)",
+                            confirmats, "unidades",
+                            "uniones estructurales entre tableros (R-09)"))
+    herrajes.append(Herraje("H-04", "Tornillo aglomerado 4×30",
+                            tornillos_frente, "unidades",
+                            "fijar frentes de cajón desde adentro y laminar tapa doble"))
+    if con_cajonera:
+        herrajes.append(Herraje("H-05", f"Corredera telescópica {largo_corr} mm (par)",
+                                caj["cantidad_cajones"], "pares",
+                                "un par por cajón (R-08); incluye tornillos 4×16"))
+    if pas["cantidad"] > 0:
+        herrajes.append(Herraje("H-06", f"Grommet pasacables Ø{pas['diametro']}",
+                                pas["cantidad"], "unidades",
+                                "terminación de las perforaciones de la tapa (R-16)"))
+    herrajes.append(Herraje("H-07", "Clavos 1½\" (o tornillo 3×16)",
+                            clavos, "unidades", "fijar fondos de 3 mm (R-10)"))
+    herrajes.append(Herraje("H-08", "Tapacanto PVC 22×0,45 mm",
+                            round(tapacanto_fino_mm * 1.10 / 1000, 1), "metros",
+                            "cantos visibles generales (R-11, incluye 10% de descarte)"))
+    herrajes.append(Herraje("H-09", "Tapacanto PVC 22×2 mm",
+                            round(tapacanto_grueso_mm * 1.10 / 1000, 1), "metros",
+                            "cantos de la tapa, alto impacto (R-11)"))
+    herrajes.append(Herraje("H-10", "Regatón nivelador atornillable",
+                            regatones, "unidades",
+                            "separar la melamina del piso y nivelar"))
+    herrajes.append(Herraje("H-11", "Escuadra metálica 25 mm con tornillos 4×16",
+                            math.ceil(escuadras_mm / 300), "unidades",
+                            "fijar la tapa a los apoyos sin tornillos a la vista"))
+
+    # ------------------------------------------------- Chequeo final R-15
+    for p in piezas:
+        if p.largo > 2560 or p.ancho > 1790:
+            avisos.append(
+                f"⚠ ATENCIÓN: la pieza '{p.nombre}' ({p.largo}×{p.ancho}) no sale de "
+                "una placa de 2600×1830 con margen (R-15). Revisar la receta."
+            )
+
+    return mueble

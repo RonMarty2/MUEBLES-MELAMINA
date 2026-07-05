@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "tipo_mueble": "escritorio_gamer",
+  "nombre": "Escritorio Gamer Demo",
+  "dimensiones": {
+    "ancho": 1600,
+    "profundidad": 700,
+    "alto": 750
+  },
+  "material": {
+    "color": "Negro"
+  },
+  "cajonera": {
+    "posicion": "derecha",
+    "ancho": 400,
+    "cantidad_cajones": 3
+  },
+  "soporte_cpu": {
+    "incluir": true,
+    "ancho": 250
+  },
+  "pasacables": {
+    "cantidad": 2,
+    "diametro": 60
+  }
+}
