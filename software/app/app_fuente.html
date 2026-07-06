@@ -1072,6 +1072,121 @@ function tarjetasColocacionHerrajes(texto, m) {
   return html;
 }
 
+/* ------------------------------------------------ diagrama genérico didáctico por paso (D-024)
+   No es un plano acotado (como bisagra/corredera): es un dibujo simple, tipo IKEA, que muestra
+   QUÉ acción hacer (atornillar, encolar, clavar, perforar, deslizar...) y en qué orden, para
+   pasos que hoy son solo texto. */
+function cajaOrdenXY(x, y, items) {
+  if (!items || !items.length) return { svg: "", h: 0 };
+  const h = 26 + items.length * 18;
+  return { h: h + 10, svg: `<rect x="${x}" y="${y}" width="240" height="${h}" fill="#fff7ed" stroke="#f59e0b"/>
+    <text x="${x + 12}" y="${y + 18}" font-size="12" font-weight="700" fill="#111">Orden correcto</text>
+    ${items.map((t, i) => `<text x="${x + 12}" y="${y + 36 + i * 18}" font-size="11" fill="#111">${i + 1} ${t}</text>`).join("")}` };
+}
+function cajaNoHacerXY(x, y, items) {
+  if (!items || !items.length) return { svg: "", h: 0 };
+  const h = 26 + items.length * 18;
+  return { h: h + 10, svg: `<rect x="${x}" y="${y}" width="240" height="${h}" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="${x + 12}" y="${y + 18}" font-size="12" font-weight="700" fill="#111">No hacer</text>
+    ${items.map((t, i) => `<text x="${x + 12}" y="${y + 36 + i * 18}" font-size="11" fill="#111">${t}</text>`).join("")}` };
+}
+function iconoFlecha(x1, y1, x2, y2) {
+  const ang = Math.atan2(y2 - y1, x2 - x1), ah = 9;
+  const ax1 = x2 - ah * Math.cos(ang - 0.5), ay1 = y2 - ah * Math.sin(ang - 0.5);
+  const ax2 = x2 - ah * Math.cos(ang + 0.5), ay2 = y2 - ah * Math.sin(ang + 0.5);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#111" stroke-width="2.5"/>
+    <path d="M${ax1} ${ay1} L${x2} ${y2} L${ax2} ${ay2}" fill="none" stroke="#111" stroke-width="2.5"/>`;
+}
+function iconoTornilloMini(x, y) {
+  return `<circle cx="${x}" cy="${y}" r="6" fill="#fff" stroke="#111" stroke-width="1.6"/>
+    <line x1="${x - 3}" y1="${y}" x2="${x + 3}" y2="${y}" stroke="#111"/>
+    <line x1="${x}" y1="${y - 3}" x2="${x}" y2="${y + 3}" stroke="#111"/>
+    <line x1="${x}" y1="${y + 6}" x2="${x}" y2="${y + 22}" stroke="#111" stroke-width="2"/>`;
+}
+function iconoGota(x, y) {
+  return `<circle cx="${x}" cy="${y}" r="3.5" fill="#c7a76c" stroke="#8a6d3b"/>`;
+}
+function iconoClavoMini(x, y) {
+  return `<line x1="${x}" y1="${y - 14}" x2="${x}" y2="${y + 2}" stroke="#111" stroke-width="2"/>
+    <circle cx="${x}" cy="${y - 16}" r="3" fill="#111"/>`;
+}
+function iconoBrocaMini(x, y) {
+  return `<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="#111" stroke-width="1.6" stroke-dasharray="3 3"/>
+    <circle cx="${x}" cy="${y}" r="4" fill="#111"/>`;
+}
+function svgDiagramaPaso(datos) {
+  const piezas = datos.piezas || [];
+  const anchoTotal = 820, altoBase = 300;
+  let piezasHtml = "", accionHtml = "";
+  if (datos.layout === "apilado") {
+    const x = 140, w = 260, yAbajo = 200, hAbajo = 46, yArriba = 108, hArriba = 46;
+    piezasHtml = `
+      <rect x="${x}" y="${yAbajo}" width="${w}" height="${hAbajo}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
+      <text x="${x + w / 2}" y="${yAbajo + hAbajo + 18}" text-anchor="middle" font-size="12" fill="#444">${piezas[0] || ""}</text>
+      <rect x="${x}" y="${yArriba}" width="${w}" height="${hArriba}" fill="#fff" stroke="#111" stroke-width="1.6"/>
+      <text x="${x + w / 2}" y="${yArriba - 10}" text-anchor="middle" font-size="12" fill="#444">${piezas[1] || ""}</text>`;
+    const gotas = [0, 1, 2, 3, 4].map(i => iconoGota(x + 30 + i * (w - 60) / 4, (yArriba + hArriba + yAbajo) / 2)).join("");
+    accionHtml = `${gotas}${iconoFlecha(x + w / 2, yArriba - 34, x + w / 2, yArriba + 6)}
+      <text x="${x + w + 16}" y="${(yArriba + yAbajo) / 2 - 8}" font-size="12" fill="#111">Cola en toda la cara,</text>
+      <text x="${x + w + 16}" y="${(yArriba + yAbajo) / 2 + 10}" font-size="12" fill="#111">presioná y dejá peso</text>
+      <text x="${x + w + 16}" y="${(yArriba + yAbajo) / 2 + 28}" font-size="12" fill="#111">encima mientras seca.</text>`;
+  } else if (datos.layout === "escuadra") {
+    const bx = 140, by = 230, bw = 260, bh = 26, lw = 26, lh = 150;
+    piezasHtml = `
+      <rect x="${bx}" y="${by - lh}" width="${lw}" height="${lh}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
+      <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="#fff" stroke="#111" stroke-width="1.6"/>
+      <rect x="${bx + bw - lw}" y="${by - lh}" width="${lw}" height="${lh}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
+      <text x="${bx + lw / 2}" y="${by - lh - 10}" text-anchor="middle" font-size="11" fill="#444">${piezas[0] || ""}</text>
+      <text x="${bx + bw - lw / 2}" y="${by - lh - 10}" text-anchor="middle" font-size="11" fill="#444">${piezas[1] || ""}</text>
+      <text x="${bx + bw / 2}" y="${by + bh + 16}" text-anchor="middle" font-size="11" fill="#444">${piezas[2] || ""}</text>
+      ${piezas[3] ? `<rect x="${bx}" y="${by - lh - 14}" width="${bw}" height="14" fill="#fff" stroke="#111" stroke-dasharray="4 3"/><text x="${bx + bw / 2}" y="${by - lh - 20}" text-anchor="middle" font-size="10" fill="#444">${piezas[3]}</text>` : ""}`;
+    accionHtml = `${iconoTornilloMini(bx + 8, by - 6)}${iconoTornilloMini(bx + bw - 8, by - 6)}
+      <text x="${bx + bw + 20}" y="${by - 44}" font-size="12" fill="#111">Presentá las piezas primero,</text>
+      <text x="${bx + bw + 20}" y="${by - 26}" font-size="12" fill="#111">pre-perforá y recién atornillá.</text>`;
+  } else {
+    const x = 160, y = 130, w = 220, h = 110, cxA = x + w / 2, cyA = y + h / 2;
+    piezasHtml = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
+      <text x="${cxA}" y="${y + h + 18}" text-anchor="middle" font-size="12" fill="#444">${piezas[0] || ""}</text>`;
+    if (datos.accion === "atornillar-adentro") {
+      accionHtml = `${iconoFlecha(x - 40, cyA, x + 6, cyA)}${iconoTornilloMini(x - 30, cyA - 14)}
+        <text x="${x - 150}" y="${cyA - 24}" font-size="12" fill="#111">Atornillá desde</text>
+        <text x="${x - 150}" y="${cyA - 6}" font-size="12" fill="#111">ADENTRO hacia afuera.</text>`;
+    } else if (datos.accion === "clavar") {
+      const clavos = [0, 1, 2, 3].map(i => iconoClavoMini(x + 20 + i * (w - 40) / 3, y + h)).join("");
+      accionHtml = `${clavos}<text x="${x + w + 20}" y="${cyA}" font-size="12" fill="#111">Clavos cada ~15 cm</text>`;
+    } else if (datos.accion === "perforar-broca") {
+      accionHtml = `${iconoBrocaMini(cxA, cyA)}${iconoFlecha(cxA, cyA - 44, cxA, cyA - 14)}
+        <text x="${x + w + 20}" y="${cyA}" font-size="12" fill="#111">Perforá con broca copa</text>`;
+    } else if (datos.accion === "insertar-deslizar") {
+      accionHtml = `${iconoFlecha(x - 50, cyA, x - 4, cyA)}
+        <text x="${x - 190}" y="${cyA - 10}" font-size="12" fill="#111">Insertá / deslizá</text>`;
+    } else if (datos.accion === "colgar-apoyar") {
+      accionHtml = `${iconoFlecha(cxA, y - 40, cxA, y - 4)}
+        <text x="${x + w + 20}" y="${cyA}" font-size="12" fill="#111">Apoyá / colgá acá</text>`;
+    } else {
+      accionHtml = `${iconoFlecha(cxA, y - 40, cxA, y - 4)}${iconoTornilloMini(cxA - 6, y - 38)}
+        <text x="${x + w + 20}" y="${cyA}" font-size="12" fill="#111">Atornillá desde arriba</text>`;
+    }
+  }
+  const orden = cajaOrdenXY(560, 30, datos.orden);
+  const noHacer = cajaNoHacerXY(560, 30 + orden.h, datos.noHacer);
+  return `<svg class="plano-generico" viewBox="0 0 ${anchoTotal} ${altoBase}" role="img" aria-label="Diagrama del paso">
+    <rect x="1" y="1" width="${anchoTotal - 2}" height="${altoBase - 2}" rx="8" fill="#fff" stroke="#d6d3ce"/>
+    ${piezasHtml}
+    ${accionHtml}
+    ${datos.fijacion ? `<text x="20" y="${altoBase - 14}" font-size="12" fill="#111">Fijación: <tspan font-weight="700">${datos.fijacion}</tspan></text>` : ""}
+    ${orden.svg}
+    ${noHacer.svg}
+  </svg>`;
+}
+function tarjetasDiagramaPaso(diagrama) {
+  if (!diagrama) return "";
+  return `<div class="colocacion-card">
+    <h4>Cómo se hace este paso</h4>
+    ${svgDiagramaPaso(diagrama)}
+  </div>`;
+}
+
 const GLOSARIO_HERRAJES = [
   { patron: /tornillo\s*4\s*[x×]\s*30/, nombre: "Tornillo para aglomerado 4×30", diametro: 4, largo: 30,
     broca: "Ø2,5 mm",
@@ -1128,8 +1243,8 @@ function tarjetasHerrajes(texto, m = mueble, incluirColocacion = true) {
 
 function instruccionesArmadoJS(m, receta) {
   const pasos = [];
-  const paso = (titulo, texto, piezas = [], herraje = "", tip = "") =>
-    pasos.push({ n: pasos.length + 1, titulo, texto, piezas, herraje, tip });
+  const paso = (titulo, texto, piezas = [], herraje = "", tip = "", diagrama = null) =>
+    pasos.push({ n: pasos.length + 1, titulo, texto, piezas, herraje, tip, diagrama });
 
   if (receta.tipo_mueble === "ropero") {
     paso("Entendé las placas y ordená los cortes",
@@ -1137,26 +1252,34 @@ function instruccionesArmadoJS(m, receta) {
       [], "", "Trabajá en un piso parejo y con espacio: el ropero es grande.");
     paso("Armá la base y el zócalo",
       "El zócalo va más adentro del frente (retranqueado), para que no se vea al agacharse y separe la melamina del piso.",
-      ["Zócalo frontal"], "Confirmat / excéntrico", "La melamina nunca debe apoyar directo al piso (humedad).");
+      ["Zócalo frontal"], "Confirmat / excéntrico", "La melamina nunca debe apoyar directo al piso (humedad).",
+      { layout: "una-pieza", piezas: ["zócalo"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
     paso("Parás los laterales y armá la caja",
       "Uní los dos laterales con el piso y el techo, formando la caja principal. Pre-perforá antes de atornillar.",
       ["Lateral izquierdo", "Lateral derecho", "Piso", "Techo (estante superior)"], "Confirmat / excéntrico",
-      "Medí las dos diagonales: deben dar igual (así queda en escuadra).");
+      "Medí las dos diagonales: deben dar igual (así queda en escuadra).",
+      { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "piso", "techo"], fijacion: "Confirmat/excéntrico + pre-perforado",
+        orden: ["presentar en escuadra", "pre-perforar", "atornillar"], noHacer: ["atornillar sin perforar guía"] });
     paso("Cerrá el fondo",
       "El fondo de 3 mm va clavado por detrás. No lo selles hermético: dejá que ventile para que la ropa no tome humedad.",
-      ["Fondo"], "Clavos 1½\"");
+      ["Fondo"], "Clavos 1½\"",
+      "", { layout: "una-pieza", piezas: ["fondo (3 mm)"], accion: "clavar", fijacion: "Clavos 1½\" cada ~15 cm",
+        noHacer: ["sellar el fondo hermético"] });
     if (hayPieza(m, "Divisor cajones"))
       paso("Armá la cajonera interior",
         "Colocá el divisor y armá el bloque de cajones (cajas + correderas + frentes). Para las correderas, medí desde el piso interior del hueco y seguí el plano acotado: la línea central debe coincidir en cajón y mueble.",
-        ["Divisor cajones", "Tapa de cajonera", "Lateral caja cajón", "Frente cajón"], "Corredera (según calidad) + tirador");
+        ["Divisor cajones", "Tapa de cajonera", "Lateral caja cajón", "Frente cajón"], "Corredera (según calidad) + tirador",
+        "", { layout: "escuadra", piezas: ["lateral caja izq.", "lateral caja der.", "piso caja"], fijacion: "Confirmat + clavos" });
     if (hayPieza(m, "Barral"))
       paso("Colocá el barral para colgar la ropa",
         "Atornillá los soportes a los laterales a la altura indicada y apoyá el tubo. Si es ancho, lleva un soporte en el medio.",
-        ["Barral colgador"], "Barral tubular + soportes");
+        ["Barral colgador"], "Barral tubular + soportes",
+        "", { layout: "una-pieza", piezas: ["barral tubular"], accion: "colgar-apoyar", fijacion: "Soportes atornillados al lateral" });
     if (hayPieza(m, "Estante inferior"))
       paso("Colocá el estante inferior",
         "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras.",
-        ["Estante inferior (zapatos)"], "Rinconera/taco");
+        ["Estante inferior (zapatos)"], "Rinconera/taco",
+        "", { layout: "una-pieza", piezas: ["estante inferior"], accion: "colgar-apoyar", fijacion: "Apoyado sobre taco/rinconera" });
     if (hayPieza(m, "Puerta batiente"))
       paso("Colocá las puertas batientes",
         "Marcá los centros de las cazoletas en la cara interna de cada puerta siguiendo el plano acotado. Perforá con broca copa Ø35 solo 12-13 mm de profundidad, sin atravesar la puerta. Atornillá las bisagras, colgá las puertas y regulá hasta que cierren parejas.",
@@ -1165,7 +1288,8 @@ function instruccionesArmadoJS(m, receta) {
     else if (hayPieza(m, "Puerta corrediza"))
       paso("Colocá los rieles y las puertas corredizas",
         "Atornillá el riel de arriba y el de abajo. Colgá cada hoja; se solapan un poco. Probá que deslicen suave.",
-        ["Puerta corrediza 1", "Puerta corrediza 2"], "Riel corredizo (juego) + tirador");
+        ["Puerta corrediza 1", "Puerta corrediza 2"], "Riel corredizo (juego) + tirador",
+        "", { layout: "una-pieza", piezas: ["puerta corrediza"], accion: "insertar-deslizar", fijacion: "Riel superior + inferior" });
     paso("Terminación final",
       "Repasá tapacantos, apretá todas las uniones y nivelá el mueble en su lugar. Un ropero cargado pesa mucho: ubicalo antes de llenarlo.",
       [], "", "Si es alto, fijalo a la pared con un ángulo para que no se vuelque.");
@@ -1180,24 +1304,33 @@ function instruccionesArmadoJS(m, receta) {
     paso("Armá la tapa doble (refuerzo anti-pandeo)",
       "La tapa lleva dos capas: abajo el aglomerado crudo (no se ve) y arriba la melamina decorativa. Poné cola en toda la capa de abajo, apoyá la de arriba alineada y atornillá desde abajo con 4×30 cada ~30 cm. Dejá secar con peso encima.",
       ["Tapa capa inferior (oculta)", "Tapa capa superior (visible)"], "Tornillo 4×30 + cola",
-      "La cara linda va PARA ARRIBA. La capa cruda queda escondida abajo.");
+      "La cara linda va PARA ARRIBA. La capa cruda queda escondida abajo.",
+      { layout: "apilado", piezas: ["capa inferior (cruda)", "capa superior (melamina)"], fijacion: "Tornillo 4×30 cada ~30 cm",
+        orden: ["encolar capa de abajo", "alinear la de arriba", "atornillar desde abajo", "dejar secar con peso"],
+        noHacer: ["poner la cara linda para abajo"] });
   if (hayPieza(m, "Lateral cajonera"))
     paso("Armá el cajón de la cajonera (caja estructural)",
       "Uní los dos laterales de la cajonera con el piso, formando una U. Cerrá por atrás con el fondo. Pre-perforá SIEMPRE.",
       ["Lateral cajonera interno", "Lateral cajonera externo", "Piso cajonera", "Fondo cajonera"],
-      "Confirmat / excéntrico + clavos", "Verificá la escuadra midiendo las dos diagonales.");
+      "Confirmat / excéntrico + clavos", "Verificá la escuadra midiendo las dos diagonales.",
+      { layout: "escuadra", piezas: ["lateral interno", "lateral externo", "piso"], fijacion: "Confirmat/excéntrico + pre-perforado",
+        orden: ["presentar en escuadra", "pre-perforar", "atornillar", "clavar el fondo atrás"],
+        noHacer: ["atornillar sin perforar guía"] });
   if (hayPieza(m, "Lateral caja cajón")) {
     paso("Armá las cajas de los cajones",
       "Cada cajón es una caja: dos laterales, frente interno y contrafrente, más un fondo de 3 mm por debajo. Armá todas primero.",
       ["Lateral caja cajón", "Frente interno cajón", "Contrafrente cajón", "Fondo cajón"], "Confirmat + clavos",
-      "Todas las cajas iguales para que los cajones corran parejos.");
+      "Todas las cajas iguales para que los cajones corran parejos.",
+      { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
     paso("Colocá las correderas y meté los cajones",
       "Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, a la misma altura. Medí desde el piso interior del hueco según el plano acotado: la línea central de la corredera debe coincidir en cajón y mueble. Usá tornillos 4×16 y probá que corra suave antes de poner el frente.",
       [], "Corredera (según el nivel de calidad que elegiste)",
       "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.");
     paso("Atornillá los frentes de los cajones",
       "El frente visible (con el tirador) se atornilla desde ADENTRO del cajón. Dejá 3 mm de luz entre frentes.",
-      ["Frente cajón"], "Tornillo 4×30 + tirador");
+      ["Frente cajón"], "Tornillo 4×30 + tirador",
+      "", { layout: "una-pieza", piezas: ["frente de cajón"], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
+        noHacer: ["atornillar desde afuera"] });
   }
   const apoyos = ["Lateral izquierdo (pata panel)"];
   let textoApoyo = "Parás el lateral izquierdo, que es una de las patas del escritorio.";
@@ -1206,27 +1339,34 @@ function instruccionesArmadoJS(m, receta) {
     textoApoyo = "Parás el lateral izquierdo y, al lado, el parante del soporte de CPU. Entre ambos va la bandeja, a 10 cm del piso para que ventile.";
   }
   paso("Parás los apoyos verticales", textoApoyo, apoyos, "Confirmat / excéntrico",
-    "Todavía no aprietes del todo: primero presentá todo, después ajustás.");
+    "Todavía no aprietes del todo: primero presentá todo, después ajustás.",
+    { layout: "una-pieza", piezas: ["apoyo/pata vertical"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
   paso("Colocá la tapa sobre los apoyos",
     "Apoyá la tapa sobre la cajonera y el lateral (o parante). Fijala desde abajo con escuadras o tornillos, sin que asomen arriba.",
     [hayPieza(m, "Tapa capa superior") ? "Tapa capa superior (visible)" : "Tapa"], "Escuadra metálica 25 mm",
-    "Revisá que no se hamaque: si se mueve, revisá la escuadra.");
+    "Revisá que no se hamaque: si se mueve, revisá la escuadra.",
+    { layout: "una-pieza", piezas: ["tapa"], accion: "colgar-apoyar", fijacion: "Escuadra metálica 25 mm desde abajo",
+      noHacer: ["que asome el tornillo arriba"] });
   if (hayPieza(m, "Viga trasera"))
     paso("Poné la viga trasera (rigidez)",
       "Tu escritorio es ancho: lleva una viga atrás, de canto, que evita que se hamaque. Atornillala a los apoyos y a la tapa.",
-      ["Viga trasera"], "Confirmat / excéntrico");
+      ["Viga trasera"], "Confirmat / excéntrico",
+      "", { layout: "una-pieza", piezas: ["viga trasera"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
   if ((m.grommets || []).length)
     paso("Hacé los agujeros de pasacables",
       "Marcá y perforá los agujeros de la tapa con una broca copa del diámetro del grommet. Colocá los grommets.",
-      [], "", "Perforá con la cara buena hacia arriba y apoyo abajo, sin astillar.");
+      [], "", "Perforá con la cara buena hacia arriba y apoyo abajo, sin astillar.",
+      { layout: "una-pieza", piezas: ["tapa"], accion: "perforar-broca", fijacion: "Broca copa del diámetro del grommet" });
   if (hayPieza(m, "Tapa elevación monitor"))
     paso("Montá la elevación para el monitor",
       "Sobre la tapa, parás las dos patitas y encima la bandeja elevada. El monitor va arriba y el teclado se guarda deslizándolo abajo.",
-      ["Pata elevación monitor (izq)", "Pata elevación monitor (der)", "Tapa elevación monitor"], "Confirmat / excéntrico");
+      ["Pata elevación monitor (izq)", "Pata elevación monitor (der)", "Tapa elevación monitor"], "Confirmat / excéntrico",
+      "", { layout: "escuadra", piezas: ["pata izq.", "pata der.", "bandeja elevada"], fijacion: "Confirmat/excéntrico" });
   paso("Niveladores y terminación final",
     "Colocá los regatones en la base para que no toque el piso y quede nivelado. Repasá que los cantos visibles tengan tapacanto. Apretá todo.",
     [], "Regatón + tapacanto",
-    "Nunca arrastres el escritorio armado: movelo entre dos, levantándolo (R-26).");
+    "Nunca arrastres el escritorio armado: movelo entre dos, levantándolo (R-26).",
+    { layout: "una-pieza", piezas: ["pata / base"], accion: "insertar-deslizar", fijacion: "Regatón a presión o roscado" });
   return pasos;
 }
 
@@ -1503,6 +1643,7 @@ function pintarArmado(c) {
       <div class="armado-lista">${lista}</div>
       <div class="armado-detalle">
         <h3>Paso ${p.n} de ${pasos.length}: ${p.titulo}</h3>
+        ${tarjetasDiagramaPaso(p.diagrama)}
         ${p.herraje ? tarjetasColocacionHerrajes(p.herraje, mueble) : ""}
         <p class="texto-paso">${convAvisos(p.texto)}</p>
         ${p.piezas.length ? `<p class="nota">🧩 <b>Piezas de este paso</b> (resaltadas y enfocadas en el 3D de arriba): <b>${p.piezas.join(", ")}</b></p>` : ""}

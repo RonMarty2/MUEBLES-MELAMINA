@@ -420,6 +420,41 @@ Formato de cada entrada:
 
 ---
 
+## D-024 — Diagrama visual didáctico genérico en TODOS los pasos de armado
+
+**Fecha:** 2026-07-06 · **Estado:** vigente
+
+- **Contexto:** los planos acotados de D-022 (bisagra/corredera) no eran lo que el usuario
+  pedía — quiso decir que necesita un dibujo simple en **cada** paso de armado, no solo en
+  esos dos, porque "no sé nada, soy torpe" y el texto solo no le alcanza para saber qué hacer
+  con sus manos. De ~10-11 pasos por tipo de mueble, solo 2 tenían dibujo.
+- **Decisión:** en vez de ilustrar cada paso a mano (carísimo de mantener), se generalizó el
+  patrón de D-022 a un **renderer único y paramétrico**, `svgDiagramaPaso(datos)` en
+  `software/app/app_fuente.html`, con un vocabulario visual chico y reusable (igual que IKEA
+  reusa las mismas flechas/íconos en todo el manual):
+  - **Layouts:** `apilado` (una pieza encima de otra, ej. tapa doble), `escuadra` (piezas en
+    L/U, ej. armar una caja), `una-pieza` (una pieza sola con una acción).
+  - **Acciones:** `atornillar-abajo`, `atornillar-adentro`, `encolar-prensar`, `clavar`,
+    `insertar-deslizar`, `perforar-broca`, `colgar-apoyar` — cada una con su ícono/flecha.
+  - Cajas reusables `cajaOrdenXY`/`cajaNoHacerXY` (mismo estilo que ya existía en D-022,
+    ahora factorizadas) para el orden de pasos y los errores comunes.
+  - `paso(...)` (dentro de `instruccionesArmadoJS`) ganó un 6to argumento opcional
+    `diagrama = {layout, piezas, accion, fijacion, orden, noHacer}`, sin tocar los 5
+    argumentos existentes — no afecta el texto que también usa `generador_instrucciones.py`
+    (el dibujo, igual que el glosario de D-020, vive solo en la app JS).
+  - Se completó el `diagrama` de los ~14 pasos con acción física clara (tapa doble, caja de
+    cajonera/laterales del ropero, cajas de cajón, frentes, zócalo, apoyos verticales, tapa
+    sobre apoyos, viga trasera, pasacables, elevación de monitor, regatones, fondo, barral,
+    estante inferior, puertas corredizas). Bisagra y corredera siguen usando su plano
+    acotado específico de D-022 (más preciso que cualquier plantilla genérica); los pasos
+    sin acción física ("entendé los cortes", "terminación final") se quedan solo con texto.
+- **Descartada:** una ilustración bespoke por paso (18 dibujos a mano) — mucho más trabajo
+  de mantener y sin garantía de consistencia visual entre pasos.
+- **Consecuencias:** cambio 100% visual en `app_fuente.html`; no toca ninguna cifra de
+  despiece ni el motor Python. `DISENADOR_MUEBLES.html` reconstruido.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
