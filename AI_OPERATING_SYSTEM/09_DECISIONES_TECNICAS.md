@@ -455,6 +455,32 @@ Formato de cada entrada:
 
 ---
 
+## D-025 — Indicador de scroll en el panel de controles (izquierda)
+
+**Fecha:** 2026-07-06 · **Estado:** vigente
+
+- **Contexto:** el usuario reportó que "no aparecen todas las opciones" en el panel
+  izquierdo, y que solo las veía si hacía zoom out del navegador. Medido con Playwright a
+  una resolución común de notebook (1366×768): el panel de controles mide ~1060 px de
+  contenido real contra solo ~440 px visibles — el panel SÍ tenía scroll interno
+  (`#controles { overflow-y: auto }`, ya existía), pero no había ninguna señal visible de
+  que hubiera más opciones abajo, así que el usuario no sabía que debía desplazarse.
+- **Decisión:** (a) scrollbar del panel estilizada para que se vea claramente (ancho 11px,
+  color visible, también en Firefox vía `scrollbar-color`) en vez de depender de la barra
+  fina/auto-oculta del sistema operativo; (b) un aviso `↓ desplazá para ver más opciones ↓`
+  fijo (`position: sticky; bottom`) al pie del panel, que la propia app oculta/muestra según
+  si ya se llegó al final (`actualizarIndicadorControles()`, disparado por `scroll` del panel,
+  `resize` de la ventana y al cambiar de tipo de mueble); (c) se recortaron levemente los
+  márgenes del panel (`.campo`, títulos `h2`, header) para que entre más contenido sin
+  necesidad de scroll.
+- **Descartada:** rediseñar el panel en pestañas/acordeón para que quepa todo sin scroll —
+  cambio de navegación mucho más grande; el problema real no era "falta espacio" sino "no se
+  nota que hay que bajar", así que alcanza con hacerlo evidente.
+- **Consecuencias:** cambio de UI en `app_fuente.html` (CSS + HTML + JS de wiring);
+  no toca ninguna cifra de despiece. `DISENADOR_MUEBLES.html` reconstruido.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

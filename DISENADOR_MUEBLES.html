@@ -7,7 +7,7 @@
   * { box-sizing: border-box; }
   body { margin: 0; font-family: system-ui, -apple-system, sans-serif; height: 100vh;
          display: flex; flex-direction: column; overflow: hidden; background: #f5f4f2; }
-  header { background: #1f2430; color: #fff; padding: 8px 16px; display: flex;
+  header { background: #1f2430; color: #fff; padding: 6px 16px; display: flex;
            align-items: center; gap: 12px; flex-wrap: wrap; }
   header h1 { font-size: 17px; margin: 0; white-space: nowrap; }
   header .botones { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
@@ -17,10 +17,17 @@
   button.gris { background: #4b5563; }
   #principal { flex: 1; display: flex; min-height: 0; }
   #controles { width: 300px; overflow-y: auto; background: #fff; padding: 12px;
-               border-right: 1px solid #ddd; }
+               border-right: 1px solid #ddd; position: relative;
+               scrollbar-width: thin; scrollbar-color: #9ca3af #f0efec; }
+  #controles::-webkit-scrollbar { width: 11px; }
+  #controles::-webkit-scrollbar-track { background: #f0efec; }
+  #controles::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 6px; border: 2px solid #f0efec; }
+  #controles-mas { position: sticky; bottom: -12px; margin: 10px -12px -12px; padding: 7px 12px;
+                   background: linear-gradient(to top, #fff 55%, rgba(255,255,255,0)); font-size: 11.5px;
+                   color: #3b82f6; font-weight: 600; text-align: center; pointer-events: none; }
   #controles h2 { font-size: 13px; text-transform: uppercase; color: #666;
-                  margin: 14px 0 6px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
-  .campo { margin-bottom: 8px; }
+                  margin: 11px 0 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+  .campo { margin-bottom: 6px; }
   .campo label { display: block; font-size: 12.5px; color: #333; margin-bottom: 2px; }
   .campo .fila { display: flex; gap: 8px; align-items: center; }
   .campo input[type=range] { flex: 1; }
@@ -269,6 +276,7 @@
           <option value="excentrica">Excéntrica/cam-lock (si vas a mover el mueble)</option>
         </select></div>
     </div>
+    <div id="controles-mas">↓ desplazá para ver más opciones ↓</div>
   </div>
 
   <div id="zona3d">
@@ -1567,6 +1575,13 @@ function mostrarControlesDelTipo() {
   $("controles-escritorio_gamer").style.display = tipoActual === "escritorio_gamer" ? "" : "none";
   $("controles-ropero").style.display = tipoActual === "ropero" ? "" : "none";
   $("titulo-app").textContent = tipoActual === "ropero" ? "🚪 Ropero / Placard" : "🖥️ Escritorio Gamer";
+  actualizarIndicadorControles();
+}
+function actualizarIndicadorControles() {
+  const c = $("controles"), ind = $("controles-mas");
+  if (!c || !ind) return;
+  const quedaPorVer = c.scrollHeight - c.scrollTop - c.clientHeight > 4;
+  ind.style.visibility = quedaPorVer ? "visible" : "hidden";
 }
 
 let mueble = null, recetaActual = null, precios = null;
@@ -2234,6 +2249,8 @@ window.addEventListener("DOMContentLoaded", () => {
   tipoActual = localStorage.getItem("ultimo_tipo") || "escritorio_gamer";
   $("tipo-mueble").value = tipoActual;
   mostrarControlesDelTipo();
+  $("controles").addEventListener("scroll", actualizarIndicadorControles);
+  window.addEventListener("resize", actualizarIndicadorControles);
   let guardadaEsc = null, guardadaRop = null;
   try { guardadaEsc = JSON.parse(localStorage.getItem("receta_escritorio_gamer")); } catch {}
   try { guardadaRop = JSON.parse(localStorage.getItem("receta_ropero")); } catch {}
