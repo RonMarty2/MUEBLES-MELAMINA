@@ -518,6 +518,37 @@ Formato de cada entrada:
 
 ---
 
+## D-027 — Animación de armado: piezas y cámara que se deslizan (no saltan)
+
+**Fecha:** 2026-07-06 · **Estado:** vigente
+
+- **Contexto:** Ron pidió ir más allá del dibujo estático: una animación mostrando cómo se
+  monta cada pieza paso a paso. Hoy la cámara y las piezas saltaban instantáneamente a su
+  posición nueva al cambiar de paso (`ubicarCamara()` leía `centro`/`dist` fijos;
+  `explotarPiezas()`/`limpiarResaltado()` hacían `position.copy/set` directo).
+- **Decisión:** motor de animación manual por interpolación (lerp), sin librería externa
+  (mantiene D-010: archivo autocontenido). Se agrega `moverA(mesh, destino, dur)` que guarda
+  origen/destino/tiempo, y el loop de render que ya existía (`iniciar3D` → `anim()`,
+  `software/app/app_fuente.html`) llama en cada frame `actualizarAnimacionesPos()` y
+  `actualizarAnimacionCamara()` antes de dibujar. `explotarPiezas`/`limpiarResaltado` y el
+  encuadre de cámara (`enfocarPiezas`/`enfocarMuebleCompleto`) ahora animan hacia el destino
+  en vez de saltar. El zoom manual con la rueda cancela cualquier animación de cámara en
+  curso, para que el usuario siempre tenga el control final.
+- **Nuevo botón "▶ Ver cómo se arma este paso"**: además de la transición de fondo (siempre
+  activa), el usuario puede pedir una animación más vistosa a demanda — las piezas del paso
+  arrancan bien lejos (como recién sacadas del paquete, 3× la distancia normal de
+  explosión), y se deslizan una por una (con ~260 ms de diferencia entre cada una, no todas
+  juntas) hasta encastrar en su lugar; al terminar, reaparecen los marcadores de tornillo. El
+  botón se deshabilita mientras corre y se puede repetir las veces que se quiera.
+- **Descartada:** una librería de animación/timeline (GSAP, tween.js, etc.) — un lerp manual
+  de ~30 líneas alcanza para este caso y no agrega una dependencia externa a un archivo que
+  debe seguir funcionando con doble clic, sin internet.
+- **Consecuencias:** cambio 100% en el motor 3D de `app_fuente.html`; no toca ninguna cifra
+  de despiece (motor Python intacto, 89 pruebas en verde). `DISENADOR_MUEBLES.html`
+  reconstruido.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

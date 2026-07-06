@@ -1696,7 +1696,8 @@ function pintarArmado(c) {
         ${tarjetasDiagramaPaso(p.diagrama)}
         ${p.herraje ? tarjetasColocacionHerrajes(p.herraje, mueble) : ""}
         <p class="texto-paso">${convAvisos(p.texto)}</p>
-        ${p.piezas.length ? `<p class="nota">🧩 <b>Piezas de este paso</b> (resaltadas y enfocadas en el 3D de arriba): <b>${p.piezas.join(", ")}</b></p>` : ""}
+        ${p.piezas.length ? `<p class="nota">🧩 <b>Piezas de este paso</b> (resaltadas y enfocadas en el 3D de arriba): <b>${p.piezas.join(", ")}</b></p>
+        <button id="btn-animar-paso" class="btn-paso-grande">▶ Ver cómo se arma este paso</button>` : ""}
         ${nMarcadores ? `<p class="nota">🟡 Se marcaron <b>${nMarcadores} punto(s) amarillo(s)</b> en el dibujo: son los mismos agujeros vistos desde cada una de las dos piezas (por eso aparece de a pares, unidos por la línea punteada). Con tu pieza real en mano: medí esa misma posición con cinta métrica y escuadra, marcá con lápiz, <b>perforá primero</b> con la broca que te indica la tarjeta de abajo (agujero guía, nunca a mano alzada) y <b>recién después atornillá</b>.</p>` : ""}
         ${tieneCantos ? `<p class="nota">🟠 Los bordes <b>naranjas</b> de estas piezas llevan tapacanto (cinta de terminación): <b>no se perfora ni se pega con cola</b>. Se coloca con una <b>plancha de ropa caliente</b> (el tapacanto ya trae pegamento termofusible en la parte de atrás; el calor lo activa) — apoyá la cinta sobre el canto y pasá la plancha unos segundos hasta que se adhiera, presionando con un trapo. Después recortá el sobrante de los costados con un cutter o una lima, al ras.</p>` : ""}
         ${p.herraje ? `<p class="nota">🔩 <b>Herraje que necesitás:</b> ${p.herraje}</p>${tarjetasHerrajes(p.herraje, mueble, false)}` : ""}
@@ -1713,7 +1714,49 @@ function pintarArmado(c) {
   const sig = $("paso-sig"), ant = $("paso-ant");
   if (sig) sig.onclick = () => { pasoArmadoActivo++; pintarArmado(c); aplicarResaltadoPaso(); };
   if (ant) ant.onclick = () => { pasoArmadoActivo--; pintarArmado(c); aplicarResaltadoPaso(); };
+  const btnAnimar = $("btn-animar-paso");
+  if (btnAnimar) btnAnimar.onclick = () => animarArmadoPaso(p.piezas, btnAnimar);
   aplicarResaltadoPaso();
+}
+/* ------------------------------------------------ animación de armado a pedido (D-027):
+   las piezas del paso arrancan "recién sacadas del paquete" (más lejos que la explosión
+   normal) y se deslizan una por una hasta encastrar, con los tornillos apareciendo al final. */
+let animandoPaso = false;
+function animarArmadoPaso(nombres, btn) {
+  if (!nombres || !nombres.length || animandoPaso || !escena) return;
+  animandoPaso = true;
+  if (btn) { btn.disabled = true; btn.textContent = "▶ Reproduciendo…"; }
+  const esc = 0.001;
+  const box = bboxDePiezas(nombres);
+  const centroGrupo = box ? { x: (box.minX+box.maxX)/2, y: (box.minY+box.maxY)/2, z: (box.minZ+box.maxZ)/2 } : null;
+  const piezasAnimar = mallas.filter(m => m.userData.pieza !== undefined && !m.userData.esBorde
+    && nombres.some(n => m.userData.pieza.startsWith(n)));
+  pintarMarcadoresTornillo([]);
+  const DEMORA_ENTRE_PIEZAS = 260, DUR_LLEGADA = 550;
+  piezasAnimar.forEach((m, i) => {
+    const v = centroGrupo ? vectorExplode(m.userData.p, centroGrupo) : { x: 0, y: 0, z: 0 };
+    const lejos = new THREE.Vector3(
+      m.userData.posBase.x + v.x*EXPLODE_MM*3*esc,
+      m.userData.posBase.y + v.z*EXPLODE_MM*3*esc + 0.18,
+      m.userData.posBase.z + v.y*EXPLODE_MM*3*esc);
+    const destino = new THREE.Vector3(
+      m.userData.posBase.x + v.x*EXPLODE_MM*esc,
+      m.userData.posBase.y + v.z*EXPLODE_MM*esc,
+      m.userData.posBase.z + v.y*EXPLODE_MM*esc);
+    m.position.copy(lejos);
+    const borde = mallas.find(b => b.userData.esBorde && b.userData.pieza === m.userData.pieza);
+    if (borde) borde.position.copy(lejos);
+    setTimeout(() => {
+      moverA(m, destino, DUR_LLEGADA);
+      if (borde) moverA(borde, destino, DUR_LLEGADA);
+    }, i * DEMORA_ENTRE_PIEZAS);
+  });
+  const totalMs = piezasAnimar.length * DEMORA_ENTRE_PIEZAS + DUR_LLEGADA + 150;
+  setTimeout(() => {
+    pintarMarcadoresTornillo(nombres);
+    animandoPaso = false;
+    if (btn) { btn.disabled = false; btn.textContent = "▶ Ver cómo se arma este paso"; }
+  }, totalMs);
 }
 function aplicarResaltadoPaso() {
   if (pestanaActiva !== "armado" || !mueble) { limpiarResaltado(); return; }
@@ -1812,6 +1855,38 @@ function pintarPestana() {
 let escena, camara, render3d, mallas = [];
 let rotY = 2.55, rotX = 0.4, dist = 3.5;
 
+/* ------------------------------------------------ animación (D-027): lerp manual, sin
+   librería externa (D-010: archivo autocontenido). Piezas y cámara se deslizan hacia su
+   destino en vez de saltar de un frame al otro. */
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+const animacionesPos = new Map();  // mesh -> {desde, hasta, t0, dur}
+function moverA(mesh, destino, dur = 450) {
+  animacionesPos.set(mesh, { desde: mesh.position.clone(), hasta: destino.clone(), t0: performance.now(), dur });
+}
+function actualizarAnimacionesPos() {
+  const ahora = performance.now();
+  for (const [mesh, a] of animacionesPos) {
+    const t = Math.min(1, (ahora - a.t0) / a.dur);
+    mesh.position.lerpVectors(a.desde, a.hasta, easeOutCubic(t));
+    if (t >= 1) animacionesPos.delete(mesh);
+  }
+}
+let animacionCamara = null;  // {x0,y0,z0,d0, x1,y1,z1,d1, t0, dur}
+function animarCamaraA(centroDestino, distDestino, dur = 500) {
+  animacionCamara = {
+    x0: centro.x, y0: centro.y, z0: centro.z, d0: dist,
+    x1: centroDestino.x, y1: centroDestino.y, z1: centroDestino.z, d1: distDestino,
+    t0: performance.now(), dur };
+}
+function actualizarAnimacionCamara() {
+  if (!animacionCamara) return;
+  const a = animacionCamara;
+  const t = Math.min(1, (performance.now() - a.t0) / a.dur), e = easeOutCubic(t);
+  centro = { x: a.x0 + (a.x1 - a.x0) * e, y: a.y0 + (a.y1 - a.y0) * e, z: a.z0 + (a.z1 - a.z0) * e };
+  dist = a.d0 + (a.d1 - a.d0) * e;
+  if (t >= 1) animacionCamara = null;
+}
+
 function iniciar3D() {
   const zona = $("zona3d");
   escena = new THREE.Scene();
@@ -1836,9 +1911,16 @@ function iniciar3D() {
   });
   dom.addEventListener("wheel", e => {
     e.preventDefault();
+    animacionCamara = null;  // el zoom manual cancela cualquier transición automática en curso
     dist = Math.min(15, Math.max(0.4, dist * (e.deltaY > 0 ? 1.08 : 0.92)));
   }, { passive: false });
-  (function anim() { requestAnimationFrame(anim); ubicarCamara(); render3d.render(escena, camara); })();
+  (function anim() {
+    requestAnimationFrame(anim);
+    actualizarAnimacionesPos();
+    actualizarAnimacionCamara();
+    ubicarCamara();
+    render3d.render(escena, camara);
+  })();
 }
 
 let centro = { x: 0.8, y: 0.4, z: 0.35 };
@@ -1946,20 +2028,21 @@ function bboxDePiezas(nombres) {
 function enfocarMuebleCompleto() {
   if (!recetaActual) return;
   const esc = 0.001, d = recetaActual.dimensiones;
-  centro = { x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 };
-  dist = Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1);
+  animarCamaraA({ x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 },
+    Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1));
 }
 function enfocarPiezas(nombres) {
   const box = bboxDePiezas(nombres);
   if (!box) { enfocarMuebleCompleto(); return; }
   const esc = 0.001;
-  centro = {
+  const centroDestino = {
     x: (box.minX+box.maxX)/2*esc,
     y: (box.minZ+box.maxZ)/2*esc,
     z: (box.minY+box.maxY)/2*esc,
   };
   const extent = Math.max(box.maxX-box.minX, box.maxZ-box.minZ, box.maxY-box.minY) * esc;
-  dist = Math.max(extent * 2.9, 0.35);  // margen extra: las piezas se separan (vista explotada)
+  const distDestino = Math.max(extent * 2.9, 0.35);  // margen extra: las piezas se separan (vista explotada)
+  animarCamaraA(centroDestino, distDestino);
 }
 
 /* ------------------------------------------------ vista "explotada" tipo IKEA (D-021)
@@ -1982,12 +2065,12 @@ function explotarPiezas(nombres) {
   for (const m of mallas) {
     if (m.userData.pieza === undefined || !m.userData.posBase) continue;
     const activo = centroGrupo && nombres.some(n => m.userData.pieza.startsWith(n));
-    if (!activo) { m.position.copy(m.userData.posBase); continue; }
+    if (!activo) { moverA(m, m.userData.posBase); continue; }
     const v = vectorExplode(m.userData.p, centroGrupo);
-    m.position.set(
+    moverA(m, new THREE.Vector3(
       m.userData.posBase.x + v.x*EXPLODE_MM*esc,
       m.userData.posBase.y + v.z*EXPLODE_MM*esc,
-      m.userData.posBase.z + v.y*EXPLODE_MM*esc);
+      m.userData.posBase.z + v.y*EXPLODE_MM*esc));
   }
 }
 
