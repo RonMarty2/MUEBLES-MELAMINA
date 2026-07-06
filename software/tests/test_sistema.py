@@ -334,6 +334,13 @@ r_arm_rop, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero"})
 pasos_rop = instrucciones_armado(despiece_ropero(r_arm_rop), r_arm_rop)
 prueba("ropero: genera pasos de armado", len(pasos_rop) >= 5, f"({len(pasos_rop)})")
 
+# D-026: cada cajón tiene su propio paso (antes se agrupaban todos, 3D muy confuso)
+titulos_esc = [p["titulo"] for p in pasos_esc]
+prueba("escritorio: cajón 1 y 2 tienen pasos separados",
+       any("cajón 1 de 3" in t for t in titulos_esc) and any("cajón 2 de 3" in t for t in titulos_esc))
+prueba("escritorio: paso del cajón 1 no cita piezas del cajón 2",
+       not any("cajón 2" in n for p in pasos_esc if "cajón 1 de 3" in p["titulo"] for n in p["piezas"]))
+
 # ---------------------------------------------------------------- calidad (D-018)
 print("Niveles de calidad de herrajes (D-018)…")
 def corredera_de(receta):

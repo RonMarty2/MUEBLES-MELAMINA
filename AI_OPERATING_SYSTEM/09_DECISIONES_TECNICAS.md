@@ -481,6 +481,43 @@ Formato de cada entrada:
 
 ---
 
+## D-026 — Un paso por cajón (no todos juntos) + arreglo del salto tapa↔apoyos
+
+**Fecha:** 2026-07-06 · **Estado:** vigente
+
+- **Contexto:** con capturas de la vista explotada 3D, el usuario mostró que el paso "Armá
+  las cajas de los cajones" resaltaba y separaba los 3 cajones **a la vez**, produciendo una
+  vista saturada de piezas superpuestas y docenas de puntos amarillos — imposible de leer
+  ("no son guías fáciles, son afirmaciones, no se ve didáctico... ¿no podemos separar cada
+  etapa?"). Además, en el paso "Colocá la tapa sobre los apoyos", la lista de piezas
+  resaltadas solo incluía la tapa (nunca los apoyos/lateral/cajonera sobre los que se
+  apoya), así que `calcularMarcadoresTornillo` no tenía 2 piezas para detectar contacto: la
+  unión tapa↔base nunca mostraba marcador ni se separaba — exactamente lo que el usuario
+  reportó como "no veo la parte donde se une la tabla de arriba con la de abajo".
+- **Decisión:** (a) los pasos que antes agrupaban TODOS los cajones ("Armá las cajas de los
+  cajones", "Colocá las correderas...", "Atornillá los frentes...") ahora generan **un paso
+  por cajón** (`Armá la caja del cajón N de T`, etc.), en un `for` sobre
+  `cajonera.cantidad_cajones` (escritorio) / `cajones.cantidad_cajones` (ropero) — tanto en
+  `instruccionesArmadoJS` (`app_fuente.html`) como en `generador_instrucciones.py` (Python,
+  para paridad de texto). Cada paso resalta y explota SOLO las piezas de ese cajón. (b) "Colocá
+  la tapa sobre los apoyos" ahora incluye los apoyos/lateral/cajonera en su lista de piezas
+  resaltadas, así el contacto tapa↔base se detecta y se dibuja como cualquier otra unión. (c)
+  se agregó un layout nuevo al diagrama genérico (D-024), `apoyado` (dos patas + una pieza
+  arriba, sin piso), más fiel que reusar `escuadra` para este caso. (d) los textos de los
+  pasos tocados se reescribieron en formato numerado imperativo ("1. Uní... 2. Pre-perforá...
+  3. Clavá...") en vez de párrafos descriptivos, para que se lean como instrucciones y no como
+  afirmaciones.
+- **Descartada:** mantener un solo paso "por tipo de pieza" con un selector de "cuál cajón
+  mirar" dentro del mismo paso — más complejo de programar y de entender que simplemente
+  tener un paso por cajón en la lista.
+- **Consecuencias:** el número de pasos totales aumenta con la cantidad de cajones (ej.
+  10 → 16 pasos con 3 cajones en el escritorio de ejemplo). Se agregaron pruebas en
+  `test_sistema.py` verificando que cajón 1 y cajón 2 tengan pasos separados y que un paso de
+  un cajón no cite piezas de otro. No cambia ninguna cifra de despiece — motor Python sigue
+  en verde. Se regeneraron los proyectos demo.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

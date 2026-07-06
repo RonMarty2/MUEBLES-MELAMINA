@@ -1157,6 +1157,18 @@ function svgDiagramaPaso(datos) {
     accionHtml = `${iconoTornilloMini(bx + 8, by - 6)}${iconoTornilloMini(bx + bw - 8, by - 6)}
       <text x="${bx + bw + 20}" y="${by - 44}" font-size="12" fill="#111">Presentá las piezas primero,</text>
       <text x="${bx + bw + 20}" y="${by - 26}" font-size="12" fill="#111">pre-perforá y recién atornillá.</text>`;
+  } else if (datos.layout === "apoyado") {
+    const bx = 140, bw = 260, lw = 26, lh = 130, topY = 100, topH = 100, legY = topY + topH - 4;
+    piezasHtml = `
+      <rect x="${bx}" y="${legY}" width="${lw}" height="${lh}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
+      <rect x="${bx + bw - lw}" y="${legY}" width="${lw}" height="${lh}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
+      <rect x="${bx - 10}" y="${topY}" width="${bw + 20}" height="${topH}" fill="#fff" stroke="#111" stroke-width="1.6"/>
+      <text x="${bx + lw / 2}" y="${legY + lh + 16}" text-anchor="middle" font-size="11" fill="#444">${piezas[0] || ""}</text>
+      <text x="${bx + bw - lw / 2}" y="${legY + lh + 16}" text-anchor="middle" font-size="11" fill="#444">${piezas[1] || ""}</text>
+      <text x="${bx + bw / 2}" y="${topY - 10}" text-anchor="middle" font-size="12" fill="#444">${piezas[3] || piezas[2] || ""}</text>`;
+    accionHtml = `${iconoTornilloMini(bx + 14, legY + 6)}${iconoTornilloMini(bx + bw - 14, legY + 6)}
+      <text x="${bx + bw + 20}" y="${legY - 10}" font-size="12" fill="#111">Fijá desde ABAJO con</text>
+      <text x="${bx + bw + 20}" y="${legY + 8}" font-size="12" fill="#111">escuadra, sin que asome arriba.</text>`;
   } else {
     const x = 160, y = 130, w = 220, h = 110, cxA = x + w / 2, cyA = y + h / 2;
     piezasHtml = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#fafafa" stroke="#111" stroke-width="1.6"/>
@@ -1279,11 +1291,29 @@ function instruccionesArmadoJS(m, receta) {
       ["Fondo"], "Clavos 1½\"",
       "", { layout: "una-pieza", piezas: ["fondo (3 mm)"], accion: "clavar", fijacion: "Clavos 1½\" cada ~15 cm",
         noHacer: ["sellar el fondo hermético"] });
-    if (hayPieza(m, "Divisor cajones"))
-      paso("Armá la cajonera interior",
-        "Colocá el divisor y armá el bloque de cajones (cajas + correderas + frentes). Para las correderas, medí desde el piso interior del hueco y seguí el plano acotado: la línea central debe coincidir en cajón y mueble.",
-        ["Divisor cajones", "Tapa de cajonera", "Lateral caja cajón", "Frente cajón"], "Corredera (según calidad) + tirador",
-        "", { layout: "escuadra", piezas: ["lateral caja izq.", "lateral caja der.", "piso caja"], fijacion: "Confirmat + clavos" });
+    if (hayPieza(m, "Divisor cajones")) {
+      paso("Colocá el divisor de la cajonera",
+        "1. Atornillá el divisor vertical que separa la zona de cajones del resto del ropero. 2. Cerrá arriba con la tapa de cajonera.",
+        ["Divisor cajones", "Tapa de cajonera"], "Confirmat / excéntrico",
+        "", { layout: "una-pieza", piezas: ["divisor"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
+      const nCajRop = receta.cajones?.cantidad_cajones || 1;
+      for (let i = 1; i <= nCajRop; i++) {
+        paso(`Armá la caja del cajón ${i} de ${nCajRop}`,
+          `1. Uní los dos laterales de este cajón con el frente interno y el contrafrente. 2. Pre-perforá siempre antes de atornillar. 3. Clavá el fondo de 3 mm por debajo.`,
+          [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`, `Frente interno cajón ${i}`, `Contrafrente cajón ${i}`, `Fondo cajón ${i}`], "Confirmat + clavos",
+          "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
+          { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
+        paso(`Colocá la corredera y meté el cajón ${i} de ${nCajRop}`,
+          "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al divisor/lateral, a la misma altura (mirá el plano acotado de abajo). 3. Probá que corra suave.",
+          [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`], "Corredera (según calidad)",
+          "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2.");
+        paso(`Atornillá el frente del cajón ${i} de ${nCajRop}`,
+          "1. Metié el cajón en su lugar. 2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del cajón.",
+          [`Frente cajón ${i}`], "Tornillo 4×30 + tirador",
+          "", { layout: "una-pieza", piezas: [`frente del cajón ${i}`], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
+            noHacer: ["atornillar desde afuera"] });
+      }
+    }
     if (hayPieza(m, "Barral"))
       paso("Colocá el barral para colgar la ropa",
         "Atornillá los soportes a los laterales a la altura indicada y apoyá el tubo. Si es ancho, lleva un soporte en el medio.",
@@ -1331,20 +1361,23 @@ function instruccionesArmadoJS(m, receta) {
         orden: ["presentar en escuadra", "pre-perforar", "atornillar", "clavar el fondo atrás"],
         noHacer: ["atornillar sin perforar guía"] });
   if (hayPieza(m, "Lateral caja cajón")) {
-    paso("Armá las cajas de los cajones",
-      "Cada cajón es una caja: dos laterales, frente interno y contrafrente, más un fondo de 3 mm por debajo. Armá todas primero.",
-      ["Lateral caja cajón", "Frente interno cajón", "Contrafrente cajón", "Fondo cajón"], "Confirmat + clavos",
-      "Todas las cajas iguales para que los cajones corran parejos.",
-      { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
-    paso("Colocá las correderas y meté los cajones",
-      "Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, a la misma altura. Medí desde el piso interior del hueco según el plano acotado: la línea central de la corredera debe coincidir en cajón y mueble. Usá tornillos 4×16 y probá que corra suave antes de poner el frente.",
-      [], "Corredera (según el nivel de calidad que elegiste)",
-      "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.");
-    paso("Atornillá los frentes de los cajones",
-      "El frente visible (con el tirador) se atornilla desde ADENTRO del cajón. Dejá 3 mm de luz entre frentes.",
-      ["Frente cajón"], "Tornillo 4×30 + tirador",
-      "", { layout: "una-pieza", piezas: ["frente de cajón"], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
-        noHacer: ["atornillar desde afuera"] });
+    const nCaj = receta.cajonera?.cantidad_cajones || 1;
+    for (let i = 1; i <= nCaj; i++) {
+      paso(`Armá la caja del cajón ${i} de ${nCaj}`,
+        `1. Uní los dos laterales de este cajón con el frente interno y el contrafrente, formando una caja cerrada. 2. Pre-perforá siempre antes de atornillar. 3. Al final, clavá por debajo el fondo de 3 mm.`,
+        [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`, `Frente interno cajón ${i}`, `Contrafrente cajón ${i}`, `Fondo cajón ${i}`], "Confirmat + clavos",
+        "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
+        { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
+      paso(`Colocá la corredera y meté el cajón ${i} de ${nCaj}`,
+        "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al mueble, a la misma altura (mirá el plano acotado de abajo: la línea central debe coincidir). 3. Probá que el cajón corra suave antes de seguir con el frente.",
+        [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`], "Corredera (según el nivel de calidad que elegiste)",
+        "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.");
+      paso(`Atornillá el frente del cajón ${i} de ${nCaj}`,
+        "1. Metié el cajón ya armado en su lugar, corriendo sobre la corredera. 2. Apoyá el frente por fuera, centrado, dejando 3 mm de luz con los cajones de al lado. 3. Atornillalo desde ADENTRO del cajón (nunca desde afuera, se vería el tornillo).",
+        [`Frente cajón ${i}`], "Tornillo 4×30 + tirador",
+        "", { layout: "una-pieza", piezas: [`frente del cajón ${i}`], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
+          noHacer: ["atornillar desde afuera"] });
+    }
   }
   const apoyos = ["Lateral izquierdo (pata panel)"];
   let textoApoyo = "Parás el lateral izquierdo, que es una de las patas del escritorio.";
@@ -1355,12 +1388,14 @@ function instruccionesArmadoJS(m, receta) {
   paso("Parás los apoyos verticales", textoApoyo, apoyos, "Confirmat / excéntrico",
     "Todavía no aprietes del todo: primero presentá todo, después ajustás.",
     { layout: "una-pieza", piezas: ["apoyo/pata vertical"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
+  const apoyosTapa = [...apoyos];
+  if (hayPieza(m, "Lateral cajonera")) apoyosTapa.push("Lateral cajonera interno", "Lateral cajonera externo");
   paso("Colocá la tapa sobre los apoyos",
-    "Apoyá la tapa sobre la cajonera y el lateral (o parante). Fijala desde abajo con escuadras o tornillos, sin que asomen arriba.",
-    [hayPieza(m, "Tapa capa superior") ? "Tapa capa superior (visible)" : "Tapa"], "Escuadra metálica 25 mm",
-    "Revisá que no se hamaque: si se mueve, revisá la escuadra.",
-    { layout: "una-pieza", piezas: ["tapa"], accion: "colgar-apoyar", fijacion: "Escuadra metálica 25 mm desde abajo",
-      noHacer: ["que asome el tornillo arriba"] });
+    "1. Apoyá la tapa encima de la cajonera y del lateral (o parante), bien alineada por los bordes. 2. Fijala desde ABAJO con escuadras metálicas o tornillos cortos, sin que ninguno asome arriba de la tapa. 3. Revisá que no se hamaque.",
+    [...apoyosTapa, hayPieza(m, "Tapa capa superior") ? "Tapa capa superior (visible)" : "Tapa"], "Escuadra metálica 25 mm",
+    "Si se mueve al empujarla, revisá que pusiste suficientes escuadras.",
+    { layout: "apoyado", piezas: [apoyosTapa[0] || "apoyo", apoyosTapa[1] || "apoyo", "tapa"],
+      fijacion: "Escuadra metálica 25 mm desde abajo", noHacer: ["que asome el tornillo arriba"] });
   if (hayPieza(m, "Viga trasera"))
     paso("Poné la viga trasera (rigidez)",
       "Tu escritorio es ancho: lleva una viga atrás, de canto, que evita que se hamaque. Atornillala a los apoyos y a la tapa.",

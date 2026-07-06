@@ -53,24 +53,31 @@ def instrucciones_escritorio(mueble, receta):
              tip="Verificá la escuadra midiendo las dos diagonales: deben dar igual.")
 
     if _hay(mueble, "Lateral caja cajón"):
-        paso("Armá las cajas de los cajones",
-             "Cada cajón es una caja: dos laterales, un frente interno y un contrafrente, "
-             "más un fondo de 3 mm por debajo. Armá todas las cajas primero.",
-             piezas=["Lateral caja cajón", "Frente interno cajón", "Contrafrente cajón",
-                     "Fondo cajón"],
-             herraje="Confirmat + clavos",
-             tip="Todas las cajas deben quedar iguales para que los cajones corran parejos.")
-        paso("Colocá las correderas y meté los cajones",
-             "Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, "
-             "a la misma altura. Medí desde el piso interior del hueco según el plano acotado "
-             "de la app: la línea central de la corredera debe coincidir en cajón y mueble. "
-             "Usá tornillos 4×16 y probá que el cajón corra suave antes de poner el frente.",
-             herraje="Corredera (según el nivel de calidad que elegiste)",
-             tip="Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, no lo fuerces al cerrar.")
-        paso("Atornillá los frentes de los cajones",
-             "El frente visible (con el tirador) se atornilla desde ADENTRO del cajón, con "
-             "tornillos 4×30. Dejá 3 mm de luz entre frentes para que no rocen.",
-             piezas=["Frente cajón"], herraje="Tornillo aglomerado 4×30 + tirador")
+        n_caj = receta.get("cajonera", {}).get("cantidad_cajones", 1)
+        for i in range(1, n_caj + 1):
+            paso(f"Armá la caja del cajón {i} de {n_caj}",
+                 "1. Uní los dos laterales de este cajón con el frente interno y el "
+                 "contrafrente, formando una caja cerrada. 2. Pre-perforá siempre antes de "
+                 "atornillar. 3. Al final, clavá por debajo el fondo de 3 mm.",
+                 piezas=[f"Lateral caja cajón {i} (izq)", f"Lateral caja cajón {i} (der)",
+                         f"Frente interno cajón {i}", f"Contrafrente cajón {i}",
+                         f"Fondo cajón {i}"],
+                 herraje="Confirmat + clavos",
+                 tip="Armá esta caja igual que las demás, para que todos los cajones corran parejos.")
+            paso(f"Colocá la corredera y meté el cajón {i} de {n_caj}",
+                 "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá "
+                 "la otra guía al mueble, a la misma altura (mirá el plano acotado de la app: "
+                 "la línea central debe coincidir). 3. Probá que el cajón corra suave antes de "
+                 "poner el frente.",
+                 piezas=[f"Lateral caja cajón {i} (izq)", f"Lateral caja cajón {i} (der)"],
+                 herraje="Corredera (según el nivel de calidad que elegiste)",
+                 tip="Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, no lo fuerces al cerrar.")
+            paso(f"Atornillá el frente del cajón {i} de {n_caj}",
+                 "1. Metié el cajón ya armado en su lugar, corriendo sobre la corredera. "
+                 "2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al "
+                 "lado. 3. Atornillalo desde ADENTRO del cajón, con tornillos 4×30 (nunca desde "
+                 "afuera, se vería el tornillo).",
+                 piezas=[f"Frente cajón {i}"], herraje="Tornillo aglomerado 4×30 + tirador")
 
     apoyos = ["Lateral izquierdo (pata panel)"]
     if _hay(mueble, "Parante soporte CPU"):
@@ -85,11 +92,15 @@ def instrucciones_escritorio(mueble, receta):
          tip="Todavía no aprietes del todo: primero presentá todo, después ajustás.")
 
     tapa = ["Tapa capa superior (visible)"] if _tapa_doble(mueble) else ["Tapa"]
+    apoyos_tapa = list(apoyos)
+    if _hay(mueble, "Lateral cajonera"):
+        apoyos_tapa += ["Lateral cajonera interno", "Lateral cajonera externo"]
     paso("Colocá la tapa sobre los apoyos",
-         "Apoyá la tapa sobre la cajonera y el lateral (o el parante). Fijala desde abajo "
-         "con escuadras o tornillos, cuidando que no asomen arriba.",
-         piezas=tapa, herraje="Escuadra metálica 25 mm",
-         tip="Revisá que el escritorio no se hamaque: si se mueve, revisá la escuadra.")
+         "1. Apoyá la tapa encima de la cajonera y del lateral (o parante), bien alineada "
+         "por los bordes. 2. Fijala desde ABAJO con escuadras metálicas o tornillos cortos, "
+         "sin que ninguno asome arriba de la tapa. 3. Revisá que no se hamaque.",
+         piezas=apoyos_tapa + tapa, herraje="Escuadra metálica 25 mm",
+         tip="Si se mueve al empujarla, revisá que pusiste suficientes escuadras.")
 
     if _hay(mueble, "Viga trasera"):
         paso("Poné la viga trasera (rigidez)",
@@ -150,12 +161,32 @@ def instrucciones_ropero(mueble, receta):
          piezas=["Fondo"], herraje="Clavos 1½\"")
 
     if _hay(mueble, "Divisor cajones"):
-        paso("Armá la cajonera interior",
-             "Colocá el divisor que separa la zona de cajones del resto, y armá el bloque "
-             "de cajones (cajas + correderas + frentes), igual que en un escritorio.",
-             piezas=["Divisor cajones", "Tapa de cajonera", "Lateral caja cajón",
-                     "Frente cajón"],
-             herraje="Corredera (según calidad) + tirador")
+        paso("Colocá el divisor de la cajonera",
+             "1. Atornillá el divisor vertical que separa la zona de cajones del resto del "
+             "ropero. 2. Cerrá arriba con la tapa de cajonera.",
+             piezas=["Divisor cajones", "Tapa de cajonera"], herraje="Confirmat / excéntrico")
+        n_caj_rop = receta.get("cajones", {}).get("cantidad_cajones", 1)
+        for i in range(1, n_caj_rop + 1):
+            paso(f"Armá la caja del cajón {i} de {n_caj_rop}",
+                 "1. Uní los dos laterales de este cajón con el frente interno y el "
+                 "contrafrente. 2. Pre-perforá siempre antes de atornillar. 3. Clavá el fondo "
+                 "de 3 mm por debajo.",
+                 piezas=[f"Lateral caja cajón {i} (izq)", f"Lateral caja cajón {i} (der)",
+                         f"Frente interno cajón {i}", f"Contrafrente cajón {i}",
+                         f"Fondo cajón {i}"],
+                 herraje="Confirmat + clavos",
+                 tip="Armá esta caja igual que las demás, para que todos los cajones corran parejos.")
+            paso(f"Colocá la corredera y meté el cajón {i} de {n_caj_rop}",
+                 "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá "
+                 "la otra guía al divisor/lateral, a la misma altura (mirá el plano acotado de "
+                 "la app). 3. Probá que corra suave.",
+                 piezas=[f"Lateral caja cajón {i} (izq)", f"Lateral caja cajón {i} (der)"],
+                 herraje="Corredera (según calidad)")
+            paso(f"Atornillá el frente del cajón {i} de {n_caj_rop}",
+                 "1. Metié el cajón en su lugar. 2. Apoyá el frente por fuera, centrado, con "
+                 "3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del "
+                 "cajón.",
+                 piezas=[f"Frente cajón {i}"], herraje="Tornillo aglomerado 4×30 + tirador")
 
     if _hay(mueble, "Barral"):
         paso("Colocá el barral para colgar la ropa",

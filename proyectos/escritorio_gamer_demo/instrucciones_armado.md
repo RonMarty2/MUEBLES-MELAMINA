@@ -25,28 +25,76 @@ Uní los dos laterales de la cajonera con el piso, formando una U. Después cerr
 - **Herraje:** Confirmat 7×50 (o excéntrico) + clavos para el fondo
 - 💡 Verificá la escuadra midiendo las dos diagonales: deben dar igual.
 
-## Paso 4: Armá las cajas de los cajones
+## Paso 4: Armá la caja del cajón 1 de 3
 
-Cada cajón es una caja: dos laterales, un frente interno y un contrafrente, más un fondo de 3 mm por debajo. Armá todas las cajas primero.
+1. Uní los dos laterales de este cajón con el frente interno y el contrafrente, formando una caja cerrada. 2. Pre-perforá siempre antes de atornillar. 3. Al final, clavá por debajo el fondo de 3 mm.
 
-- **Piezas:** Lateral caja cajón, Frente interno cajón, Contrafrente cajón, Fondo cajón
+- **Piezas:** Lateral caja cajón 1 (izq), Lateral caja cajón 1 (der), Frente interno cajón 1, Contrafrente cajón 1, Fondo cajón 1
 - **Herraje:** Confirmat + clavos
-- 💡 Todas las cajas deben quedar iguales para que los cajones corran parejos.
+- 💡 Armá esta caja igual que las demás, para que todos los cajones corran parejos.
 
-## Paso 5: Colocá las correderas y meté los cajones
+## Paso 5: Colocá la corredera y meté el cajón 1 de 3
 
-Atornillá una guía de la corredera a cada lado del cajón y la otra al mueble, a la misma altura. Medí desde el piso interior del hueco según el plano acotado de la app: la línea central de la corredera debe coincidir en cajón y mueble. Usá tornillos 4×16 y probá que el cajón corra suave antes de poner el frente.
+1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al mueble, a la misma altura (mirá el plano acotado de la app: la línea central debe coincidir). 3. Probá que el cajón corra suave antes de poner el frente.
+
+- **Piezas:** Lateral caja cajón 1 (izq), Lateral caja cajón 1 (der)
 - **Herraje:** Corredera (según el nivel de calidad que elegiste)
 - 💡 Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, no lo fuerces al cerrar.
 
-## Paso 6: Atornillá los frentes de los cajones
+## Paso 6: Atornillá el frente del cajón 1 de 3
 
-El frente visible (con el tirador) se atornilla desde ADENTRO del cajón, con tornillos 4×30. Dejá 3 mm de luz entre frentes para que no rocen.
+1. Metié el cajón ya armado en su lugar, corriendo sobre la corredera. 2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del cajón, con tornillos 4×30 (nunca desde afuera, se vería el tornillo).
 
-- **Piezas:** Frente cajón
+- **Piezas:** Frente cajón 1
 - **Herraje:** Tornillo aglomerado 4×30 + tirador
 
-## Paso 7: Parás los apoyos verticales
+## Paso 7: Armá la caja del cajón 2 de 3
+
+1. Uní los dos laterales de este cajón con el frente interno y el contrafrente, formando una caja cerrada. 2. Pre-perforá siempre antes de atornillar. 3. Al final, clavá por debajo el fondo de 3 mm.
+
+- **Piezas:** Lateral caja cajón 2 (izq), Lateral caja cajón 2 (der), Frente interno cajón 2, Contrafrente cajón 2, Fondo cajón 2
+- **Herraje:** Confirmat + clavos
+- 💡 Armá esta caja igual que las demás, para que todos los cajones corran parejos.
+
+## Paso 8: Colocá la corredera y meté el cajón 2 de 3
+
+1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al mueble, a la misma altura (mirá el plano acotado de la app: la línea central debe coincidir). 3. Probá que el cajón corra suave antes de poner el frente.
+
+- **Piezas:** Lateral caja cajón 2 (izq), Lateral caja cajón 2 (der)
+- **Herraje:** Corredera (según el nivel de calidad que elegiste)
+- 💡 Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, no lo fuerces al cerrar.
+
+## Paso 9: Atornillá el frente del cajón 2 de 3
+
+1. Metié el cajón ya armado en su lugar, corriendo sobre la corredera. 2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del cajón, con tornillos 4×30 (nunca desde afuera, se vería el tornillo).
+
+- **Piezas:** Frente cajón 2
+- **Herraje:** Tornillo aglomerado 4×30 + tirador
+
+## Paso 10: Armá la caja del cajón 3 de 3
+
+1. Uní los dos laterales de este cajón con el frente interno y el contrafrente, formando una caja cerrada. 2. Pre-perforá siempre antes de atornillar. 3. Al final, clavá por debajo el fondo de 3 mm.
+
+- **Piezas:** Lateral caja cajón 3 (izq), Lateral caja cajón 3 (der), Frente interno cajón 3, Contrafrente cajón 3, Fondo cajón 3
+- **Herraje:** Confirmat + clavos
+- 💡 Armá esta caja igual que las demás, para que todos los cajones corran parejos.
+
+## Paso 11: Colocá la corredera y meté el cajón 3 de 3
+
+1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al mueble, a la misma altura (mirá el plano acotado de la app: la línea central debe coincidir). 3. Probá que el cajón corra suave antes de poner el frente.
+
+- **Piezas:** Lateral caja cajón 3 (izq), Lateral caja cajón 3 (der)
+- **Herraje:** Corredera (según el nivel de calidad que elegiste)
+- 💡 Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, no lo fuerces al cerrar.
+
+## Paso 12: Atornillá el frente del cajón 3 de 3
+
+1. Metié el cajón ya armado en su lugar, corriendo sobre la corredera. 2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del cajón, con tornillos 4×30 (nunca desde afuera, se vería el tornillo).
+
+- **Piezas:** Frente cajón 3
+- **Herraje:** Tornillo aglomerado 4×30 + tirador
+
+## Paso 13: Parás los apoyos verticales
 
 Parás el lateral izquierdo y, al lado, el parante del soporte de CPU. Entre ambos va la bandeja donde se apoya la CPU, a 10 cm del piso para que ventile.
 
@@ -54,15 +102,15 @@ Parás el lateral izquierdo y, al lado, el parante del soporte de CPU. Entre amb
 - **Herraje:** Confirmat / excéntrico
 - 💡 Todavía no aprietes del todo: primero presentá todo, después ajustás.
 
-## Paso 8: Colocá la tapa sobre los apoyos
+## Paso 14: Colocá la tapa sobre los apoyos
 
-Apoyá la tapa sobre la cajonera y el lateral (o el parante). Fijala desde abajo con escuadras o tornillos, cuidando que no asomen arriba.
+1. Apoyá la tapa encima de la cajonera y del lateral (o parante), bien alineada por los bordes. 2. Fijala desde ABAJO con escuadras metálicas o tornillos cortos, sin que ninguno asome arriba de la tapa. 3. Revisá que no se hamaque.
 
-- **Piezas:** Tapa capa superior (visible)
+- **Piezas:** Lateral izquierdo (pata panel), Parante soporte CPU, Bandeja CPU, Lateral cajonera interno, Lateral cajonera externo, Tapa capa superior (visible)
 - **Herraje:** Escuadra metálica 25 mm
-- 💡 Revisá que el escritorio no se hamaque: si se mueve, revisá la escuadra.
+- 💡 Si se mueve al empujarla, revisá que pusiste suficientes escuadras.
 
-## Paso 9: Niveladores y terminación final
+## Paso 15: Niveladores y terminación final
 
 Colocá los regatones/niveladores en la base para que el escritorio no toque el piso y quede nivelado. Repasá que todos los cantos visibles tengan su tapacanto bien pegado. Apretá todas las uniones.
 - **Herraje:** Regatón nivelador + tapacanto
