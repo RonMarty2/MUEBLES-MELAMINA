@@ -49,7 +49,7 @@
   #pestanas div.activa { background: #fff; color: #111; font-weight: 600; }
   #btn-expandir { margin-left: auto; margin-right: 8px; background: #4b5563; color: #fff;
                   border: 0; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
-  #contenido { flex: 1; overflow: auto; padding: 10px 14px; }
+  #contenido { flex: 1; overflow: auto; padding: 10px 14px; min-height: 0; }
   table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
   th, td { border: 1px solid #e2e0dc; padding: 4px 8px; text-align: left; }
   th { background: #f3f2ef; position: sticky; top: -10px; }
@@ -95,6 +95,8 @@
   .leyenda-3d span { display: inline-flex; align-items: center; gap: 5px; }
   .punto { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
   .btn-paso-grande { font-size: 14px !important; padding: 10px 18px !important; }
+  .nav-paso { position: sticky; bottom: -10px; margin: 12px -14px -10px; padding: 10px 14px;
+              background: #fff; border-top: 1px solid #e2e0dc; }
   #paneles.expandido .armado-cols { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
   #paneles.expandido .armado-detalle h3 { font-size: 19px; }
   #paneles.expandido .armado-detalle .texto-paso { font-size: 16px; }
@@ -1504,11 +1506,11 @@ function pintarArmado(c) {
         ${p.herraje ? tarjetasColocacionHerrajes(p.herraje, mueble) : ""}
         <p class="texto-paso">${convAvisos(p.texto)}</p>
         ${p.piezas.length ? `<p class="nota">🧩 <b>Piezas de este paso</b> (resaltadas y enfocadas en el 3D de arriba): <b>${p.piezas.join(", ")}</b></p>` : ""}
-        ${nMarcadores ? `<p class="nota">🟡 Se marcaron <b>${nMarcadores} punto(s) amarillo(s)</b> en el dibujo: ahí van los tornillos/fijaciones entre estas piezas.</p>` : ""}
-        ${tieneCantos ? `<p class="nota">🟠 Los bordes <b>naranjas</b> de estas piezas llevan tapacanto (cinta de terminación) — no van tornillos ahí.</p>` : ""}
+        ${nMarcadores ? `<p class="nota">🟡 Se marcaron <b>${nMarcadores} punto(s) amarillo(s)</b> en el dibujo: son los mismos agujeros vistos desde cada una de las dos piezas (por eso aparece de a pares, unidos por la línea punteada). Con tu pieza real en mano: medí esa misma posición con cinta métrica y escuadra, marcá con lápiz, <b>perforá primero</b> con la broca que te indica la tarjeta de abajo (agujero guía, nunca a mano alzada) y <b>recién después atornillá</b>.</p>` : ""}
+        ${tieneCantos ? `<p class="nota">🟠 Los bordes <b>naranjas</b> de estas piezas llevan tapacanto (cinta de terminación): <b>no se perfora ni se pega con cola</b>. Se coloca con una <b>plancha de ropa caliente</b> (el tapacanto ya trae pegamento termofusible en la parte de atrás; el calor lo activa) — apoyá la cinta sobre el canto y pasá la plancha unos segundos hasta que se adhiera, presionando con un trapo. Después recortá el sobrante de los costados con un cutter o una lima, al ras.</p>` : ""}
         ${p.herraje ? `<p class="nota">🔩 <b>Herraje que necesitás:</b> ${p.herraje}</p>${tarjetasHerrajes(p.herraje, mueble, false)}` : ""}
         ${p.tip ? `<div class="paso-tip">💡 ${convAvisos(p.tip)}</div>` : ""}
-        <div style="margin-top:12px">
+        <div class="nav-paso">
           <button id="paso-ant" class="btn-paso-grande gris" ${pasoArmadoActivo === 0 ? "disabled" : ""}>◀ Anterior</button>
           <button id="paso-sig" class="btn-paso-grande" ${pasoArmadoActivo === pasos.length - 1 ? "disabled" : ""}>Siguiente ▶</button>
         </div>

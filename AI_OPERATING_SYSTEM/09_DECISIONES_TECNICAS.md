@@ -392,6 +392,34 @@ Formato de cada entrada:
 
 ---
 
+## D-023 — Botones "Anterior/Siguiente" siempre visibles + explicación de cómo se coloca el tapacanto
+
+**Fecha:** 2026-07-06 · **Estado:** vigente
+
+- **Contexto:** el usuario reportó dos problemas concretos en la pestaña Armado, con captura
+  de un manual de IKEA como referencia de claridad: (1) en el panel sin agrandar, los botones
+  "◀ Anterior" / "Siguiente ▶" quedaban cortados fuera de la pantalla — bug real de layout:
+  `#contenido` tenía `flex:1; overflow:auto` pero sin `min-height:0`, así que nunca se achicaba
+  para habilitar su propio scroll y el contenido se recortaba directamente contra el borde de
+  la ventana del navegador en vez de quedar navegable dentro del panel. (2) preguntó
+  explícitamente si el tapacanto se perfora o se pega con cola — el sistema marcaba el borde
+  naranja pero nunca explicaba el método real de colocación (plancha caliente).
+- **Decisión:** (a) se agregó `min-height:0` a `#contenido` y una franja de navegación
+  `.nav-paso` con `position: sticky; bottom` para que los botones de paso queden siempre
+  visibles y alcanzables, con o sin scroll, en modo normal y expandido. (b) se reescribió la
+  nota de cantos con tapacanto explicando el método real: se activa con calor de una plancha
+  de ropa (el tapacanto ya trae pegamento termofusible), nunca se perfora ni se pega con cola
+  común, y se recorta el sobrante con cutter o lima. (c) se amplió la nota de los marcadores
+  amarillos para conectar el dibujo 3D con la acción física: medir con cinta y escuadra sobre
+  la pieza real, perforar primero (agujero guía) y recién después atornillar.
+- **Descartada:** ocultar la lista de pasos o la caja explicativa para "ganar espacio" —
+  perdía contexto; la solución de raíz era el bug de layout (`min-height:0`) más botones
+  sticky, no esconder información.
+- **Consecuencias:** cambio solo de UI/texto en `app_fuente.html`; no toca ninguna cifra de
+  despiece. `DISENADOR_MUEBLES.html` reconstruido.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
