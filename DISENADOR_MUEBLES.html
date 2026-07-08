@@ -1759,7 +1759,7 @@ function animarArmadoPaso(nombres, btn) {
   });
   const totalMs = piezasAnimar.length * DEMORA_ENTRE_PIEZAS + DUR_LLEGADA + 150;
   setTimeout(() => {
-    pintarMarcadoresTornillo(nombres);
+    animarEntradaTornillos(nombres);
     animandoPaso = false;
     if (btn) { btn.disabled = false; btn.textContent = "▶ Ver cómo se arma este paso"; }
   }, totalMs);
@@ -1774,6 +1774,7 @@ function aplicarResaltadoPaso() {
   explotarPiezas(nombres);
   enfocarPiezas(nombres);
   pintarMarcadoresTornillo(nombres);
+  pintarRieles(nombres, /corredera/i.test(p?.herraje || ""));
 }
 
 function pintarPestana() {
@@ -1923,6 +1924,7 @@ function iniciar3D() {
   (function anim() {
     requestAnimationFrame(anim);
     actualizarAnimacionesPos();
+    actualizarAnimacionesGiro();
     actualizarAnimacionCamara();
     ubicarCamara();
     render3d.render(escena, camara);
@@ -1963,6 +1965,7 @@ function render3D() {
     m.userData.pieza = p.nombre;
     m.userData.p = p;  // datos crudos (mm): pos/dim/cantos, para marcadores y cámara
     m.userData.posBase = m.position.clone();  // para volver acá al salir de Armado
+    m.userData.colorReal = m.material.color.clone();  // para restaurar tras aclarar en modo armado (D-028)
     escena.add(m); mallas.push(m);
     const borde = new THREE.LineSegments(new THREE.EdgesGeometry(geo),
       new THREE.LineBasicMaterial({ color: 0x555555 }));
@@ -1990,19 +1993,27 @@ function resaltarPiezas(nombres) {
     if (!m.material || m.userData.pieza === undefined) continue;
     m.material.transparent = true;
     const match = activos && nombres.some(n => m.userData.pieza.startsWith(n));
-    m.material.opacity = !activos ? 1 : (match ? 0.82 : 0.12);
+    m.material.opacity = !activos ? 1 : (match ? 0.92 : 0.1);
     m.material.depthWrite = !(activos && match);  // deja ver los tornillos "a través" de la pieza activa
+    if (m.userData.colorReal) {
+      // D-028: la pieza del paso se aclara (modo armado) para que el tornillo metálico resalte
+      // sobre melaminas oscuras — si no, "no se ve nada" contra un mueble negro.
+      if (match) m.material.color.copy(m.userData.colorReal).lerp(new THREE.Color(0xffffff), 0.6);
+      else m.material.color.copy(m.userData.colorReal);
+    }
   }
 }
 function limpiarResaltado() {
   for (const m of mallas) {
     if (m.material && m.userData.pieza !== undefined) {
       m.material.opacity = 1; m.material.transparent = false; m.material.depthWrite = true;
+      if (m.userData.colorReal) m.material.color.copy(m.userData.colorReal);
     }
     if (m.userData.esBorde) m.material.color.set(0x555555);
   }
   explotarPiezas([]);
   pintarMarcadoresTornillo([]);
+  pintarRieles([], false);
 }
 
 /* ------------------------------------------------ resaltado de cantos con tapacanto */
@@ -2104,7 +2115,7 @@ function calcularMarcadoresTornillo(nombres) {
       if (eje === "x") punto = [contacto, u, vCentro];
       else if (eje === "y") punto = [u, contacto, vCentro];
       else punto = [u, vCentro, contacto];
-      puntos.push({ x: punto[0], y: punto[1], z: punto[2], piezaA: nombreA, piezaB: nombreB });
+      puntos.push({ x: punto[0], y: punto[1], z: punto[2], piezaA: nombreA, piezaB: nombreB, eje });
     }
   };
   for (let i = 0; i < piezas.length; i++) {
@@ -2119,34 +2130,152 @@ function calcularMarcadoresTornillo(nombres) {
   }
   return puntos;
 }
-function pintarMarcadoresTornillo(nombres) {
-  for (const mk of marcadoresTornilloMeshes) escena.remove(mk);
-  marcadoresTornilloMeshes = [];
-  if (pestanaActiva !== "armado" || !nombres || !nombres.length) return;
+/* ------------------------------------------------ tornillo 3D real (D-028)
+   Antes cada unión se marcaba con una esferita amarilla abstracta — Ron no veía "dónde
+   está el tornillo ni en qué dirección entra". Ahora se dibuja un tornillo (cabeza + caña +
+   ranura) orientado exactamente según el eje de contacto real de la unión. */
+function crearTornillo(largoMm = 70) {
+  // Tamaño exagerado a propósito (no a escala real) para que se vea clarísimo contra
+  // piezas claras de "modo armado" — es un dibujo didáctico, no un plano técnico.
+  const esc = 0.001;
+  const headH = 9*esc, headR = 13*esc, shankLen = largoMm*esc, shankR0 = 6*esc, shankR1 = 2.5*esc;
+  const grupo = new THREE.Group();
+  const matMetal = new THREE.MeshPhongMaterial({ color: 0xc8940f, specular: 0xffe9a8, shininess: 70 });
+  const cabeza = new THREE.Mesh(new THREE.CylinderGeometry(headR, headR, headH, 16), matMetal);
+  cabeza.position.y = headH/2;  // grupo.position (y=0 local) queda en la cara exterior de la pieza
+  grupo.add(cabeza);
+  const cana = new THREE.Mesh(new THREE.CylinderGeometry(shankR0, shankR1, shankLen, 12), matMetal);
+  cana.position.y = headH + shankLen/2;  // +Y local = "hacia adentro", rumbo a la unión
+  grupo.add(cana);
+  const ranura = new THREE.Mesh(new THREE.BoxGeometry(headR*1.3, headH*0.45, headR*0.26),
+    new THREE.MeshPhongMaterial({ color: 0x2b2205, shininess: 15 }));
+  ranura.position.y = headH*0.75;
+  grupo.add(ranura);
+  return grupo;
+}
+function ejeMmAEscena(ejeMm) {
+  // mm: x, y (profundidad), z (altura)  ->  escena: x, z, y (ver aEscena/render3D)
+  if (ejeMm === "y") return "z";
+  if (ejeMm === "z") return "y";
+  return "x";
+}
+function direccionEjeScene(ejeMm, signo) {
+  const v = new THREE.Vector3();
+  v[ejeMmAEscena(ejeMm)] = signo || 1;
+  return v;
+}
+function orientarTornilloEje(grupo, ejeMm, signoHaciaAfuera) {
+  // el grupo apunta con +Y local hacia ADENTRO (rumbo a la unión) = lo opuesto de "hacia afuera"
+  const ejeScene = ejeMmAEscena(ejeMm);
+  const signo = -(signoHaciaAfuera || 1);
+  grupo.rotation.set(0, 0, 0);
+  if (ejeScene === "y") { if (signo < 0) grupo.rotation.x = Math.PI; }
+  else if (ejeScene === "x") { grupo.rotation.z = signo > 0 ? -Math.PI/2 : Math.PI/2; }
+  else { grupo.rotation.x = signo > 0 ? Math.PI/2 : -Math.PI/2; }
+}
+function construirTornillosDePaso(nombres) {
   const esc = 0.001;
   const box = bboxDePiezas(nombres);
-  if (!box) return;
+  if (!box) return [];
   const centroGrupo = { x:(box.minX+box.maxX)/2, y:(box.minY+box.maxY)/2, z:(box.minZ+box.maxZ)/2 };
   const aEscena = (x,y,z) => new THREE.Vector3(x*esc, z*esc, y*esc);
+  const items = [];
   for (const pt of calcularMarcadoresTornillo(nombres)) {
     const piezaA = mueble.piezas.find(p => p.nombre === pt.piezaA);
     const piezaB = mueble.piezas.find(p => p.nombre === pt.piezaB);
     const vA = vectorExplode(piezaA, centroGrupo), vB = vectorExplode(piezaB, centroGrupo);
-    const posA = [pt.x+vA.x*EXPLODE_MM, pt.y+vA.y*EXPLODE_MM, pt.z+vA.z*EXPLODE_MM];
-    const posB = [pt.x+vB.x*EXPLODE_MM, pt.y+vB.y*EXPLODE_MM, pt.z+vB.z*EXPLODE_MM];
-    for (const [x,y,z] of [posA, posB]) {
-      const esf = new THREE.Mesh(new THREE.SphereGeometry(0.013, 14, 14),
-        new THREE.MeshBasicMaterial({ color: 0xffc400 }));
-      esf.position.set(x*esc, z*esc, y*esc);
-      escena.add(esf); marcadoresTornilloMeshes.push(esf);
+    const destinos = [];
+    for (const v of [vA, vB]) {
+      const destino = aEscena(pt.x+v.x*EXPLODE_MM, pt.y+v.y*EXPLODE_MM, pt.z+v.z*EXPLODE_MM);
+      const signo = Math.sign(v[pt.eje]) || 1;
+      const tornillo = crearTornillo();
+      orientarTornilloEje(tornillo, pt.eje, signo);
+      tornillo.userData.baseQuat = tornillo.quaternion.clone();
+      items.push({ tornillo, destino, eje: pt.eje, signo, esLinea: false });
+      destinos.push(destino);
     }
-    const geoLinea = new THREE.BufferGeometry().setFromPoints([
-      aEscena(...posA), aEscena(...posB),
-    ]);
-    const linea = new THREE.Line(geoLinea,
+    const linea = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(destinos),
       new THREE.LineDashedMaterial({ color: 0xffc400, dashSize: 0.01, gapSize: 0.007 }));
     linea.computeLineDistances();
-    escena.add(linea); marcadoresTornilloMeshes.push(linea);
+    items.push({ tornillo: linea, destino: null, esLinea: true });
+  }
+  return items;
+}
+function pintarMarcadoresTornillo(nombres) {
+  for (const mk of marcadoresTornilloMeshes) escena.remove(mk);
+  marcadoresTornilloMeshes = [];
+  if (pestanaActiva !== "armado" || !nombres || !nombres.length) return;
+  for (const it of construirTornillosDePaso(nombres)) {
+    if (!it.esLinea) it.tornillo.position.copy(it.destino);
+    escena.add(it.tornillo);
+    marcadoresTornilloMeshes.push(it.tornillo);
+  }
+}
+/* ------------------------------------------------ animación de "atornillado" (D-028):
+   cada tornillo arranca afuera y gira mientras se desliza hasta encastrar. */
+const animacionesGiro = new Map();  // mesh -> {baseQuat, vueltas, t0, dur}
+function girarEntrando(mesh, vueltas, dur) {
+  animacionesGiro.set(mesh, { baseQuat: mesh.userData.baseQuat || mesh.quaternion.clone(), vueltas, t0: performance.now(), dur });
+}
+function actualizarAnimacionesGiro() {
+  const ahora = performance.now();
+  for (const [mesh, a] of animacionesGiro) {
+    const t = Math.min(1, (ahora - a.t0) / a.dur);
+    const spin = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), a.vueltas * Math.PI * 2 * t);
+    mesh.quaternion.copy(a.baseQuat).multiply(spin);
+    if (t >= 1) animacionesGiro.delete(mesh);
+  }
+}
+function animarEntradaTornillos(nombres) {
+  for (const mk of marcadoresTornilloMeshes) escena.remove(mk);
+  marcadoresTornilloMeshes = [];
+  const esc = 0.001, DEMORA = 160, DUR = 500, ENTRADA_MM = 60;
+  const items = construirTornillosDePaso(nombres);
+  let i = 0;
+  for (const it of items) {
+    escena.add(it.tornillo);
+    marcadoresTornilloMeshes.push(it.tornillo);
+    if (it.esLinea) { it.tornillo.visible = false; continue; }
+    const outward = direccionEjeScene(it.eje, it.signo);
+    it.tornillo.position.copy(it.destino).addScaledVector(outward, ENTRADA_MM*esc);
+    const idx = i++;
+    setTimeout(() => { moverA(it.tornillo, it.destino, DUR); girarEntrando(it.tornillo, 2.5, DUR); }, idx*DEMORA);
+  }
+  const totalTornillos = items.filter(it => !it.esLinea).length;
+  setTimeout(() => { for (const it of items) if (it.esLinea) it.tornillo.visible = true; },
+    totalTornillos*DEMORA + DUR + 100);
+}
+
+/* ------------------------------------------------ rieles de corredera como objeto real (D-028)
+   "Dónde están los rieles" — antes el paso de corredera no dibujaba nada: solo separaba los
+   dos laterales del cajón sin mostrar el herraje. Ahora se ve un riel metálico pegado a la
+   cara interior de cada lateral, a la altura real de la corredera (P-02). */
+let rielMeshes = [];
+function pintarRieles(nombres, hayCorredera) {
+  for (const r of rielMeshes) escena.remove(r);
+  rielMeshes = [];
+  if (!hayCorredera) return;
+  const box = bboxDePiezas(nombres);
+  if (!box || box.piezas.length < 2) return;
+  const esc = 0.001;
+  const centroGrupo = { x: (box.minX+box.maxX)/2, y: (box.minY+box.maxY)/2, z: (box.minZ+box.maxZ)/2 };
+  const ejeZ = (box.minZ + box.maxZ) / 2;
+  for (const p of box.piezas) {
+    const [px,py,pz] = p.pos, [pdx,pdy,pdz] = p.dim;
+    const v = vectorExplode(p, centroGrupo);
+    const largoMm = Math.max(pdy - 20, 40);
+    const geo = new THREE.BoxGeometry(20*esc, largoMm*esc, 26*esc);  // grosor exagerado a propósito, ver crearTornillo
+    const mat = new THREE.MeshPhongMaterial({ color: 0x38424c, specular: 0xffffff, shininess: 80 });
+    const riel = new THREE.Mesh(geo, mat);
+    riel.rotation.x = Math.PI/2;  // el "largo" del riel (Y local) va a lo largo de la profundidad (Z escena)
+    // pegado a la cara interior del lateral (hacia el centro del grupo), a la altura del eje
+    const offsetHaciaAdentro = -Math.sign(v.x || 1) * (pdx/2 - 10);
+    riel.position.set(
+      (px + pdx/2 + offsetHaciaAdentro)*esc + v.x*EXPLODE_MM*esc,
+      ejeZ*esc + v.z*EXPLODE_MM*esc,
+      (py + pdy/2)*esc + v.y*EXPLODE_MM*esc);
+    escena.add(riel); rielMeshes.push(riel);
   }
 }
 

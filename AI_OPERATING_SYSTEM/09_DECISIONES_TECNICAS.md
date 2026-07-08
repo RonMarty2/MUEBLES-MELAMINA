@@ -549,6 +549,49 @@ Formato de cada entrada:
 
 ---
 
+## D-028 — Tornillos 3D reales orientados + rieles visibles + piezas claras en modo armado
+
+**Fecha:** 2026-07-06 · **Estado:** vigente
+
+- **Contexto:** Ron insistió, con razón: los "tornillos" eran una esferita amarilla
+  abstracta (`pintarMarcadoresTornillo`), las piezas del armado seguían casi negras (la
+  melamina por defecto), no había ningún objeto de corredera, y la unión de la tapa con las
+  patas nunca se veía. Pidió textualmente "necesito animaciones que al verla se vea
+  claramente la unión, el atornillado".
+- **Decisión:**
+  1. **Tornillo 3D real** (`crearTornillo`): cabeza + caña cónica + ranura, tamaño
+     exagerado a propósito (no a escala) para que se lea clarísimo, color dorado metálico
+     con `MeshPhongMaterial` (no `MeshStandardMaterial`: sin mapa de entorno, un material
+     PBR con metalness alto se ve casi negro bajo esta escena de luces simples — bug real
+     detectado y corregido durante la implementación).
+  2. **Orientación real de la unión**: `calcularMarcadoresTornillo` ahora devuelve también
+     el `eje` (x/y/z) de contacto; `orientarTornilloEje` rota el tornillo para que entre
+     exactamente en esa dirección. Se detectó y corrigió un bug de mapeo de ejes (mm→escena):
+     el eje "z" (altura) se dejaba sin convertir y terminaba orientando los tornillos
+     verticales como si fueran horizontales — por eso en la primera prueba se veían como
+     rayitas ilegibles en vez de tornillos parados.
+  3. **Piezas claras en modo armado** (`resaltarPiezas`): la pieza activa del paso se aclara
+     (mezcla con blanco) en vez de quedar en su color real oscuro, para que el tornillo
+     dorado resalte contra melaminas negras/oscuras. Se guarda `colorReal` por mesh para
+     restaurar al salir.
+  4. **Rieles de corredera como objeto real** (`pintarRieles`): antes el paso de corredera no
+     dibujaba nada. Ahora se ve una barra metálica pegada a la cara interior de cada lateral
+     del cajón, a la altura real de la corredera (P-02). Se detectó y corrigió un bug de
+     rotación (la barra salía apuntando hacia arriba en vez de a lo largo de la profundidad).
+  5. **Animación de atornillado** (`animarEntradaTornillos`, dentro de "▶ Ver cómo se arma
+     este paso"): cada tornillo arranca afuera y gira sobre su propio eje mientras se
+     desliza hasta encastrar (cola `animacionesGiro` + quaternion, en el mismo loop de
+     render que ya traía D-027).
+- **Descartada:** un material PBR con mapa de entorno para que el metal se vea realista —
+  agregaría una textura/HDR externa a un archivo que debe seguir siendo autocontenido
+  (D-010); `MeshPhongMaterial` con `specular`/`shininess` alcanza para el brillo metálico
+  necesario en este contexto didáctico.
+- **Consecuencias:** cambio 100% en el motor 3D de `app_fuente.html`; `calcularMarcadores
+  Tornillo` solo suma el campo `eje` (retrocompatible). No toca ninguna cifra de despiece —
+  89 pruebas Python y 53 JS en verde. `DISENADOR_MUEBLES.html` reconstruido.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
