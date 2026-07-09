@@ -1394,17 +1394,20 @@ function instruccionesArmadoJS(m, receta) {
           "", { layout: "una-pieza", piezas: ["divisor"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
         const nCajRop = receta.cajones?.cantidad_cajones || 1;
         for (let i = 1; i <= nCajRop; i++) {
+          const subPiezasRop = [`Lateral caja cajón ${i} (izq)${suf}`, `Lateral caja cajón ${i} (der)${suf}`, `Frente interno cajón ${i}${suf}`, `Contrafrente cajón ${i}${suf}`, `Fondo cajón ${i}${suf}`];
           paso(`Armá la caja del cajón ${i} de ${nCajRop}${tag}`,
-            `1. Uní los dos laterales de este cajón con el frente interno y el contrafrente. 2. Pre-perforá siempre antes de atornillar. 3. Clavá el fondo de 3 mm por debajo.`,
-            [`Lateral caja cajón ${i} (izq)${suf}`, `Lateral caja cajón ${i} (der)${suf}`, `Frente interno cajón ${i}${suf}`, `Contrafrente cajón ${i}${suf}`, `Fondo cajón ${i}${suf}`], "Confirmat + clavos",
+            `⚠️ Esta caja NO se atornilla al mueble. Solo va unida por los rieles de la corredera (próximo paso).<br><br>Primero tocá "🧩 Armar en la mesada (aparte)" para ver las piezas fuera del mueble. Después "📥 Insertar en el mueble" para colocarla.<br><br>1. <b>Pará los dos laterales</b> enfrentados, con el frente interno entremedio adelante y el contrafrente atrás — rectángulo en planta. 2. <b>Pre-perforá</b> con broca Ø2 mm. 3. <b>Atornillá</b> el frente/contrafrente a los laterales. 4. <b>Clavá el fondo de 3 mm</b> por debajo, clavos cada ~15 cm.`,
+            subPiezasRop, "Confirmat + clavos",
             "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
             { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
+          pasos[pasos.length-1].subEnsamble = true;
           paso(`Colocá la corredera y meté el cajón ${i} de ${nCajRop}${tag}`,
-            "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al divisor/lateral, a la misma altura (mirá el plano acotado de abajo). 3. Probá que corra suave.",
+            "1. <b>Sobre el lateral del CAJÓN (pieza chica):</b> Apoyá la guía móvil al ras del borde delantero del lateral, centrada en la altura marcada. Atornillala con 2–3 tornillos 4×16 desde <b>AFUERA</b> del lateral (el tornillo entra hacia adentro del cajón). Hacé lo mismo en los dos laterales.<br><br>2. <b>Sobre el MUEBLE (divisor/lateral):</b> Atornillá la guía fija a la misma altura exacta. Atornillá desde <b>AFUERA</b> del mueble. Usá los agujeros ranurados para ajustar.<br><br>3. <b>Insertá el cajón:</b> Alineá los rieles y deslizá hasta que encastre. Probá que corra suave.",
             [`Lateral caja cajón ${i} (izq)${suf}`, `Lateral caja cajón ${i} (der)${suf}`], "Corredera (según calidad)",
             "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2.");
+          pasos[pasos.length-1].subEnsamble = true;
           paso(`Atornillá el frente del cajón ${i} de ${nCajRop}${tag}`,
-            "1. Metié el cajón en su lugar. 2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del cajón.",
+            "1. <b>Meté el cajón</b> ya armado en su lugar, deslizándolo sobre la corredera. 2. <b>Apoyá el frente</b> por fuera, centrado en el hueco, con 3 mm de luz arriba/abajo. 3. <b>Atornillá desde ADENTRO</b>: abrí el cajón y pasá los 4 tornillos 4×30 desde adentro atravesando el frente interno hacia el frente decorativo — los tornillos quedan invisibles.",
             [`Frente cajón ${i}${suf}`], "Tornillo 4×30 + tirador",
             "", { layout: "una-pieza", piezas: [`frente del cajón ${i}`], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
               noHacer: ["atornillar desde afuera"] });
@@ -1470,8 +1473,8 @@ function instruccionesArmadoJS(m, receta) {
         orden: ["encolar capa de abajo", "alinear la de arriba", "atornillar desde abajo", "dejar secar con peso"],
         noHacer: ["poner la cara linda para abajo"] });
   if (hayPieza(m, "Lateral cajonera"))
-    paso("Armá el cajón de la cajonera (caja estructural)",
-      "Uní los dos laterales de la cajonera con el piso, formando una U. Cerrá por atrás con el fondo. Pre-perforá SIEMPRE.",
+    paso("Armá la cajonera (el bloque de cajones ya forma parte del costado del escritorio)",
+      "1. El <b>lateral externo de la cajonera ES el costado derecho del escritorio</b> — no se atornilla a nada, es la pared del mueble.<br><br>2. Pará el lateral externo y el lateral interno enfrentados, con el piso de la cajonera entremedio (formando una H acostada). Pre-perforá y atornillá con confirmat/excéntrico.<br><br>3. Cerrá por atrás con el fondo de 3 mm clavado.<br><br>⚠️ La cajonera NO se atornilla al lateral izquierdo — el espacio entre ambos es para tus piernas. La tapa que va arriba es lo que une todo.",
       ["Lateral cajonera interno", "Lateral cajonera externo", "Piso cajonera", "Fondo cajonera"],
       "Confirmat / excéntrico + clavos", "Verificá la escuadra midiendo las dos diagonales.",
       { layout: "escuadra", piezas: ["lateral interno", "lateral externo", "piso"], fijacion: "Confirmat/excéntrico + pre-perforado",
@@ -1480,17 +1483,20 @@ function instruccionesArmadoJS(m, receta) {
   if (hayPieza(m, "Lateral caja cajón")) {
     const nCaj = receta.cajonera?.cantidad_cajones || 1;
     for (let i = 1; i <= nCaj; i++) {
+      const subPiezasCajon = [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`, `Frente interno cajón ${i}`, `Contrafrente cajón ${i}`, `Fondo cajón ${i}`];
       paso(`Armá la caja del cajón ${i} de ${nCaj}`,
-        `1. Uní los dos laterales de este cajón con el frente interno y el contrafrente, formando una caja cerrada. 2. Pre-perforá siempre antes de atornillar. 3. Al final, clavá por debajo el fondo de 3 mm.`,
-        [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`, `Frente interno cajón ${i}`, `Contrafrente cajón ${i}`, `Fondo cajón ${i}`], "Confirmat + clavos",
+        `⚠️ Esta caja NO se atornilla al mueble. Los ÚNICOS tornillos entre la caja del cajón y el mueble son los de la corredera (próximo paso). La caja simplemente se desliza sobre los rieles.<br><br>Primero tocá "🧩 Armar en la mesada (aparte)" para ver las piezas fuera del mueble. Después "📥 Insertar en el mueble" para colocarla en su lugar.<br><br>1. <b>Pará los dos laterales</b> del cajón enfrentados, con el frente interior entremedio adelante y el contrafrente entremedio atrás — formando un rectángulo visto desde arriba. 2. <b>Pre-perforá</b> siempre con broca Ø2 mm antes de atornillar. 3. <b>Atornillá</b> el frente interno a los laterales (los laterales "abrazan" al frente/contrafrente). 4. <b>Clavá el fondo de 3 mm</b> por debajo: centrado, clavos cada ~15 cm.`,
+        subPiezasCajon, "Confirmat + clavos",
         "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
         { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
+      pasos[pasos.length-1].subEnsamble = true;
       paso(`Colocá la corredera y meté el cajón ${i} de ${nCaj}`,
-        "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al mueble, a la misma altura (mirá el plano acotado de abajo: la línea central debe coincidir). 3. Probá que el cajón corra suave antes de seguir con el frente.",
+        "1. <b>Sobre el lateral del CAJÓN (pieza chica):</b> Apoyá la guía móvil (la que tiene las bolitas/rodillos) al ras del borde delantero del lateral, centrada en la altura marcada. Atornillala con 2–3 tornillos 4×16 desde <b>AFUERA</b> del lateral (el tornillo entra de afuera hacia adentro del cajón). Hacé lo mismo en los dos laterales del cajón.<br><br>2. <b>Sobre el MUEBLE (lateral cajonera / divisor):</b> Atornillá la guía fija (la que se acopla a la anterior) a la misma altura exacta, centrada en la línea del plano de abajo. Atornillá desde <b>AFUERA</b> del mueble — el tornillo entra desde el lateral del mueble hacia adentro. Usá los agujeros ranurados (no los redondos) para poder ajustar la altura.<br><br>3. <b>Insertá el cajón:</b> Alineá los rieles y deslizá el cajón hasta que encastre. Probá que corra suave. Si está duro: aflojá los tornillos de los agujeros ranurados, ajustá y volvé a apretar.<br><br>➡️ <b>Mirá el plano acotado de ABAJO:</b> muestra las cotas reales y los 3 puntos de tornillo por riel. Los dos rieles (uno en el cajón y otro en el mueble) deben quedar enfrentados a la misma altura, paralelos.",
         [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`], "Corredera (según el nivel de calidad que elegiste)",
         "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2. Si elegiste soft-close, el cajón se frena solo al cerrar: no lo fuerces.");
+      pasos[pasos.length-1].subEnsamble = true;
       paso(`Atornillá el frente del cajón ${i} de ${nCaj}`,
-        "1. Metié el cajón ya armado en su lugar, corriendo sobre la corredera. 2. Apoyá el frente por fuera, centrado, dejando 3 mm de luz con los cajones de al lado. 3. Atornillalo desde ADENTRO del cajón (nunca desde afuera, se vería el tornillo).",
+        "1. <b>Meté el cajón</b> ya armado en su lugar, deslizándolo sobre la corredera. 2. <b>Apoyá el frente</b> por FUERA del mueble, centrado en el hueco, dejando 3 mm de luz arriba/abajo con los cajones vecinos. 3. <b>Atornillá desde ADENTRO</b>: abrí el cajón, y desde adentro pasá los 4 tornillos 4×30 atravesando el frente interno y entrando en el frente decorativo (el tornillo queda invisible, escondido dentro del cajón). Nunca atornilles desde afuera — se vería la cabeza del tornillo en la cara linda.",
         [`Frente cajón ${i}`], "Tornillo 4×30 + tirador",
         "", { layout: "una-pieza", piezas: [`frente del cajón ${i}`], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
           noHacer: ["atornillar desde afuera"] });
@@ -1505,6 +1511,8 @@ function instruccionesArmadoJS(m, receta) {
     apoyos.push("Parante soporte CPU", "Bandeja CPU");
     textoApoyo = "Parás el lateral izquierdo y, al lado, el parante del soporte de CPU. Entre ambos va la bandeja, a 10 cm del piso para que ventile.";
   }
+  if (hayPieza(m, "Lateral cajonera"))
+    textoApoyo += " Si tenés cajonera: los dos laterales de la cajonera ya están parados del paso anterior (ella misma ES el costado derecho del escritorio). No hace falta atornillarla a nada más.";
   paso("Parás los apoyos verticales", textoApoyo, apoyos, "Confirmat / excéntrico",
     "Todavía no aprietes del todo: primero presentá todo, después ajustás.",
     { layout: "una-pieza", piezas: ["apoyo/pata vertical"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
@@ -1833,7 +1841,12 @@ function pintarArmado(c) {
         ${p.herraje ? tarjetasColocacionHerrajes(p.herraje, mueble) : ""}
         <p class="texto-paso">${convAvisos(p.texto)}</p>
         ${p.piezas.length ? `<p class="nota">🧩 <b>Piezas de este paso</b> (resaltadas y enfocadas en el 3D de arriba): <b>${p.piezas.join(", ")}</b></p>
-        <button id="btn-animar-paso" class="btn-paso-grande">▶ Ver cómo se arma este paso</button>` : ""}
+        ${p.subEnsamble
+          ? `<div style="display:flex;gap:8px;margin-top:6px">
+              <button id="btn-animar-sub" class="btn-paso-grande">🧩 Armar en la mesada (aparte)</button>
+              <button id="btn-insertar-sub" class="btn-paso-grande gris">📥 Insertar en el mueble</button>
+             </div>`
+          : `<button id="btn-animar-paso" class="btn-paso-grande">▶ Ver cómo se arma este paso</button>`}` : ""}
         ${nMarcadores ? `<p class="nota">🟡 Se marcaron <b>${nMarcadores} punto(s) amarillo(s)</b> en el dibujo: son los mismos agujeros vistos desde cada una de las dos piezas (por eso aparece de a pares, unidos por la línea punteada). Con tu pieza real en mano: medí esa misma posición con cinta métrica y escuadra, marcá con lápiz, <b>perforá primero</b> con la broca que te indica la tarjeta de abajo (agujero guía, nunca a mano alzada) y <b>recién después atornillá</b>.</p>` : ""}
         ${tieneCantos ? `<p class="nota">🟠 Los bordes <b>naranjas</b> de estas piezas llevan tapacanto (cinta de terminación): <b>no se perfora ni se pega con cola</b>. Se coloca con una <b>plancha de ropa caliente</b> (el tapacanto ya trae pegamento termofusible en la parte de atrás; el calor lo activa) — apoyá la cinta sobre el canto y pasá la plancha unos segundos hasta que se adhiera, presionando con un trapo. Después recortá el sobrante de los costados con un cutter o una lima, al ras.</p>` : ""}
         ${p.herraje ? `<p class="nota">🔩 <b>Herraje que necesitás:</b> ${p.herraje}</p>${tarjetasHerrajes(p.herraje, mueble, false)}` : ""}
@@ -1853,6 +1866,31 @@ function pintarArmado(c) {
   if (ant) ant.onclick = () => { reproduciendoTodo = false; pasoArmadoActivo--; pintarArmado(c); aplicarResaltadoPaso(); };
   const btnAnimar = $("btn-animar-paso");
   if (btnAnimar) btnAnimar.onclick = () => animarArmadoPaso(p.piezas, btnAnimar);
+  const btnSub = $("btn-animar-sub");
+  if (btnSub) {
+    btnSub.onclick = () => {
+      pintarRieles([], false); // limpiar rieles anteriores
+      colocarEnMesada(p.piezas);
+      btnSub.textContent = "✅ Piezas en la mesada";
+      btnSub.disabled = true;
+      const btnIns = $("btn-insertar-sub");
+      if (btnIns) { btnIns.disabled = false; btnIns.className = "btn-paso-grande"; }
+    };
+  }
+  const btnIns = $("btn-insertar-sub");
+  if (btnIns) {
+    btnIns.disabled = true;
+    btnIns.onclick = () => {
+      volverDelMesada(p.piezas);
+      btnIns.textContent = "📥 Insertando…";
+      btnIns.disabled = true;
+      const btnSub2 = $("btn-animar-sub");
+      if (btnSub2) { btnSub2.disabled = false; btnSub2.textContent = "🧩 Armar en la mesada (aparte)"; }
+      // Mostrar rieles y tornillos al insertar
+      pintarRieles(p.piezas, /corredera/i.test(p?.herraje || ""));
+      animarEntradaTornillos(p.piezas);
+    };
+  }
   const btnCompleto = $("btn-ver-completo");
   if (btnCompleto) {
     btnCompleto.onclick = () => reproducirArmadoCompleto();
@@ -1861,9 +1899,11 @@ function pintarArmado(c) {
   }
   aplicarResaltadoPaso();
 }
-/* ------------------------------------------------ animación de armado a pedido (D-027):
-   las piezas del paso arrancan "recién sacadas del paquete" (más lejos que la explosión
-   normal) y se deslizan una por una hasta encastrar, con los tornillos apareciendo al final. */
+/* ------------------------------------------------ animación de armado a pedido (D-027 v2):
+   las piezas del paso arrancan "recién sacadas del paquete" DESDE FUERA de la escena (como
+   si entraran por el frente, una por una), se deslizan a su posición final y los tornillos
+   aparecen al final. Ya no aparecen "de la nada" porque arrancaban visibles desde la posición
+   explosionada — ahora llegan desde el exterior del campo visual. */
 let animandoPaso = false;
 function animarArmadoPaso(nombres, btn) {
   if (!nombres || !nombres.length || animandoPaso || !escena) return;
@@ -1875,27 +1915,30 @@ function animarArmadoPaso(nombres, btn) {
   const piezasAnimar = mallas.filter(m => m.userData.p && m.userData.posBase && !m.userData.esBorde
     && nombres.some(n => m.userData.pieza.startsWith(n)));
   pintarMarcadoresTornillo([]);
-  const DEMORA_ENTRE_PIEZAS = 260, DUR_LLEGADA = 550;
+  // Calcular el radio de la escena para saber qué tan lejos poner las piezas
+  const sceneRadius = box ? Math.max(box.maxX-box.minX, box.maxY-box.minY, box.maxZ-box.minZ) * esc * 1.5 : 2;
+  const DEMORA_ENTRE_PIEZAS = 280, DUR_LLEGADA = 600;
   piezasAnimar.forEach((m, i) => {
     const v = centroGrupo ? vectorExplode(m.userData.p, centroGrupo) : { x: 0, y: 0, z: 0 };
-    const lejos = new THREE.Vector3(
-      m.userData.posBase.x + v.x*EXPLODE_MM*3*esc,
-      m.userData.posBase.y + v.z*EXPLODE_MM*3*esc + 0.18,
-      m.userData.posBase.z + v.y*EXPLODE_MM*3*esc);
     const destino = new THREE.Vector3(
       m.userData.posBase.x + v.x*EXPLODE_MM*esc,
       m.userData.posBase.y + v.z*EXPLODE_MM*esc,
       m.userData.posBase.z + v.y*EXPLODE_MM*esc);
-    m.position.copy(lejos);
-    animacionesPos.delete(m);  // cancelar la transición de explosión en curso, si la hay
+    const afuera = new THREE.Vector3(
+      destino.x + v.x * sceneRadius * 2,
+      destino.y + sceneRadius * 3 + 0.3,
+      destino.z + v.y * sceneRadius * 2);
+    m.position.copy(afuera);
+    m.visible = true;
+    animacionesPos.delete(m);
     const borde = mallas.find(b => b.userData.esBorde && b.userData.pieza === m.userData.pieza);
-    if (borde) { borde.position.copy(lejos); animacionesPos.delete(borde); }
+    if (borde) { borde.position.copy(afuera); borde.visible = true; animacionesPos.delete(borde); }
     setTimeout(() => {
       moverA(m, destino, DUR_LLEGADA);
       if (borde) moverA(borde, destino, DUR_LLEGADA);
     }, i * DEMORA_ENTRE_PIEZAS);
   });
-  const totalMs = piezasAnimar.length * DEMORA_ENTRE_PIEZAS + DUR_LLEGADA + 150;
+  const totalMs = piezasAnimar.length * DEMORA_ENTRE_PIEZAS + DUR_LLEGADA + 200;
   setTimeout(() => {
     animarEntradaTornillos(nombres);
     animandoPaso = false;
@@ -2176,6 +2219,47 @@ function render3D() {
   }
 }
 
+/* ------------------------------------------------ sub-ensamble: armar piezas "aparte" (fuera del mueble)
+   Para pasos que requieren mostrar cómo se arma un subconjunto (ej: caja de cajón), las piezas
+   se desplazan a una "mesada virtual" a la derecha del mueble, se muestran cómo encajan, y
+   luego el subconjunto completo se desliza adentro. */
+function colocarEnMesada(nombres) {
+  const esc = 0.001;
+  const box = bboxDePiezas(nombres);
+  if (!box) return;
+  const anchoMueble = recetaActual?.dimensiones?.ancho || 1000;
+  const offsetX = (anchoMueble + 200) * esc; // a la derecha del mueble
+  for (const m of mallas) {
+    if (!m.userData.pieza || !m.userData.posBase) continue;
+    if (!nombres.some(n => m.userData.pieza.startsWith(n))) continue;
+    const dest = new THREE.Vector3(
+      m.userData.posBase.x + offsetX,
+      m.userData.posBase.y,
+      m.userData.posBase.z);
+    // Guardar la posición original en userData para poder volver
+    if (m.userData.posEnMesada === undefined) {
+      m.userData.posEnMesada = dest.clone();
+    }
+    moverA(m, dest, 400);
+    const borde = mallas.find(b => b.userData.esBorde && b.userData.pieza === m.userData.pieza);
+    if (borde) {
+      if (borde.userData.posEnMesada === undefined) {
+        borde.userData.posEnMesada = new THREE.Vector3(dest.x, dest.y, dest.z);
+      }
+      moverA(borde, dest, 400);
+    }
+  }
+}
+function volverDelMesada(nombres) {
+  for (const m of mallas) {
+    if (!m.userData.pieza || !m.userData.posBase || !nombres.some(n => m.userData.pieza.startsWith(n))) continue;
+    if (m.userData.posEnMesada) {
+      moverA(m, m.userData.posBase, 500);
+      const borde = mallas.find(b => b.userData.esBorde && b.userData.pieza === m.userData.pieza);
+      if (borde) moverA(borde, borde.userData.posBase || m.userData.posBase, 500);
+    }
+  }
+}
 /* ------------------------------------------------ resaltado de piezas (armado) */
 function resaltarPiezas(nombres) {
   const activos = nombres && nombres.length;
@@ -2438,35 +2522,79 @@ function animarEntradaTornillos(nombres) {
     totalTornillos*DEMORA + DUR + 100);
 }
 
-/* ------------------------------------------------ rieles de corredera como objeto real (D-028)
+/* ------------------------------------------------ rieles de corredera como objeto real (D-028 v2)
    "Dónde están los rieles" — antes el paso de corredera no dibujaba nada: solo separaba los
    dos laterales del cajón sin mostrar el herraje. Ahora se ve un riel metálico pegado a la
-   cara interior de cada lateral, a la altura real de la corredera (P-02). */
+   cara interior de cada lateral, a la altura real de la corredera (P-02).
+   v2: los rieles aparecen con animación: se deslizan desde el FRENTE del mueble hacia el fondo,
+   como si los estuvieras insertando en su lugar. */
 let rielMeshes = [];
 function pintarRieles(nombres, hayCorredera) {
   for (const r of rielMeshes) escena.remove(r);
   rielMeshes = [];
-  if (!hayCorredera) return;
-  const box = bboxDePiezas(nombres);
-  if (!box || box.piezas.length < 2) return;
+  if (!hayCorredera || !mueble) return;
+  // Buscar las piezas de la CAJA del cajón (laterales) y los laterales del MUEBLE (lateral cajonera/divisor)
+  const latCajaNombres = nombres.filter(n => /Lateral caja cajón/i.test(n));
+  if (!latCajaNombres.length) return;
+  // Encontrar en el mueble: los laterales de la caja del cajón actual y los laterales del mueble a los que se enfrentan
+  const piezasCaja = mueble.piezas.filter(p => nombres.some(n => p.nombre.startsWith(n) && /Lateral caja cajón/i.test(p.nombre)));
+  const piezasMueble = mueble.piezas.filter(p => /Lateral cajonera/i.test(p.nombre) || /Divisor cajones/i.test(p.nombre));
+  if (!piezasCaja.length) return;
   const esc = 0.001;
-  const centroGrupo = { x: (box.minX+box.maxX)/2, y: (box.minY+box.maxY)/2, z: (box.minZ+box.maxZ)/2 };
-  const ejeZ = (box.minZ + box.maxZ) / 2;
-  for (const p of box.piezas) {
-    const [px,py,pz] = p.pos, [pdx,pdy,pdz] = p.dim;
-    const v = vectorExplode(p, centroGrupo);
-    const largoMm = Math.max(pdy - 20, 40);
-    const geo = new THREE.BoxGeometry(20*esc, largoMm*esc, 26*esc);  // grosor exagerado a propósito, ver crearTornillo
-    const mat = new THREE.MeshPhongMaterial({ color: 0x38424c, specular: 0xffffff, shininess: 80 });
+  const boxCaja = bboxDePiezas(latCajaNombres);
+  if (!boxCaja) return;
+  const centroCaja = { x:(boxCaja.minX+boxCaja.maxX)/2, y:(boxCaja.minY+boxCaja.maxY)/2, z:(boxCaja.minZ+boxCaja.maxZ)/2 };
+  const profundidadMax = Math.max(...piezasCaja.map(p => p.pos[1] + p.dim[1]));
+  const anchoEscena = recetaActual?.dimensiones?.ancho * esc || 1;
+  function crearRiel(posMm, desdeFrente) {
+    const geo = new THREE.BoxGeometry(20*esc, (desdeFrente?Math.max(posMm[3]-20,40):Math.max(posMm[3]-20,40))*esc, 26*esc);
+    const mat = new THREE.MeshPhongMaterial({ color: 0x38424c, specular: 0xffffff, shininess: 80, transparent: true, opacity: 1 });
     const riel = new THREE.Mesh(geo, mat);
-    riel.rotation.x = Math.PI/2;  // el "largo" del riel (Y local) va a lo largo de la profundidad (Z escena)
-    // pegado a la cara interior del lateral (hacia el centro del grupo), a la altura del eje
+    riel.rotation.x = Math.PI/2;
+    riel.position.set(posMm[0]*esc, posMm[2]*esc, (profundidadMax+100)*esc);
+    return riel;
+  }
+  // Riel en los laterales del CAJÓN (guía móvil, parte del cajón)
+  for (const p of piezasCaja) {
+    const [px,py,pz] = p.pos, [pdx,pdy,pdz] = p.dim;
+    const v = vectorExplode(p, centroCaja);
     const offsetHaciaAdentro = -Math.sign(v.x || 1) * (pdx/2 - 10);
-    riel.position.set(
+    const posFinal = [
+      px + pdx/2 + offsetHaciaAdentro,
+      py,
+      pz + pdz/2,
+      pdy
+    ];
+    const riel = crearRiel(posFinal, true);
+    // Destino final con offset de explosión
+    const destinoFinal = new THREE.Vector3(
       (px + pdx/2 + offsetHaciaAdentro)*esc + v.x*EXPLODE_MM*esc,
-      ejeZ*esc + v.z*EXPLODE_MM*esc,
+      (pz + pdz/2)*esc + v.z*EXPLODE_MM*esc,
       (py + pdy/2)*esc + v.y*EXPLODE_MM*esc);
+    setTimeout(() => moverA(riel, destinoFinal, 500), rielMeshes.length * 200);
     escena.add(riel); rielMeshes.push(riel);
+  }
+  // Dibujar también el riel en los laterales del MUEBLE (guía fija)
+  for (const p of piezasMueble) {
+    const [px,py,pz] = p.pos, [pdx,pdy,pdz] = p.dim;
+    // Buscar la altura de cada cajón: usar el eje Z de la caja del cajón actual
+    for (const pc of piezasCaja) {
+      const v = vectorExplode(p, centroCaja);
+      const offsetHaciaAdentro = Math.sign(v.x || 1) * (pdx/2 - 10);  // hacia el centro del grupo
+      const posFinal = [
+        px + pdx/2 + offsetHaciaAdentro,
+        py,
+        pc.pos[2] + pc.dim[2]/2,
+        pc.dim[1]
+      ];
+      const riel = crearRiel(posFinal, false);
+      const destinoFinal = new THREE.Vector3(
+        (px + pdx/2 + offsetHaciaAdentro)*esc + v.x*EXPLODE_MM*esc,
+        (pc.pos[2] + pc.dim[2]/2)*esc + v.z*EXPLODE_MM*esc,
+        (py + pdy/2)*esc + v.y*EXPLODE_MM*esc);
+      setTimeout(() => moverA(riel, destinoFinal, 500), rielMeshes.length * 200);
+      escena.add(riel); rielMeshes.push(riel);
+    }
   }
 }
 
