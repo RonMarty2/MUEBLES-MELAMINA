@@ -141,85 +141,112 @@ def instrucciones_ropero(mueble, receta):
         pasos.append({"n": len(pasos) + 1, "titulo": titulo, "texto": texto,
                       "piezas": piezas or [], "herraje": herraje, "tip": tip})
 
+    n_cuerpos = receta.get("cuerpos", {}).get("cantidad", 1)
     paso("Entendé las placas y ordená los cortes",
          "Separá y etiquetá todas las piezas según la lista de cortes. Verificá medidas "
-         "antes de empezar.",
+         "antes de empezar."
+         + (f" Tu ropero son {n_cuerpos} cuerpos independientes: cada uno se arma completo "
+            "por separado y al final se atornillan entre sí (R-30)." if n_cuerpos > 1 else ""),
          tip="Trabajá en un piso parejo y con espacio: el ropero es grande.")
 
-    zocalos = ["Zócalo frontal"]
-    if _hay(mueble, "Zócalo trasero"):
-        zocalos.append("Zócalo trasero")
-    paso("Armá la base y el zócalo",
-         "El zócalo delantero va retranqueado (más adentro) del frente, para que no se vea "
-         "al agacharse y separe el mueble del piso."
-         + (" El zócalo trasero es la segunda línea de apoyo del piso: sin él, el piso "
-            "cargado cede atrás (R-28)." if len(zocalos) > 1 else ""),
-         piezas=zocalos, herraje="Confirmat / excéntrico",
-         tip="El ropero nunca debe apoyar la melamina directo al piso (humedad).")
+    # ---- pasos del módulo, repetidos por cuerpo (con 1 cuerpo, idénticos a siempre)
+    for k in range(1, n_cuerpos + 1):
+        suf = "" if n_cuerpos == 1 else f" (cuerpo {k})"
+        tag = "" if n_cuerpos == 1 else f" — cuerpo {k} de {n_cuerpos}"
 
-    caja_piezas = ["Lateral izquierdo", "Lateral derecho", "Piso", "Techo (estante superior)"]
-    texto_caja = ("Uní los dos laterales con el piso y el techo, formando la caja principal. "
-                  "Pre-perforá antes de atornillar.")
-    if _hay(mueble, "Refuerzo bajo techo"):
-        caja_piezas.append("Refuerzo bajo techo")
-        texto_caja += (" El refuerzo de canto va pegado al fondo, debajo del techo: tu "
-                       "ropero es ancho y sin él el techo se dobla por el medio con el "
-                       "peso (R-27).")
-    paso("Parás los laterales y armá la caja", texto_caja,
-         piezas=caja_piezas, herraje="Confirmat / excéntrico",
-         tip="Medí las diagonales para verificar la escuadra antes de apretar todo.")
+        zocalos = [f"Zócalo frontal{suf}"]
+        if _hay(mueble, f"Zócalo trasero{suf}"):
+            zocalos.append(f"Zócalo trasero{suf}")
+        paso(f"Armá la base y el zócalo{tag}",
+             "El zócalo delantero va retranqueado (más adentro) del frente, para que no se vea "
+             "al agacharse y separe el mueble del piso."
+             + (" El zócalo trasero es la segunda línea de apoyo del piso: sin él, el piso "
+                "cargado cede atrás (R-28)." if len(zocalos) > 1 else ""),
+             piezas=zocalos, herraje="Confirmat / excéntrico",
+             tip="El ropero nunca debe apoyar la melamina directo al piso (humedad).")
 
-    paso("Cerrá el fondo",
-         "El fondo de 3 mm va clavado por detrás. Clavalo también a las líneas intermedias "
-         "(zócalo trasero, refuerzo, divisor): el fondo bien clavado es lo que evita que el "
-         "mueble se tuerza en paralelogramo al moverlo (R-29/R-26). NO lo selles hermético: "
-         "dejá que ventile para que la ropa no tome humedad.",
-         piezas=["Fondo"], herraje="Clavos 1½\"")
+        caja_piezas = [f"Lateral izquierdo{suf}", f"Lateral derecho{suf}",
+                       f"Piso{suf}", f"Techo (estante superior){suf}"]
+        texto_caja = ("Uní los dos laterales con el piso y el techo, formando la caja. "
+                      "Pre-perforá antes de atornillar.")
+        if _hay(mueble, f"Refuerzo bajo techo{suf}"):
+            caja_piezas.append(f"Refuerzo bajo techo{suf}")
+            texto_caja += (" El refuerzo de canto va pegado al fondo, debajo del techo: el "
+                           "cuerpo es ancho y sin él el techo se dobla por el medio con el "
+                           "peso (R-27).")
+        paso(f"Parás los laterales y armá la caja{tag}", texto_caja,
+             piezas=caja_piezas, herraje="Confirmat / excéntrico",
+             tip="Medí las diagonales para verificar la escuadra antes de apretar todo.")
 
-    if _hay(mueble, "Divisor cajones"):
-        paso("Colocá el divisor de la cajonera",
-             "1. Atornillá el divisor vertical que separa la zona de cajones del resto del "
-             "ropero. 2. Cerrá arriba con la tapa de cajonera.",
-             piezas=["Divisor cajones", "Tapa de cajonera"], herraje="Confirmat / excéntrico")
-        n_caj_rop = receta.get("cajones", {}).get("cantidad_cajones", 1)
-        for i in range(1, n_caj_rop + 1):
-            paso(f"Armá la caja del cajón {i} de {n_caj_rop}",
-                 "1. Uní los dos laterales de este cajón con el frente interno y el "
-                 "contrafrente. 2. Pre-perforá siempre antes de atornillar. 3. Clavá el fondo "
-                 "de 3 mm por debajo.",
-                 piezas=[f"Lateral caja cajón {i} (izq)", f"Lateral caja cajón {i} (der)",
-                         f"Frente interno cajón {i}", f"Contrafrente cajón {i}",
-                         f"Fondo cajón {i}"],
-                 herraje="Confirmat + clavos",
-                 tip="Armá esta caja igual que las demás, para que todos los cajones corran parejos.")
-            paso(f"Colocá la corredera y meté el cajón {i} de {n_caj_rop}",
-                 "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá "
-                 "la otra guía al divisor/lateral, a la misma altura (mirá el plano acotado de "
-                 "la app). 3. Probá que corra suave.",
-                 piezas=[f"Lateral caja cajón {i} (izq)", f"Lateral caja cajón {i} (der)"],
-                 herraje="Corredera (según calidad)")
-            paso(f"Atornillá el frente del cajón {i} de {n_caj_rop}",
-                 "1. Metié el cajón en su lugar. 2. Apoyá el frente por fuera, centrado, con "
-                 "3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del "
-                 "cajón.",
-                 piezas=[f"Frente cajón {i}"], herraje="Tornillo aglomerado 4×30 + tirador")
+        paso(f"Cerrá el fondo{tag}",
+             "El fondo de 3 mm va clavado por detrás. Clavalo también a las líneas intermedias "
+             "(zócalo trasero, refuerzo, divisor): el fondo bien clavado es lo que evita que el "
+             "mueble se tuerza en paralelogramo al moverlo (R-29/R-26). NO lo selles hermético: "
+             "dejá que ventile para que la ropa no tome humedad.",
+             piezas=[f"Fondo{suf}"], herraje="Clavos 1½\"")
 
-    if _hay(mueble, "Barral"):
-        paso("Colocá el barral para colgar la ropa",
-             "Atornillá los soportes del barral a los laterales, a la altura indicada, y "
-             "apoyá el tubo. Si el ropero es ancho, lleva un soporte en el medio para que "
-             "no se arquee.",
-             piezas=["Barral colgador"], herraje="Barral tubular + soportes")
+        if _hay(mueble, f"Divisor cajones{suf}"):
+            paso(f"Colocá el divisor de la cajonera{tag}",
+                 "1. Atornillá el divisor vertical que separa la zona de cajones del resto. "
+                 "2. Cerrá arriba con la tapa de cajonera.",
+                 piezas=[f"Divisor cajones{suf}", f"Tapa de cajonera{suf}"],
+                 herraje="Confirmat / excéntrico")
+            n_caj_rop = receta.get("cajones", {}).get("cantidad_cajones", 1)
+            for i in range(1, n_caj_rop + 1):
+                paso(f"Armá la caja del cajón {i} de {n_caj_rop}{tag}",
+                     "1. Uní los dos laterales de este cajón con el frente interno y el "
+                     "contrafrente. 2. Pre-perforá siempre antes de atornillar. 3. Clavá el fondo "
+                     "de 3 mm por debajo.",
+                     piezas=[f"Lateral caja cajón {i} (izq){suf}", f"Lateral caja cajón {i} (der){suf}",
+                             f"Frente interno cajón {i}{suf}", f"Contrafrente cajón {i}{suf}",
+                             f"Fondo cajón {i}{suf}"],
+                     herraje="Confirmat + clavos",
+                     tip="Armá esta caja igual que las demás, para que todos los cajones corran parejos.")
+                paso(f"Colocá la corredera y meté el cajón {i} de {n_caj_rop}{tag}",
+                     "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá "
+                     "la otra guía al divisor/lateral, a la misma altura (mirá el plano acotado de "
+                     "la app). 3. Probá que corra suave.",
+                     piezas=[f"Lateral caja cajón {i} (izq){suf}", f"Lateral caja cajón {i} (der){suf}"],
+                     herraje="Corredera (según calidad)")
+                paso(f"Atornillá el frente del cajón {i} de {n_caj_rop}{tag}",
+                     "1. Metié el cajón en su lugar. 2. Apoyá el frente por fuera, centrado, con "
+                     "3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del "
+                     "cajón.",
+                     piezas=[f"Frente cajón {i}{suf}"], herraje="Tornillo aglomerado 4×30 + tirador")
 
-    if _hay(mueble, "Estante inferior"):
-        est_piezas = ["Estante inferior (zapatos)"]
-        texto_est = "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras."
-        if _hay(mueble, "Apoyo central estante inferior"):
-            est_piezas.append("Apoyo central estante inferior")
-            texto_est += (" Parale el apoyo central al medio: el vano es ancho y sin él "
-                          "el estante se dobla con el peso (R-27).")
-        paso("Colocá el estante inferior", texto_est,
-             piezas=est_piezas, herraje="Rinconera/taco")
+        if _hay(mueble, f"Barral colgador{suf}"):
+            paso(f"Colocá el barral para colgar la ropa{tag}",
+                 "Atornillá los soportes del barral a los laterales, a la altura indicada, y "
+                 "apoyá el tubo. Si el cuerpo es ancho, lleva un soporte en el medio para que "
+                 "no se arquee.",
+                 piezas=[f"Barral colgador{suf}"], herraje="Barral tubular + soportes")
+
+        if _hay(mueble, f"Estante inferior (zapatos){suf}"):
+            est_piezas = [f"Estante inferior (zapatos){suf}"]
+            texto_est = "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras."
+            if _hay(mueble, f"Apoyo central estante inferior{suf}"):
+                est_piezas.append(f"Apoyo central estante inferior{suf}")
+                texto_est += (" Parale el apoyo central al medio: el vano es ancho y sin él "
+                              "el estante se dobla con el peso (R-27).")
+            paso(f"Colocá el estante inferior{tag}", texto_est,
+                 piezas=est_piezas, herraje="Rinconera/taco")
+
+    # ---- unión entre cuerpos (R-30)
+    if n_cuerpos > 1:
+        laterales_union = []
+        for k in range(1, n_cuerpos):
+            laterales_union += [f"Lateral derecho (cuerpo {k})",
+                                f"Lateral izquierdo (cuerpo {k + 1})"]
+        paso("Uní los cuerpos entre sí",
+             "1. Pará los cuerpos uno al lado del otro, en su lugar definitivo. 2. Alineá "
+             "los frentes y prensá los laterales que se tocan (con sargentos o pidiéndole a "
+             "alguien que los apriete). 3. Pre-perforá y atornillá con tornillos 4×30 desde "
+             "adentro de un cuerpo hacia el lateral del otro: adelante y atrás, arriba y "
+             "abajo, y repartidos en el medio (R-30). 4. Nivelá el conjunto ANTES de apretar "
+             "del todo.",
+             piezas=laterales_union, herraje="Tornillo aglomerado 4×30",
+             tip="Atornillá donde no se vea: cerca de los estantes o detrás del barral. "
+                 "Para mudanzas, estos tornillos se sacan y cada cuerpo viaja solo (R-26).")
 
     if _hay(mueble, "Puerta batiente"):
         paso("Colocá las puertas batientes",

@@ -224,9 +224,15 @@
     <!-- ============================== CONTROLES: ROPERO ============================== -->
     <div id="controles-ropero" style="display:none">
       <h2>Medidas (mm)</h2>
-      <div class="campo"><label>Ancho <span class="unidad">600–1200 (M-16)</span></label>
-        <div class="fila"><input type="range" id="rop-ancho" min="600" max="1200" step="10">
-        <input type="number" id="rop-ancho-n" min="600" max="1200"></div></div>
+      <div class="campo"><label>Cantidad de cuerpos</label>
+        <select id="rop-cuerpos">
+          <option value="1" selected>1 cuerpo (hasta 120 cm)</option>
+          <option value="2">2 cuerpos (hasta 240 cm)</option>
+          <option value="3">3 cuerpos (hasta 360 cm)</option>
+        </select></div>
+      <div class="campo"><label>Ancho total <span class="unidad">600–3600 (M-16/R-30)</span></label>
+        <div class="fila"><input type="range" id="rop-ancho" min="600" max="3600" step="10">
+        <input type="number" id="rop-ancho-n" min="600" max="3600"></div></div>
       <div class="campo"><label>Profundidad <span class="unidad">550–620 (M-17)</span></label>
         <div class="fila"><input type="range" id="rop-profundidad" min="550" max="620" step="5">
         <input type="number" id="rop-profundidad-n" min="550" max="620"></div></div>
@@ -619,11 +625,25 @@ const ALTO_FRENTE_OBJETIVO_ROPERO = 250;
 const VANO_MAX_ESTANTE = 800;  // R-27: estante 18mm cargado se pandea desde ~800mm de vano
 const ALTO_REFUERZO = 80;      // R-27: alto del travesaño de canto
 
+const ANCHO_MIN_CUERPO = 600, ANCHO_MAX_CUERPO = 1200;  // R-30 / M-16
+
 function validarRopero(r) {
   const errores = [], avisos = [];
   const d = r.dimensiones, e = 18;
-  const anchoInterior = d.ancho - 2*e;
+  const nCuerpos = r.cuerpos?.cantidad || 1;
 
+  // R-30: el ancho TOTAL se reparte entre cuerpos; cada cuerpo debe ser un módulo sano.
+  const anchoCuerpo = Math.floor(d.ancho / nCuerpos);
+  if (anchoCuerpo < ANCHO_MIN_CUERPO || anchoCuerpo > ANCHO_MAX_CUERPO) {
+    const sugerencia = anchoCuerpo > ANCHO_MAX_CUERPO ? "agregá un cuerpo" : "sacá un cuerpo o agrandá el ancho total";
+    errores.push(`Con ${nCuerpos} cuerpo(s) y ${d.ancho} mm de ancho total, cada cuerpo quedaría de ${anchoCuerpo} mm; el rango sano por cuerpo es ${ANCHO_MIN_CUERPO}–${ANCHO_MAX_CUERPO} mm (R-30/M-16): ${sugerencia}.`);
+    return { errores, avisos };
+  }
+  if (nCuerpos > 1) {
+    avisos.push(`Ropero de ${nCuerpos} cuerpos: ${nCuerpos} módulos independientes de ${anchoCuerpo} mm que se arman por separado y se atornillan entre sí (R-30). Ventaja: se muda por partes sin desarmar (R-26).`);
+  }
+
+  const anchoInterior = anchoCuerpo - 2*e;
   if (anchoInterior > 1000) {
     avisos.push(`Ancho interior de ${anchoInterior} mm: se agrega soporte central de barral para que no se arquee (R-19).`);
   }
@@ -633,183 +653,223 @@ function validarRopero(r) {
   } else if (gapSobreBarral < ALTO_LIBRE_SOBRE_BARRAL_MIN) {
     avisos.push(`Quedan solo ${gapSobreBarral} mm libres sobre el barral (recomendado ${ALTO_LIBRE_SOBRE_BARRAL_MIN} mm, M-21).`);
   }
-  if (r.puertas.tipo === "batiente") {
-    const anchoVano = d.ancho - 2*e, n = r.puertas.cantidad;
+  if (r.puertas.tipo === "batiente" && nCuerpos === 1) {
+    const anchoVano = anchoCuerpo - 2*e, n = r.puertas.cantidad;
     const anchoHoja = Math.floor((anchoVano - 3*(n+1)) / n);
     if (anchoHoja > ANCHO_MAX_PUERTA_BATIENTE) {
       errores.push(`Con ${n} puertas batientes, cada hoja quedaría de ${anchoHoja} mm; el máximo recomendado es ${ANCHO_MAX_PUERTA_BATIENTE} mm (R-21). Agregá una puerta más o usá corredizas.`);
     } else if (anchoHoja < 250) {
       errores.push(`Con ${n} puertas batientes, cada hoja quedaría de ${anchoHoja} mm: muy angosta. Reducí la cantidad de puertas.`);
     }
+  } else if (r.puertas.tipo === "batiente" && nCuerpos > 1) {
+    avisos.push(`Con ${nCuerpos} cuerpos, las puertas batientes son 2 hojas por cuerpo (${2*nCuerpos} en total); la cantidad elegida se ignora (R-30).`);
   }
   if (r.cajones.incluir) {
     const libreParaBarral = anchoInterior - r.cajones.ancho;
     if (libreParaBarral < 350) {
-      errores.push(`Con una sección de cajones de ${r.cajones.ancho} mm, solo quedarían ${libreParaBarral} mm para el barral (mínimo 350 mm). Achicá los cajones o agrandá el módulo.`);
+      errores.push(`Con una sección de cajones de ${r.cajones.ancho} mm, solo quedarían ${libreParaBarral} mm para el barral en ese cuerpo (mínimo 350 mm). Achicá los cajones o agrandá el módulo.`);
     }
   }
   return { errores, avisos };
 }
 
 function despieceRopero(r) {
-  const d = r.dimensiones, A = d.ancho, P = d.profundidad, H = d.alto;
+  const d = r.dimensiones, P = d.profundidad, H = d.alto;
   const e = 18, ef = 3, color = r.material.color;
   const mat = `Melamina 18mm ${color}`, matFondo = "Fibrofácil 3mm";
   const nivel = r.calidad.nivel;
+  const caj = r.cajones, puertas = r.puertas;
+  const nCuerpos = r.cuerpos?.cantidad || 1;
+  const A = Math.floor(d.ancho / nCuerpos);   // ancho de CADA cuerpo (R-30)
+  const AUtil = A * nCuerpos;
   const altoEstructura = H - ZOCALO, altoInterior = altoEstructura - 2*e;
-  const interiorAncho = A - 2*e;
 
   const piezas = [], perfs = [], avisos = [];
-  let confirmats = 0, clavos = 0, tcFino = 0, bisagras = 0, rinconeras = 4;
+  let confirmats = 0, clavos = 0, tcFino = 0, bisagrasTotal = 0, puertasTotal = 0,
+      tiradoresCajones = 0, rinconeras = 0, tornillos4x30 = 0;
+  let correderaInfo = null;
 
   const [tipoUnion, avisoUnion] = unionSugerida(nivel, r.uniones.tipo);
   if (avisoUnion) avisos.push(avisoUnion);
+  if (AUtil !== d.ancho) avisos.push(`Ancho total ajustado a ${AUtil} mm (${nCuerpos} cuerpos de ${A} mm parejos).`);
 
   const pieza = (nombre, cortA, cortB, esp, material, pos, dim, cantos = "", notas = "") => {
     const [largo, ancho] = cortA >= cortB ? [cortA, cortB] : [cortB, cortA];
     piezas.push({ nombre, largo, ancho, espesor: esp, material, pos, dim, cantos, notas });
   };
 
-  pieza("Lateral izquierdo", P, altoEstructura, e, mat, [0,0,ZOCALO], [e,P,altoEstructura], "canto frontal");
-  pieza("Lateral derecho", P, altoEstructura, e, mat, [A-e,0,ZOCALO], [e,P,altoEstructura], "canto frontal");
-  tcFino += 2*altoEstructura;
-  confirmats += 2 * confirmatsPorUnion(P);
+  const armarCuerpo = (k) => {
+    const suf = nCuerpos === 1 ? "" : ` (cuerpo ${k})`;
+    const xo = (k - 1) * A;
+    const conCajones = caj.incluir && k === nCuerpos;
+    const primero = k === 1;
 
-  pieza("Piso", P, interiorAncho, e, mat, [e,0,ZOCALO], [interiorAncho,P,e]);
-  pieza("Techo (estante superior)", P, interiorAncho, e, mat, [e,0,H-e], [interiorAncho,P,e],
-        "", "Apoyado sobre rinconeras (H-16); actúa como estante superior (R-20)");
-  pieza("Fondo", altoEstructura-4, A-4, ef, matFondo, [2,P-ef,ZOCALO+2], [A-4,ef,altoEstructura-4],
-        "", "Clavado sin sellar herméticamente, para ventilar (R-25). Clavado también a las líneas intermedias: es lo que evita que el mueble se tuerza en paralelogramo (R-29/R-26)");
-  clavos += Math.ceil(2*((A-4)+(altoEstructura-4))/150);
-  confirmats += 2 * confirmatsPorUnion(P);
-
-  pieza("Zócalo frontal", interiorAncho, ZOCALO, e, mat, [e,30,0], [interiorAncho,e,ZOCALO],
-        "", "Retranqueado 30 mm del frente (R-18)");
-  confirmats += confirmatsPorUnion(interiorAncho);
-  pieza("Zócalo trasero", interiorAncho, ZOCALO, e, mat, [e,P-e-ef,0], [interiorAncho,e,ZOCALO],
-        "", "Segunda línea de apoyo del piso: sin él, el piso cargado cede atrás (R-28). No lleva canto (no se ve)");
-  confirmats += confirmatsPorUnion(interiorAncho);
-  clavos += Math.ceil(interiorAncho/150);  // R-29: el fondo también se clava al zócalo trasero
-
-  if (interiorAncho > VANO_MAX_ESTANTE) {
-    pieza("Refuerzo bajo techo", interiorAncho, ALTO_REFUERZO, e, mat,
-          [e, P-e-ef, H-e-ALTO_REFUERZO], [interiorAncho, e, ALTO_REFUERZO],
-          "", `De canto, pegado al fondo: evita que el techo de ${interiorAncho} mm se pandee (R-27)`);
-    confirmats += confirmatsPorUnion(interiorAncho);
-    clavos += Math.ceil(interiorAncho/150);  // R-29: el fondo también se clava al refuerzo
-    avisos.push(`El interior mide ${interiorAncho} mm de ancho (más de ${VANO_MAX_ESTANTE} mm): el techo lleva un refuerzo de canto y el piso apoya en zócalo delantero y trasero, para que no se doblen por el medio con el peso (R-27/R-28). Sin esto, el mueble se ve bien vacío pero cede cargado.`);
-  } else if (interiorAncho > 600) {
-    avisos.push(`Estantes de ${interiorAncho} mm de vano: carga media (~25 kg distribuidos). No apiles cosas muy pesadas en el medio del techo (R-27).`);
-  }
-
-  let anchoBarralZona = interiorAncho, xZonaBarralIni = e;
-  const caj = r.cajones;
-  if (caj.incluir) {
-    const C = caj.ancho, x0 = A - C, PC = P - e - 20, interiorCaj = C - 2*e;
-    pieza("Divisor cajones", P, altoInterior, e, mat, [x0,0,ZOCALO+e], [e,P,altoInterior], "canto frontal");
-    tcFino += altoInterior;
-    confirmats += confirmatsPorUnion(P);
-
-    const n = caj.cantidad_cajones;
-    const altoFrente = ALTO_FRENTE_OBJETIVO_ROPERO;
-    const altoCajonera = n*(altoFrente+3) + 3;
-    const largoCorr = elegirCorredera(PC);
-    const anchoCaja = interiorCaj - 26, altoCaja = altoFrente - 30, xC = x0 + e + 13;
-
-    pieza("Tapa de cajonera", P, interiorCaj, e, mat, [x0+e,0,ZOCALO+e+altoCajonera], [interiorCaj,P,e],
-          "", "Cierra el bloque de cajones; arriba queda espacio libre");
-    confirmats += confirmatsPorUnion(interiorCaj);
-
-    avisos.push(`Cajones del ropero: bloque de ${n} frentes de ${altoFrente} mm (${altoCajonera} mm de alto total); caja ${anchoCaja} × ${largoCorr} × ${altoCaja} mm (R-05/R-24/M-24). Queda espacio libre arriba para un estante adicional.`);
-
-    for (let i = 0; i < n; i++) {
-      const zFrente = ZOCALO + e + i*(altoFrente+3), zCaja = zFrente + 15, num = i+1;
-      pieza(`Frente cajón ${num}`, C-4, altoFrente, e, mat, [x0+2,0,zFrente], [C-4,e,altoFrente],
-            "4 cantos", "Fijado desde adentro con 4 tornillos 4×30");
-      pieza(`Lateral caja cajón ${num} (izq)`, largoCorr, altoCaja, e, mat, [xC,0,zCaja], [e,largoCorr,altoCaja]);
-      pieza(`Lateral caja cajón ${num} (der)`, largoCorr, altoCaja, e, mat, [xC+anchoCaja-e,0,zCaja], [e,largoCorr,altoCaja]);
-      pieza(`Frente interno cajón ${num}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,0,zCaja], [anchoCaja-2*e,e,altoCaja]);
-      pieza(`Contrafrente cajón ${num}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,largoCorr-e,zCaja], [anchoCaja-2*e,e,altoCaja]);
-      pieza(`Fondo cajón ${num}`, largoCorr-2, anchoCaja-2, ef, matFondo, [xC+1,1,zCaja-ef], [anchoCaja-2,largoCorr-2,ef]);
-      tcFino += 2*((C-4)+altoFrente);
-      confirmats += 4 * confirmatsPorUnion(altoCaja);
-      clavos += Math.ceil(2*((anchoCaja-2)+(largoCorr-2))/150);
-      const ejeRel = alturaCorredera(altoCaja), ejeMueble = zCaja + ejeRel;
-      perfs.push({ pieza: "Divisor cajones / Lateral derecho", cara: "cara interior",
-        detalle: `Eje corredera cajón ${num}: centro a ${ejeRel} mm del canto inferior de la caja y a ${ejeMueble} mm del piso del mueble (P-02); tornillos 4×16` });
-    }
-    anchoBarralZona = x0 - e - e;
-  }
-
-  const largoBarral = anchoBarralZona - 2*RETRANQUEO_BARRAL;
-  pieza("Barral colgador", largoBarral, 25, 25, "Tubo cromado",
-        [xZonaBarralIni+RETRANQUEO_BARRAL, P/2-12, ALTO_BARRAL], [largoBarral,25,25],
-        "", "Tubo, no es corte de placa: comprar por metros (H-12)");
-  const soportesBarral = anchoBarralZona > 1000 ? 3 : 2;
-  const herrajes = [
-    { clave: "barral_juego", nombre: "Barral tubular cromado Ø25 + soportes", cant: 1, porVenta: 1, unidad: "juego", paraQue: `${soportesBarral} soportes (R-19)` },
-  ];
-
-  if (r.estante_inferior.incluir) {
-    pieza("Estante inferior (zapatos)", P-20, anchoBarralZona, e, mat,
-          [xZonaBarralIni,0,ZOCALO+250], [anchoBarralZona,P-20,e], "", "A 250 mm del piso, para calzado (M-23)");
-    confirmats += confirmatsPorUnion(anchoBarralZona);
+    pieza(`Lateral izquierdo${suf}`, P, altoEstructura, e, mat, [xo,0,ZOCALO], [e,P,altoEstructura], "canto frontal");
+    pieza(`Lateral derecho${suf}`, P, altoEstructura, e, mat, [xo+A-e,0,ZOCALO], [e,P,altoEstructura], "canto frontal");
+    tcFino += 2*altoEstructura;
+    confirmats += 2 * confirmatsPorUnion(P);
     rinconeras += 4;
-    if (anchoBarralZona > VANO_MAX_ESTANTE) {
-      const xApoyo = xZonaBarralIni + Math.floor(anchoBarralZona/2) - Math.floor(e/2);
-      pieza("Apoyo central estante inferior", P-40, 250-e, e, mat,
-            [xApoyo, 10, ZOCALO+e], [e, P-40, 250-e],
-            "", `Parado al medio del vano de ${anchoBarralZona} mm: sin él, el estante de zapatos se dobla (R-27)`);
-      confirmats += 4;
-    }
-  }
 
-  const puertas = r.puertas;
-  if (puertas.tipo === "batiente") {
-    const n = puertas.cantidad;
-    const anchoHoja = Math.floor((interiorAncho - 3*(n+1)) / n);
-    const altoHoja = altoEstructura - 6;
-    const posBisagras = posicionesBisagras(altoHoja);
-    for (let i = 0; i < n; i++) {
-      const xHoja = e + 3 + i*(anchoHoja+3);
-      const nombrePuerta = `Puerta batiente ${i+1}`;
-      pieza(nombrePuerta, altoHoja, anchoHoja, e, mat, [xHoja,-e,ZOCALO+3], [anchoHoja,e,altoHoja], "4 cantos");
-      const ladoBisagra = i < n / 2 ? "izquierdo" : "derecho";
-      const xCazoleta = ladoBisagra === "izquierdo" ? DISTANCIA_CAZOLETA_CANTO : anchoHoja - DISTANCIA_CAZOLETA_CANTO;
-      for (const posSup of posBisagras) {
-        perfs.push({ pieza: nombrePuerta, cara: "cara interior",
-          detalle: `Cazoleta bisagra: centro a ${posSup} mm del borde superior y ${DISTANCIA_CAZOLETA_CANTO} mm del canto ${ladoBisagra}; broca copa Ø35, profundidad 12-13 mm, NO perforar pasante (P-04/R-22)`,
-          x: xCazoleta, y: altoHoja - posSup, d: 35 });
+    const interiorAncho = A - 2*e;
+    pieza(`Piso${suf}`, P, interiorAncho, e, mat, [xo+e,0,ZOCALO], [interiorAncho,P,e]);
+    pieza(`Techo (estante superior)${suf}`, P, interiorAncho, e, mat, [xo+e,0,H-e], [interiorAncho,P,e],
+          "", "Apoyado sobre rinconeras (H-16); actúa como estante superior (R-20)");
+    pieza(`Fondo${suf}`, altoEstructura-4, A-4, ef, matFondo, [xo+2,P-ef,ZOCALO+2], [A-4,ef,altoEstructura-4],
+          "", "Clavado sin sellar herméticamente, para ventilar (R-25). Clavado también a las líneas intermedias: es lo que evita que el mueble se tuerza en paralelogramo (R-29/R-26)");
+    clavos += Math.ceil(2*((A-4)+(altoEstructura-4))/150);
+    confirmats += 2 * confirmatsPorUnion(P);
+
+    pieza(`Zócalo frontal${suf}`, interiorAncho, ZOCALO, e, mat, [xo+e,30,0], [interiorAncho,e,ZOCALO],
+          "", "Retranqueado 30 mm del frente (R-18)");
+    confirmats += confirmatsPorUnion(interiorAncho);
+    pieza(`Zócalo trasero${suf}`, interiorAncho, ZOCALO, e, mat, [xo+e,P-e-ef,0], [interiorAncho,e,ZOCALO],
+          "", "Segunda línea de apoyo del piso: sin él, el piso cargado cede atrás (R-28). No lleva canto (no se ve)");
+    confirmats += confirmatsPorUnion(interiorAncho);
+    clavos += Math.ceil(interiorAncho/150);  // R-29
+
+    if (interiorAncho > VANO_MAX_ESTANTE) {
+      pieza(`Refuerzo bajo techo${suf}`, interiorAncho, ALTO_REFUERZO, e, mat,
+            [xo+e, P-e-ef, H-e-ALTO_REFUERZO], [interiorAncho, e, ALTO_REFUERZO],
+            "", `De canto, pegado al fondo: evita que el techo de ${interiorAncho} mm se pandee (R-27)`);
+      confirmats += confirmatsPorUnion(interiorAncho);
+      clavos += Math.ceil(interiorAncho/150);  // R-29
+      if (primero) {
+        const cada = nCuerpos > 1 ? "cada cuerpo" : "el interior";
+        avisos.push(`En ${cada} el vano es de ${interiorAncho} mm (más de ${VANO_MAX_ESTANTE} mm): el techo lleva un refuerzo de canto y el piso apoya en zócalo delantero y trasero, para que no se doblen por el medio con el peso (R-27/R-28). Sin esto, el mueble se ve bien vacío pero cede cargado.`);
+      }
+    } else if (interiorAncho > 600 && primero) {
+      avisos.push(`Estantes de ${interiorAncho} mm de vano: carga media (~25 kg distribuidos). No apiles cosas muy pesadas en el medio del techo (R-27).`);
+    }
+
+    let anchoBarralZona = interiorAncho, xZonaBarralIni = xo + e;
+    if (conCajones) {
+      const C = caj.ancho, x0 = xo + A - C, PC = P - e - 20, interiorCaj = C - 2*e;
+      pieza(`Divisor cajones${suf}`, P, altoInterior, e, mat, [x0,0,ZOCALO+e], [e,P,altoInterior], "canto frontal");
+      tcFino += altoInterior;
+      confirmats += confirmatsPorUnion(P);
+      clavos += Math.ceil(altoInterior/150);  // R-29
+
+      const n = caj.cantidad_cajones;
+      const altoFrente = ALTO_FRENTE_OBJETIVO_ROPERO;
+      const altoCajonera = n*(altoFrente+3) + 3;
+      const largoCorr = elegirCorredera(PC);
+      const anchoCaja = interiorCaj - 26, altoCaja = altoFrente - 30, xC = x0 + e + 13;
+
+      pieza(`Tapa de cajonera${suf}`, P, interiorCaj, e, mat, [x0+e,0,ZOCALO+e+altoCajonera], [interiorCaj,P,e],
+            "", "Cierra el bloque de cajones; arriba queda espacio libre");
+      confirmats += confirmatsPorUnion(interiorCaj);
+
+      const donde = nCuerpos > 1 ? ` (en el cuerpo ${k})` : "";
+      avisos.push(`Cajones del ropero${donde}: bloque de ${n} frentes de ${altoFrente} mm (${altoCajonera} mm de alto total); caja ${anchoCaja} × ${largoCorr} × ${altoCaja} mm (R-05/R-24/M-24). Queda espacio libre arriba para un estante adicional.`);
+
+      for (let i = 0; i < n; i++) {
+        const zFrente = ZOCALO + e + i*(altoFrente+3), zCaja = zFrente + 15, num = i+1;
+        pieza(`Frente cajón ${num}${suf}`, C-4, altoFrente, e, mat, [x0+2,0,zFrente], [C-4,e,altoFrente],
+              "4 cantos", "Fijado desde adentro con 4 tornillos 4×30");
+        pieza(`Lateral caja cajón ${num} (izq)${suf}`, largoCorr, altoCaja, e, mat, [xC,0,zCaja], [e,largoCorr,altoCaja]);
+        pieza(`Lateral caja cajón ${num} (der)${suf}`, largoCorr, altoCaja, e, mat, [xC+anchoCaja-e,0,zCaja], [e,largoCorr,altoCaja]);
+        pieza(`Frente interno cajón ${num}${suf}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,0,zCaja], [anchoCaja-2*e,e,altoCaja]);
+        pieza(`Contrafrente cajón ${num}${suf}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,largoCorr-e,zCaja], [anchoCaja-2*e,e,altoCaja]);
+        pieza(`Fondo cajón ${num}${suf}`, largoCorr-2, anchoCaja-2, ef, matFondo, [xC+1,1,zCaja-ef], [anchoCaja-2,largoCorr-2,ef]);
+        tcFino += 2*((C-4)+altoFrente);
+        confirmats += 4 * confirmatsPorUnion(altoCaja);
+        clavos += Math.ceil(2*((anchoCaja-2)+(largoCorr-2))/150);
+        const ejeRel = alturaCorredera(altoCaja), ejeMueble = zCaja + ejeRel;
+        perfs.push({ pieza: `Divisor cajones / Lateral derecho${suf}`, cara: "cara interior",
+          detalle: `Eje corredera cajón ${num}: centro a ${ejeRel} mm del canto inferior de la caja y a ${ejeMueble} mm del piso del mueble (P-02); tornillos 4×16` });
+      }
+      tiradoresCajones += n;
+      correderaInfo = [largoCorr, n];
+      anchoBarralZona = (x0 - e) - (xo + e);
+    }
+
+    const largoBarral = anchoBarralZona - 2*RETRANQUEO_BARRAL;
+    pieza(`Barral colgador${suf}`, largoBarral, 25, 25, "Tubo cromado",
+          [xZonaBarralIni+RETRANQUEO_BARRAL, P/2-12, ALTO_BARRAL], [largoBarral,25,25],
+          "", "Tubo, no es corte de placa: comprar por metros (H-12)");
+
+    if (r.estante_inferior.incluir) {
+      pieza(`Estante inferior (zapatos)${suf}`, P-20, anchoBarralZona, e, mat,
+            [xZonaBarralIni,0,ZOCALO+250], [anchoBarralZona,P-20,e], "", "A 250 mm del piso, para calzado (M-23)");
+      confirmats += confirmatsPorUnion(anchoBarralZona);
+      rinconeras += 4;
+      if (anchoBarralZona > VANO_MAX_ESTANTE) {
+        const xApoyo = xZonaBarralIni + Math.floor(anchoBarralZona/2) - Math.floor(e/2);
+        pieza(`Apoyo central estante inferior${suf}`, P-40, 250-e, e, mat,
+              [xApoyo, 10, ZOCALO+e], [e, P-40, 250-e],
+              "", `Parado al medio del vano de ${anchoBarralZona} mm: sin él, el estante de zapatos se dobla (R-27)`);
+        confirmats += 4;
       }
     }
-    const nBis = posBisagras.length;
-    bisagras = n * nBis;
-    herrajes.push(bisagraCalidad(nivel, bisagras));
-    herrajes.push({ clave: "tirador", nombre: "Tirador", cant: n, porVenta: 1, unidad: "unid.", paraQue: "uno por puerta" });
-    avisos.push(`${n} puertas batientes de ${anchoHoja}×${altoHoja} mm, ${nBis} bisagras c/u (R-21/R-22). Centros desde borde superior: ${posBisagras.map(p => p + " mm").join(", ")}; cazoleta Ø35 a ${DISTANCIA_CAZOLETA_CANTO} mm del canto (P-04).`);
-  } else if (puertas.tipo === "corrediza") {
+
+    if (puertas.tipo === "batiente") {
+      const nHojas = nCuerpos === 1 ? puertas.cantidad : 2;  // R-30
+      const interiorP = A - 2*e;
+      const anchoHoja = Math.floor((interiorP - 3*(nHojas+1)) / nHojas);
+      const altoHoja = altoEstructura - 6;
+      const posBisagras = posicionesBisagras(altoHoja);
+      for (let i = 0; i < nHojas; i++) {
+        const xHoja = xo + e + 3 + i*(anchoHoja+3);
+        const nombrePuerta = `Puerta batiente ${i+1}${suf}`;
+        pieza(nombrePuerta, altoHoja, anchoHoja, e, mat, [xHoja,-e,ZOCALO+3], [anchoHoja,e,altoHoja], "4 cantos");
+        const ladoBisagra = i < nHojas / 2 ? "izquierdo" : "derecho";
+        const xCazoleta = ladoBisagra === "izquierdo" ? DISTANCIA_CAZOLETA_CANTO : anchoHoja - DISTANCIA_CAZOLETA_CANTO;
+        for (const posSup of posBisagras) {
+          perfs.push({ pieza: nombrePuerta, cara: "cara interior",
+            detalle: `Cazoleta bisagra: centro a ${posSup} mm del borde superior y ${DISTANCIA_CAZOLETA_CANTO} mm del canto ${ladoBisagra}; broca copa Ø35, profundidad 12-13 mm, NO perforar pasante (P-04/R-22)`,
+            x: xCazoleta, y: altoHoja - posSup, d: 35 });
+        }
+      }
+      bisagrasTotal += nHojas * posBisagras.length;
+      puertasTotal += nHojas;
+      if (primero) {
+        const porCuerpo = nCuerpos > 1 ? " por cuerpo" : "";
+        avisos.push(`${nHojas} puertas batientes${porCuerpo} de ${anchoHoja}×${altoHoja} mm, ${posBisagras.length} bisagras c/u (R-21/R-22). Centros desde borde superior: ${posBisagras.map(p => p + " mm").join(", ")}; cazoleta Ø35 a ${DISTANCIA_CAZOLETA_CANTO} mm del canto (P-04).`);
+      }
+    }
+  };
+
+  for (let k = 1; k <= nCuerpos; k++) armarCuerpo(k);
+
+  // ---- unión entre cuerpos (R-30)
+  if (nCuerpos > 1) {
+    const puntosPorUnion = Math.max(4, Math.ceil(altoEstructura / 400));
+    tornillos4x30 = puntosPorUnion * (nCuerpos - 1);
+    avisos.push(`Los cuerpos se atornillan entre sí por los laterales que se tocan: ${puntosPorUnion} tornillos 4×30 por unión (adelante/atrás, arriba/abajo y repartidos), prensando los laterales alineados antes de atornillar (R-30).`);
+  }
+
+  // ---- puertas corredizas (globales, R-23)
+  const herrajes = [];
+  if (puertas.tipo === "corrediza") {
     const n = puertas.cantidad;
-    const anchoHoja = Math.floor(interiorAncho / n) + SOLAPE_CORREDIZA;
+    const interiorTotal = AUtil - 2*e;
+    const anchoHoja = Math.floor(interiorTotal / n) + SOLAPE_CORREDIZA;
     const altoHoja = altoEstructura - 10;
     for (let i = 0; i < n; i++) {
-      const xHoja = e + i*Math.floor(interiorAncho/n) - (i > 0 ? SOLAPE_CORREDIZA/2 : 0);
+      const xHoja = e + i*Math.floor(interiorTotal/n) - (i > 0 ? SOLAPE_CORREDIZA/2 : 0);
       pieza(`Puerta corrediza ${i+1}`, altoHoja, anchoHoja, e, mat,
             [xHoja, i % 2 === 0 ? -20 : -40, ZOCALO+5], [anchoHoja,e,altoHoja], "4 cantos",
             `Riel ${i % 2 === 0 ? "delantero" : "trasero"} (R-23)`);
     }
-    herrajes.push({ clave: "riel_corredizo_juego", nombre: "Riel corredizo superior + inferior (juego)", cant: 1, porVenta: 1, unidad: "juego", paraQue: `largo ${A} mm (R-23)` });
-    herrajes.push({ clave: "tirador", nombre: "Tirador", cant: n, porVenta: 1, unidad: "unid.", paraQue: "uno por puerta" });
+    herrajes.push({ clave: "riel_corredizo_juego", nombre: "Riel corredizo superior + inferior (juego)", cant: 1, porVenta: 1, unidad: "juego", paraQue: `largo ${AUtil} mm, cruza todos los cuerpos (R-23)` });
+    puertasTotal += n;
     avisos.push(`${n} puertas corredizas de ${anchoHoja}×${altoHoja} mm, solape ${SOLAPE_CORREDIZA} mm (R-23).`);
-  } else {
+  } else if (puertas.tipo === "ninguna") {
     avisos.push("Módulo sin puertas (placard abierto tipo vestidor).");
   }
 
-  if (caj.incluir) {
-    herrajes.push(correderaCalidad(nivel, elegirCorredera(P-e-20), caj.cantidad_cajones));
-    herrajes.push({ clave: "tirador", nombre: "Tirador", cant: caj.cantidad_cajones, porVenta: 1, unidad: "unid.", paraQue: "uno por frente de cajón" });
-  }
-
+  // ---- herrajes generales
   herrajes.unshift(herrajeUnion(tipoUnion, confirmats));
+  if (bisagrasTotal) herrajes.push(bisagraCalidad(nivel, bisagrasTotal));
+  if (correderaInfo) herrajes.push(correderaCalidad(nivel, correderaInfo[0], correderaInfo[1]));
+  if (puertasTotal + tiradoresCajones) {
+    herrajes.push({ clave: "tirador", nombre: "Tirador", cant: puertasTotal + tiradoresCajones, porVenta: 1, unidad: "unid.", paraQue: "uno por puerta y por frente de cajón" });
+  }
+  const soportesPorCuerpo = (A - 2*e) > 1000 ? 3 : 2;
+  herrajes.push({ clave: "barral_juego", nombre: "Barral tubular cromado Ø25 + soportes", cant: nCuerpos, porVenta: 1, unidad: "juego(s)", paraQue: `${soportesPorCuerpo} soportes por cuerpo (R-19)` });
+  if (tornillos4x30) {
+    herrajes.push({ clave: "tornillo_4x30_caja100", nombre: "Tornillo aglomerado 4×30", cant: tornillos4x30, porVenta: 100, unidad: "unid.", paraQue: "unir los cuerpos entre sí (R-30)" });
+  }
   herrajes.push({ clave: "clavos_caja100", nombre: "Clavos 1½\"", cant: clavos, porVenta: 100, unidad: "unid.", paraQue: "fijar el fondo (R-10)" });
   herrajes.push({ clave: "tapacanto_045_m", nombre: "Tapacanto PVC 0,45 mm", cant: Math.ceil(tcFino*1.1/1000*10)/10, porVenta: 1, unidad: "m", paraQue: "cantos visibles (R-11)" });
   herrajes.push({ clave: "rinconera", nombre: "Rinconera/taco de estante", cant: rinconeras, porVenta: 1, unidad: "unid.", paraQue: "sostener el techo/estante superior" });
@@ -1297,71 +1357,96 @@ function instruccionesArmadoJS(m, receta) {
     pasos.push({ n: pasos.length + 1, titulo, texto, piezas, herraje, tip, diagrama });
 
   if (receta.tipo_mueble === "ropero") {
+    const nCuerpos = receta.cuerpos?.cantidad || 1;
     paso("Entendé las placas y ordená los cortes",
-      "Separá y etiquetá todas las piezas según la lista de cortes. Verificá las medidas antes de empezar.",
+      "Separá y etiquetá todas las piezas según la lista de cortes. Verificá las medidas antes de empezar."
+      + (nCuerpos > 1 ? ` Tu ropero son ${nCuerpos} cuerpos independientes: cada uno se arma completo por separado y al final se atornillan entre sí (R-30).` : ""),
       [], "", "Trabajá en un piso parejo y con espacio: el ropero es grande.");
-    const zocalos = ["Zócalo frontal"];
-    if (hayPieza(m, "Zócalo trasero")) zocalos.push("Zócalo trasero");
-    paso("Armá la base y el zócalo",
-      "El zócalo delantero va más adentro del frente (retranqueado), para que no se vea al agacharse y separe la melamina del piso."
-      + (zocalos.length > 1 ? " El zócalo trasero es la segunda línea de apoyo del piso: sin él, el piso cargado cede atrás (R-28)." : ""),
-      zocalos, "Confirmat / excéntrico", "La melamina nunca debe apoyar directo al piso (humedad).",
-      { layout: "una-pieza", piezas: ["zócalo"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
-    const cajaPiezas = ["Lateral izquierdo", "Lateral derecho", "Piso", "Techo (estante superior)"];
-    let textoCaja = "Uní los dos laterales con el piso y el techo, formando la caja principal. Pre-perforá antes de atornillar.";
-    if (hayPieza(m, "Refuerzo bajo techo")) {
-      cajaPiezas.push("Refuerzo bajo techo");
-      textoCaja += " El refuerzo de canto va pegado al fondo, debajo del techo: tu ropero es ancho y sin él el techo se dobla por el medio con el peso (R-27).";
-    }
-    paso("Parás los laterales y armá la caja", textoCaja,
-      cajaPiezas, "Confirmat / excéntrico",
-      "Medí las dos diagonales: deben dar igual (así queda en escuadra).",
-      { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "piso", "techo"], fijacion: "Confirmat/excéntrico + pre-perforado",
-        orden: ["presentar en escuadra", "pre-perforar", "atornillar"], noHacer: ["atornillar sin perforar guía"] });
-    paso("Cerrá el fondo",
-      "El fondo de 3 mm va clavado por detrás. Clavalo también a las líneas intermedias (zócalo trasero, refuerzo, divisor): el fondo bien clavado es lo que evita que el mueble se tuerza en paralelogramo al moverlo (R-29/R-26). No lo selles hermético: dejá que ventile para que la ropa no tome humedad.",
-      ["Fondo"], "Clavos 1½\"",
-      "", { layout: "una-pieza", piezas: ["fondo (3 mm)"], accion: "clavar", fijacion: "Clavos 1½\" cada ~15 cm",
-        noHacer: ["sellar el fondo hermético"] });
-    if (hayPieza(m, "Divisor cajones")) {
-      paso("Colocá el divisor de la cajonera",
-        "1. Atornillá el divisor vertical que separa la zona de cajones del resto del ropero. 2. Cerrá arriba con la tapa de cajonera.",
-        ["Divisor cajones", "Tapa de cajonera"], "Confirmat / excéntrico",
-        "", { layout: "una-pieza", piezas: ["divisor"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
-      const nCajRop = receta.cajones?.cantidad_cajones || 1;
-      for (let i = 1; i <= nCajRop; i++) {
-        paso(`Armá la caja del cajón ${i} de ${nCajRop}`,
-          `1. Uní los dos laterales de este cajón con el frente interno y el contrafrente. 2. Pre-perforá siempre antes de atornillar. 3. Clavá el fondo de 3 mm por debajo.`,
-          [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`, `Frente interno cajón ${i}`, `Contrafrente cajón ${i}`, `Fondo cajón ${i}`], "Confirmat + clavos",
-          "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
-          { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
-        paso(`Colocá la corredera y meté el cajón ${i} de ${nCajRop}`,
-          "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al divisor/lateral, a la misma altura (mirá el plano acotado de abajo). 3. Probá que corra suave.",
-          [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`], "Corredera (según calidad)",
-          "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2.");
-        paso(`Atornillá el frente del cajón ${i} de ${nCajRop}`,
-          "1. Metié el cajón en su lugar. 2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del cajón.",
-          [`Frente cajón ${i}`], "Tornillo 4×30 + tirador",
-          "", { layout: "una-pieza", piezas: [`frente del cajón ${i}`], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
-            noHacer: ["atornillar desde afuera"] });
+
+    for (let k = 1; k <= nCuerpos; k++) {
+      const suf = nCuerpos === 1 ? "" : ` (cuerpo ${k})`;
+      const tag = nCuerpos === 1 ? "" : ` — cuerpo ${k} de ${nCuerpos}`;
+
+      const zocalos = [`Zócalo frontal${suf}`];
+      if (hayPieza(m, `Zócalo trasero${suf}`)) zocalos.push(`Zócalo trasero${suf}`);
+      paso(`Armá la base y el zócalo${tag}`,
+        "El zócalo delantero va más adentro del frente (retranqueado), para que no se vea al agacharse y separe la melamina del piso."
+        + (zocalos.length > 1 ? " El zócalo trasero es la segunda línea de apoyo del piso: sin él, el piso cargado cede atrás (R-28)." : ""),
+        zocalos, "Confirmat / excéntrico", "La melamina nunca debe apoyar directo al piso (humedad).",
+        { layout: "una-pieza", piezas: ["zócalo"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
+
+      const cajaPiezas = [`Lateral izquierdo${suf}`, `Lateral derecho${suf}`, `Piso${suf}`, `Techo (estante superior)${suf}`];
+      let textoCaja = "Uní los dos laterales con el piso y el techo, formando la caja. Pre-perforá antes de atornillar.";
+      if (hayPieza(m, `Refuerzo bajo techo${suf}`)) {
+        cajaPiezas.push(`Refuerzo bajo techo${suf}`);
+        textoCaja += " El refuerzo de canto va pegado al fondo, debajo del techo: el cuerpo es ancho y sin él el techo se dobla por el medio con el peso (R-27).";
+      }
+      paso(`Parás los laterales y armá la caja${tag}`, textoCaja,
+        cajaPiezas, "Confirmat / excéntrico",
+        "Medí las dos diagonales: deben dar igual (así queda en escuadra).",
+        { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "piso", "techo"], fijacion: "Confirmat/excéntrico + pre-perforado",
+          orden: ["presentar en escuadra", "pre-perforar", "atornillar"], noHacer: ["atornillar sin perforar guía"] });
+
+      paso(`Cerrá el fondo${tag}`,
+        "El fondo de 3 mm va clavado por detrás. Clavalo también a las líneas intermedias (zócalo trasero, refuerzo, divisor): el fondo bien clavado es lo que evita que el mueble se tuerza en paralelogramo al moverlo (R-29/R-26). No lo selles hermético: dejá que ventile para que la ropa no tome humedad.",
+        [`Fondo${suf}`], "Clavos 1½\"",
+        "", { layout: "una-pieza", piezas: ["fondo (3 mm)"], accion: "clavar", fijacion: "Clavos 1½\" cada ~15 cm",
+          noHacer: ["sellar el fondo hermético"] });
+
+      if (hayPieza(m, `Divisor cajones${suf}`)) {
+        paso(`Colocá el divisor de la cajonera${tag}`,
+          "1. Atornillá el divisor vertical que separa la zona de cajones del resto. 2. Cerrá arriba con la tapa de cajonera.",
+          [`Divisor cajones${suf}`, `Tapa de cajonera${suf}`], "Confirmat / excéntrico",
+          "", { layout: "una-pieza", piezas: ["divisor"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
+        const nCajRop = receta.cajones?.cantidad_cajones || 1;
+        for (let i = 1; i <= nCajRop; i++) {
+          paso(`Armá la caja del cajón ${i} de ${nCajRop}${tag}`,
+            `1. Uní los dos laterales de este cajón con el frente interno y el contrafrente. 2. Pre-perforá siempre antes de atornillar. 3. Clavá el fondo de 3 mm por debajo.`,
+            [`Lateral caja cajón ${i} (izq)${suf}`, `Lateral caja cajón ${i} (der)${suf}`, `Frente interno cajón ${i}${suf}`, `Contrafrente cajón ${i}${suf}`, `Fondo cajón ${i}${suf}`], "Confirmat + clavos",
+            "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
+            { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
+          paso(`Colocá la corredera y meté el cajón ${i} de ${nCajRop}${tag}`,
+            "1. Atornillá una guía de la corredera a cada lado de esta caja. 2. Atornillá la otra guía al divisor/lateral, a la misma altura (mirá el plano acotado de abajo). 3. Probá que corra suave.",
+            [`Lateral caja cajón ${i} (izq)${suf}`, `Lateral caja cajón ${i} (der)${suf}`], "Corredera (según calidad)",
+            "Herramientas: cinta métrica, lápiz, escuadra, taladro con broca Ø2 mm y punta PH2.");
+          paso(`Atornillá el frente del cajón ${i} de ${nCajRop}${tag}`,
+            "1. Metié el cajón en su lugar. 2. Apoyá el frente por fuera, centrado, con 3 mm de luz respecto a los de al lado. 3. Atornillalo desde ADENTRO del cajón.",
+            [`Frente cajón ${i}${suf}`], "Tornillo 4×30 + tirador",
+            "", { layout: "una-pieza", piezas: [`frente del cajón ${i}`], accion: "atornillar-adentro", fijacion: "Tornillo 4×30 desde adentro",
+              noHacer: ["atornillar desde afuera"] });
+        }
+      }
+      if (hayPieza(m, `Barral colgador${suf}`))
+        paso(`Colocá el barral para colgar la ropa${tag}`,
+          "Atornillá los soportes a los laterales a la altura indicada y apoyá el tubo. Si el cuerpo es ancho, lleva un soporte en el medio.",
+          [`Barral colgador${suf}`], "Barral tubular + soportes",
+          "", { layout: "una-pieza", piezas: ["barral tubular"], accion: "colgar-apoyar", fijacion: "Soportes atornillados al lateral" });
+      if (hayPieza(m, `Estante inferior (zapatos)${suf}`)) {
+        const estPiezas = [`Estante inferior (zapatos)${suf}`];
+        let textoEst = "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras.";
+        if (hayPieza(m, `Apoyo central estante inferior${suf}`)) {
+          estPiezas.push(`Apoyo central estante inferior${suf}`);
+          textoEst += " Parale el apoyo central al medio: el vano es ancho y sin él el estante se dobla con el peso (R-27).";
+        }
+        paso(`Colocá el estante inferior${tag}`, textoEst,
+          estPiezas, "Rinconera/taco",
+          "", { layout: "una-pieza", piezas: ["estante inferior"], accion: "colgar-apoyar", fijacion: "Apoyado sobre taco/rinconera" });
       }
     }
-    if (hayPieza(m, "Barral"))
-      paso("Colocá el barral para colgar la ropa",
-        "Atornillá los soportes a los laterales a la altura indicada y apoyá el tubo. Si es ancho, lleva un soporte en el medio.",
-        ["Barral colgador"], "Barral tubular + soportes",
-        "", { layout: "una-pieza", piezas: ["barral tubular"], accion: "colgar-apoyar", fijacion: "Soportes atornillados al lateral" });
-    if (hayPieza(m, "Estante inferior")) {
-      const estPiezas = ["Estante inferior (zapatos)"];
-      let textoEst = "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras.";
-      if (hayPieza(m, "Apoyo central estante inferior")) {
-        estPiezas.push("Apoyo central estante inferior");
-        textoEst += " Parale el apoyo central al medio: el vano es ancho y sin él el estante se dobla con el peso (R-27).";
+
+    if (nCuerpos > 1) {
+      const lateralesUnion = [];
+      for (let k = 1; k < nCuerpos; k++) {
+        lateralesUnion.push(`Lateral derecho (cuerpo ${k})`, `Lateral izquierdo (cuerpo ${k + 1})`);
       }
-      paso("Colocá el estante inferior", textoEst,
-        estPiezas, "Rinconera/taco",
-        "", { layout: "una-pieza", piezas: ["estante inferior"], accion: "colgar-apoyar", fijacion: "Apoyado sobre taco/rinconera" });
+      paso("Uní los cuerpos entre sí",
+        "1. Pará los cuerpos uno al lado del otro, en su lugar definitivo. 2. Alineá los frentes y prensá los laterales que se tocan. 3. Pre-perforá y atornillá con tornillos 4×30 desde adentro de un cuerpo hacia el lateral del otro: adelante y atrás, arriba y abajo, y repartidos en el medio (R-30). 4. Nivelá el conjunto ANTES de apretar del todo.",
+        lateralesUnion, "Tornillo aglomerado 4×30",
+        "Atornillá donde no se vea: cerca de los estantes o detrás del barral. Para mudanzas, estos tornillos se sacan y cada cuerpo viaja solo (R-26).",
+        { layout: "apilado", piezas: ["lateral de un cuerpo", "lateral del otro"], fijacion: "Tornillo 4×30, mín. 4 por unión",
+          orden: ["parar y alinear", "prensar", "pre-perforar", "atornillar", "nivelar"], noHacer: ["apretar sin nivelar antes"] });
     }
+
     if (hayPieza(m, "Puerta batiente"))
       paso("Colocá las puertas batientes",
         "Marcá los centros de las cazoletas en la cara interna de cada puerta siguiendo el plano acotado. Perforá con broca copa Ø35 solo 12-13 mm de profundidad, sin atravesar la puerta. Atornillá las bisagras, colgá las puertas y regulá hasta que cierren parejas.",
@@ -1535,7 +1620,8 @@ const AYUDAS = {
   "esc-elev-prof": "La profundidad de la tarima. 25 cm alcanza para la base de casi cualquier monitor.",
   "esc-uniones": "Cómo se unen las piezas. Confirmat = tornillo grueso (más barato). Excéntrica/cam-lock = como los muebles de fábrica desarmables: NO se afloja al mover el mueble.",
   "esc-calidad": "El nivel de los herrajes. Económico = correderas de rodillo (baratas, se gastan). Estándar = telescópicas. Premium = soft-close de acero, que no se aflojan ni bailan y duran años.",
-  "rop-ancho": "Ancho del ropero. Hasta 120 cm por módulo; si necesitás más, se hacen varios módulos juntos.",
+  "rop-cuerpos": "Un 'cuerpo' es un módulo completo e independiente (sus propios laterales, piso, techo y fondo). Un ropero grande se hace de 2 o 3 cuerpos que se arman por separado y se atornillan entre sí: es más rígido, y para mudanzas se separa y cada cuerpo viaja solo.",
+  "rop-ancho": "Ancho TOTAL del ropero (todos los cuerpos juntos). Cada cuerpo debe quedar entre 60 y 120 cm: la app te avisa si necesitás más o menos cuerpos.",
   "rop-profundidad": "Fondo del ropero. 58 cm entra una percha de hombro a hombro más la puerta.",
   "rop-alto": "Alto total, de piso a techo. Ajustalo al alto de tu habitación.",
   "rop-color": "Color de la melamina visible. Solo estético.",
@@ -1614,6 +1700,7 @@ function leerRecetaRopero() {
     nombre: "Mi ropero",
     dimensiones: { ancho:+$("rop-ancho").value, profundidad:+$("rop-profundidad").value, alto:+$("rop-alto").value },
     material: { color: $("rop-color").value, espesor: 18, espesor_fondo: 3 },
+    cuerpos: { cantidad:+$("rop-cuerpos").value },
     puertas: { tipo: $("rop-puertas-tipo").value, cantidad:+$("rop-puertas-n").value },
     cajones: { incluir: $("rop-cajones").checked, ancho:+$("rop-caj-ancho").value, cantidad_cajones:+$("rop-caj-n").value },
     estante_inferior: { incluir: $("rop-estante-inf").checked },
@@ -1623,6 +1710,7 @@ function leerRecetaRopero() {
 }
 
 function aplicarRecetaRopero(r) {
+  $("rop-cuerpos").value = r.cuerpos?.cantidad ?? 1;
   $("rop-ancho").value = $("rop-ancho-n").value = r.dimensiones?.ancho ?? 900;
   $("rop-profundidad").value = $("rop-profundidad-n").value = r.dimensiones?.profundidad ?? 580;
   $("rop-alto").value = $("rop-alto-n").value = r.dimensiones?.alto ?? 2400;
@@ -1896,7 +1984,7 @@ function pintarPestana() {
     let filas = "";
     const grupos = new Map();
     for (const p of mueble.piezas) {
-      const base = p.nombre.replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
+      const base = p.nombre.replace(/ \(cuerpo \d+\)$/, "").replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
       const k = `${base}|${p.largo}|${p.ancho}|${p.espesor}`;
       if (!grupos.has(k)) grupos.set(k, { ...p, nombre: base, cant: 0 });
       grupos.get(k).cant++;
@@ -2401,7 +2489,7 @@ function csvCortes() {
   let out = `﻿Pieza;Cantidad;Largo (${u});Ancho (${u});Espesor (mm);Material;Tapacanto;Notas\n`;
   const grupos = new Map();
   for (const p of mueble.piezas) {
-    const base = p.nombre.replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
+    const base = p.nombre.replace(/ \(cuerpo \d+\)$/, "").replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
     const k = `${base}|${p.largo}|${p.ancho}|${p.espesor}`;
     if (!grupos.has(k)) grupos.set(k, { ...p, nombre: base, cant: 0 });
     grupos.get(k).cant++;
@@ -2593,6 +2681,27 @@ function correrTests() {
   ok("R-27: ropero angosto (700) sin refuerzo bajo techo",
      !despieceRopero(RRang).piezas.some(p => p.nombre === "Refuerzo bajo techo"));
 
+  // --- R-30: cuerpos múltiples ---
+  const RR2c = JSON.parse(JSON.stringify(RR));
+  RR2c.dimensiones.ancho = 2400; RR2c.cuerpos = { cantidad: 2 };
+  const v2c = validarRopero(RR2c);
+  ok("R-30: 2 cuerpos de 2400 sin errores", v2c.errores.length === 0, JSON.stringify(v2c.errores));
+  const m2c = despieceRopero(RR2c);
+  const nombres2c = m2c.piezas.map(p => p.nombre);
+  ok("R-30: 22 piezas (2×11, igual que Python)", m2c.piezas.length === 22, `(${m2c.piezas.length})`);
+  ok("R-30: piezas con sufijo de cuerpo", nombres2c.includes("Lateral izquierdo (cuerpo 1)") && nombres2c.includes("Lateral izquierdo (cuerpo 2)"));
+  ok("R-30: refuerzo R-27 en cada cuerpo (interior 1164 > 800)",
+     nombres2c.includes("Refuerzo bajo techo (cuerpo 1)") && nombres2c.includes("Refuerzo bajo techo (cuerpo 2)"));
+  ok("R-30: tornillos 4×30 para unir cuerpos", m2c.herrajes.some(h => h.clave === "tornillo_4x30_caja100" && /cuerpos/.test(h.paraQue)));
+  ok("R-30: 4 puertas batientes (2 por cuerpo)", nombres2c.filter(n => n.startsWith("Puerta batiente")).length === 4);
+  ok("R-30: rechaza 2000mm con 1 cuerpo",
+     validarRopero({ ...RR, dimensiones: { ancho: 2000, profundidad: 580, alto: 2400 } }).errores.length > 0);
+  const pasos2c = instruccionesArmadoJS(m2c, RR2c);
+  const titulos2c = pasos2c.map(p => p.titulo);
+  ok("R-30: pasos por cuerpo", titulos2c.some(t => t.includes("cuerpo 1 de 2")) && titulos2c.some(t => t.includes("cuerpo 2 de 2")));
+  ok("R-30: paso de unión de cuerpos", titulos2c.some(t => t.includes("Uní los cuerpos")));
+  ok("R-30: 2 cuerpos sin piezas huérfanas", huerfanasDe(m2c, RR2c).length === 0, `(${huerfanasDe(m2c, RR2c)})`);
+
   // --- AYUDAS cubre los controles clave ---
   const controlesClave = ["esc-ancho","esc-tapa","esc-uniones","esc-calidad","rop-puertas-tipo","rop-calidad"];
   ok("AYUDAS cubre los controles clave", controlesClave.every(id => AYUDAS[id]));
@@ -2652,7 +2761,7 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   for (const id of ["esc-color","esc-tapa","esc-caj-pos","esc-caj-n","esc-cpu","esc-pas-n","esc-pas-d",
                     "esc-elev","esc-uniones","esc-calidad",
-                    "rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf",
+                    "rop-cuerpos","rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf",
                     "rop-uniones","rop-calidad"])
     $(id).addEventListener("change", recalcular);
 

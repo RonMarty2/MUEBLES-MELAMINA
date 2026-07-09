@@ -24,7 +24,7 @@ existente (R-05 a R-08, R-12 de `05_REGLAS_DE_CARPINTERIA.md`).
 
 | Código | Medida | Valor por defecto | Rango válido | Justificación |
 |---|---|---|---|---|
-| M-16 | Ancho del módulo | **900** | 600–1200 | Módulo manejable: más ancho, la puerta/estante se vence (R-04 aplica igual, vano 800) |
+| M-16 | Ancho por cuerpo (el `ancho` de la receta es el TOTAL, ver R-30) | **900** | 600–1200 por cuerpo; total hasta 3600 con 3 cuerpos | Módulo manejable: más ancho, la puerta/estante se vence (R-04 aplica igual, vano 800) |
 | M-17 | Profundidad | **580** | 550–620 | Percha de hombro a hombro ~480–520 mm + margen de puerta y bisagra |
 | M-18 | Alto total | **2400** | 2000–2600 | De piso a cielorraso típico; si el techo es más bajo, se achica |
 | M-19 | Altura del barral (desde el piso) | **1750** | 1700–1800 | Que un pantalón colgado (largo ~1000) no toque el piso, dejando estante arriba |
@@ -91,6 +91,18 @@ existente (R-05 a R-08, R-12 de `05_REGLAS_DE_CARPINTERIA.md`).
   líneas intermedias que lo tocan: zócalo trasero (R-28), refuerzo bajo techo (R-27) y
   divisor de cajones si existe. El motor suma esos clavos a la lista de compras. Conecta
   con R-26 (nunca arrastrar el mueble armado).
+- **R-30 — Cuerpos múltiples (roperos de 1 a 3 cuerpos).** Un ropero de más de 1200 mm de
+  ancho NO se hace como un solo módulo gigante: se hace de **2 o 3 cuerpos**, cada uno un
+  módulo completo e independiente (sus propios laterales, piso, techo, fondo, zócalos y
+  refuerzos R-27/R-28), armados por separado y **atornillados entre sí** por los laterales
+  que se tocan (tornillos 4×30, mínimo 4 por unión — adelante/atrás, arriba/abajo — o uno
+  cada ~400 mm de alto; prensar alineado y nivelar antes de apretar). `dimensiones.ancho`
+  es el TOTAL; `cuerpos.cantidad` (1-3) lo reparte en partes iguales, y cada cuerpo debe
+  quedar en 600–1200 mm (M-16). Con cuerpos>1 las puertas batientes son 2 por cuerpo
+  automáticas; las corredizas cruzan el ancho total con un solo juego de rieles. Ventajas:
+  cada cuerpo es rígido por sí mismo, cada pieza entra en la placa, y para mudanzas se
+  sacan los tornillos de unión y cada cuerpo viaja entero (R-26). Los cajones (si hay) van
+  en el cuerpo derecho; barral y estante de zapatos van en todos los cuerpos.
 
 ## Herrajes nuevos (H-1x, extienden a 07_HERRAJES_Y_TORNILLERIA.md)
 

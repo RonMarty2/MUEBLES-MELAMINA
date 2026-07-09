@@ -648,6 +648,34 @@ Formato de cada entrada:
 
 ---
 
+## D-031 — Roperos de 1, 2 o 3 cuerpos (R-30)
+
+**Fecha:** 2026-07-09 · **Estado:** vigente
+
+- **Contexto:** Ron pidió roperos de 1/2/3 cuerpos. El límite de 1200 mm por módulo (M-16)
+  es correcto estructuralmente, así que "más ancho" se resuelve como en la carpintería
+  real: varios módulos completos e independientes atornillados entre sí.
+- **Decisión:** campo nuevo `cuerpos.cantidad` (1-3); `dimensiones.ancho` pasa a ser el
+  TOTAL (validado a 600–1200 POR CUERPO). El motor (`despiece_ropero.py` y espejo JS) se
+  refactorizó a un **builder por cuerpo**: cada cuerpo genera su módulo completo
+  (laterales, piso, techo, fondo, zócalos R-28, refuerzos R-27, barral, estante) con
+  nombres sufijados ` (cuerpo N)` — con 1 cuerpo los nombres y conteos quedan idénticos a
+  antes (cero cambio de números canónicos). Cajones en el cuerpo derecho; batientes 2
+  hojas por cuerpo automáticas; corredizas cruzan el total. Unión entre cuerpos: tornillos
+  4×30, `max(4, alto/400)` por unión, sumados a compras (H-04). La guía de armado repite
+  los pasos por cuerpo y agrega "Uní los cuerpos entre sí"; el modo construcción (D-030)
+  muestra cada cuerpo creciendo por separado sin cambios de código.
+- **Descartada:** un solo módulo gigante con divisores internos compartiendo laterales —
+  menos rígido, piezas que no entran en la placa (techo de 2400+), imposible de mudar; y
+  configurar cada cuerpo distinto (interiores por cuerpo) — se pospone hasta que haga
+  falta; v1: mismos interiores en todos los cuerpos.
+- **Consecuencias:** el rango del slider de ancho pasa a 600–3600 con mensajes que guían
+  la cantidad de cuerpos. Tests de paridad Python/JS para 2 cuerpos (22 piezas, unión,
+  refuerzos por cuerpo, pasos e integridad anti-huérfanas). El prompt de la IA entiende
+  "ropero de dos cuerpos".
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

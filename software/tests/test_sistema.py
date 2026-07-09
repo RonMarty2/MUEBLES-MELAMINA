@@ -226,6 +226,47 @@ r_est, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
 m_est = despiece_ropero(r_est)
 prueba("R-27: estante inferior ancho lleva apoyo central",
        any(p.nombre == "Apoyo central estante inferior" for p in m_est.piezas))
+
+# ---------------------------------------------------------------- R-30: cuerpos múltiples
+r_2c, avisos_2c = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                                        "dimensiones": {"ancho": 2400, "profundidad": 580, "alto": 2400},
+                                        "cuerpos": {"cantidad": 2}})
+m_2c = despiece_ropero(r_2c)
+nombres_2c = [p.nombre for p in m_2c.piezas]
+prueba("R-30: 2 cuerpos duplican el módulo (22 piezas = 2×11)",
+       len(m_2c.piezas) == 22, f"({len(m_2c.piezas)})")
+prueba("R-30: piezas con sufijo de cuerpo",
+       "Lateral izquierdo (cuerpo 1)" in nombres_2c and "Lateral izquierdo (cuerpo 2)" in nombres_2c)
+prueba("R-30: cada cuerpo tiene su fondo",
+       nombres_2c.count("Fondo (cuerpo 1)") == 1 and nombres_2c.count("Fondo (cuerpo 2)") == 1)
+prueba("R-30: herraje de unión entre cuerpos (tornillo 4×30)",
+       any(h.codigo == "H-04" and "cuerpos" in h.para_que for h in m_2c.herrajes))
+prueba("R-30: cada cuerpo de 1200 lleva refuerzo R-27 (interior 1164 > 800)",
+       "Refuerzo bajo techo (cuerpo 1)" in nombres_2c and "Refuerzo bajo techo (cuerpo 2)" in nombres_2c)
+prueba("R-30: 2 juegos de barral (uno por cuerpo)",
+       any(h.codigo == "H-12" and h.cantidad == 2 for h in m_2c.herrajes))
+prueba("R-30: puertas batientes 2 por cuerpo (4 en total)",
+       sum(1 for n in nombres_2c if n.startswith("Puerta batiente")) == 4)
+# validación: 2000mm no entra en 1 cuerpo pero sí en 2
+try:
+    normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                          "dimensiones": {"ancho": 2000, "profundidad": 580, "alto": 2400}})
+    prueba("R-30: rechaza 2000mm con 1 cuerpo", False, "(no rechazó)")
+except RecetaInvalida as exc:
+    prueba("R-30: rechaza 2000mm con 1 cuerpo", "R-30" in str(exc) or "cuerpo" in str(exc))
+r_2000, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                                  "dimensiones": {"ancho": 2000, "profundidad": 580, "alto": 2400},
+                                  "cuerpos": {"cantidad": 2}})
+prueba("R-30: acepta 2000mm con 2 cuerpos (cuerpos de 1000)",
+       r_2000["cuerpos"]["cantidad"] == 2)
+# pasos de armado por cuerpo + unión
+from salidas.generador_instrucciones import instrucciones_armado
+pasos_2c = instrucciones_armado(m_2c, r_2c)
+titulos_2c = [p["titulo"] for p in pasos_2c]
+prueba("R-30: pasos por cuerpo",
+       any("cuerpo 1 de 2" in t for t in titulos_2c) and any("cuerpo 2 de 2" in t for t in titulos_2c))
+prueba("R-30: paso de unión de cuerpos",
+       any("Uní los cuerpos" in t for t in titulos_2c))
 prueba("ropero: laterales 2300x580 (alto-ZOCALO)", por_rop["Lateral izquierdo"].largo == 2300
        and por_rop["Lateral izquierdo"].ancho == 580)
 prueba("ropero: interior 864 (900-2*18, R-02)", por_rop["Piso"].largo == 864, f"(dio {por_rop['Piso'].largo})")
@@ -386,6 +427,12 @@ casos_huerfanas = [
       "dimensiones": {"ancho": 1200, "profundidad": 580, "alto": 2400},
       "puertas": {"tipo": "corrediza", "cantidad": 2},
       "cajones": {"incluir": True, "ancho": 450, "cantidad_cajones": 2}}),
+    ("ropero 2 cuerpos con cajones y estante (R-30)",
+     {"version": "1.0", "tipo_mueble": "ropero",
+      "dimensiones": {"ancho": 2400, "profundidad": 580, "alto": 2400},
+      "cuerpos": {"cantidad": 2},
+      "cajones": {"incluir": True, "ancho": 450, "cantidad_cajones": 2},
+      "estante_inferior": {"incluir": True}}),
 ]
 for nombre_caso, receta_caso in casos_huerfanas:
     r_caso, _ = normalizar_y_validar(receta_caso)

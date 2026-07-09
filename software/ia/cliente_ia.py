@@ -40,11 +40,14 @@ REGLAS ESTRICTAS:
      profundidad 200-350 (defecto 250)
 
    ropero:
-   - dimensiones: ancho 600-1200 (defecto 900), profundidad 550-620 (defecto 580),
+   - dimensiones: ancho TOTAL 600-3600 (defecto 900), profundidad 550-620 (defecto 580),
      alto 2000-2600 (defecto 2400)
+   - cuerpos: cantidad 1-3 (defecto 1). Cada cuerpo debe quedar entre 600 y 1200 de ancho
+     (R-30). "Ropero de dos cuerpos" -> cantidad 2. Si piden más de 1200 de ancho total,
+     elegí la cantidad de cuerpos que deje cada cuerpo en rango.
    - material: color (texto, defecto "Blanco")
    - puertas: tipo "batiente"|"corrediza"|"ninguna" (defecto "batiente"),
-     cantidad 2-4 (defecto 2)
+     cantidad 2-4 (defecto 2; con cuerpos>1 las batientes son 2 por cuerpo automáticas)
    - cajones: incluir true|false (defecto false), ancho 300-600 (defecto 400),
      cantidad_cajones 1-4 (defecto 3)
    - estante_inferior: incluir true|false (defecto false)

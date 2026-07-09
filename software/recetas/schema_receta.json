@@ -95,9 +95,18 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "ancho": { "type": "integer", "minimum": 600, "maximum": 1200 },
+            "ancho": { "type": "integer", "minimum": 600, "maximum": 3600,
+                       "description": "Ancho TOTAL; cada cuerpo debe quedar entre 600 y 1200 (R-30)" },
             "profundidad": { "type": "integer", "minimum": 550, "maximum": 620 },
             "alto": { "type": "integer", "minimum": 2000, "maximum": 2600 }
+          }
+        },
+        "cuerpos": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cantidad": { "type": "integer", "minimum": 1, "maximum": 3,
+                          "description": "Módulos independientes atornillados entre sí (R-30)" }
           }
         },
         "puertas": {
