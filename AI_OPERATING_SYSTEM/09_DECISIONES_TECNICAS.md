@@ -766,6 +766,31 @@ Formato de cada entrada:
 
 ---
 
+## D-035 — Los tornillos dibujados en 3D respetan R-09 de verdad (2 por unión corta)
+
+**Fecha:** 2026-07-09 · **Estado:** vigente
+
+- **Contexto:** Ron preguntó, viendo la esquina de la caja del cajón con un solo tornillo
+  dibujado: "¿redujiste los tornillos? ¿con uno es suficiente?". Tenía razón en desconfiar:
+  R-09 exige **2 confirmats por unión hasta 300 mm de ancho de pieza** (y la lista de
+  compras/`confirmatsPorUnion` ya lo cuenta así — 2 por esquina × 4 esquinas de la caja), pero
+  el dibujo 3D (`calcularMarcadoresTornillo`, sin tocar desde D-021) solo ponía **1** marcador
+  cuando la unión medía ≤300 mm — la esquina de una caja de cajón (alto ~199 mm) caía ahí. El
+  dibujo mostraba menos tornillos de los que hacían falta y de los que ya se compraban.
+- **Decisión:** `agregarSiSolapa` ahora calcula la cantidad de puntos con la MISMA
+  `confirmatsPorUnion(largo)` que usa la lista de compras (2 hasta 300 mm, luego +1 cada
+  150–200 mm), y los reparte a lo largo del eje **largo** real de la unión (ej. la altura de
+  la esquina, no el espesor del canto) para que en una esquina de caja se vean 2 tornillos
+  bien separados (arriba/abajo), no amontonados.
+- **Descartada:** dejar 1 tornillo "representativo" por unión corta — quedaba lindo pero
+  mentía sobre lo que hay que comprar y atornillar de verdad; el objetivo del programa es que
+  lo que se ve sea exactamente lo que se arma.
+- **Consecuencias:** cambio visual puro en `app_fuente.html` (`calcularMarcadoresTornillo`).
+  Motores intactos (120 Python + 83 JS, 0 errores de consola); la cuenta de tornillos del 3D
+  ahora coincide con la de "🛒 Compras"/"💰 Presupuesto" para las uniones cortas.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

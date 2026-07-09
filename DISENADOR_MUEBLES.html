@@ -2568,13 +2568,28 @@ function calcularMarcadoresTornillo(nombres) {
     const uIni = Math.max(uA0,uB0), uFin = Math.min(uA1,uB1);
     const vIni = Math.max(vA0,vB0), vFin = Math.min(vA1,vB1);
     if (uFin - uIni < 10 || vFin - vIni < 10) return;
-    const vCentro = (vIni+vFin)/2;
-    const us = (uFin - uIni > 300) ? [uIni+50, uFin-50] : [(uIni+uFin)/2];
-    for (const u of us) {
+    // D-035: la cantidad de tornillos sigue R-09 (2 por unión hasta 300 mm, luego uno cada
+    // 150-200 mm) — la MISMA regla que confirmatsPorUnion ya usa para la lista de compras.
+    // Antes se dibujaba solo 1 en uniones cortas (ej. esquinas de la caja del cajón, alto
+    // ~200 mm) aunque la compra ya contaba 2, y el dibujo mentía por defecto.
+    // Los tornillos se reparten a lo largo del eje LARGO del contacto (el "correr" real de
+    // la unión, ej. la altura de la esquina), no del eje corto (ej. el espesor del canto):
+    // si no, con una unión angosta en u pero larga en v, los 2 puntos quedaban casi
+    // pegados en u en vez de repartidos en v.
+    const largoU = uFin - uIni, largoV = vFin - vIni;
+    const corre = largoU >= largoV ? "u" : "v";
+    const largoUnion = corre === "u" ? largoU : largoV;
+    const n = confirmatsPorUnion(largoUnion);
+    const margen = Math.min(50, largoUnion / 4);
+    const repartir = (ini, fin) => n <= 1 ? [(ini+fin)/2]
+      : Array.from({ length: n }, (_, k) => ini + margen + k * (fin - ini - 2*margen) / (n-1));
+    const us = corre === "u" ? repartir(uIni, uFin) : [(uIni+uFin)/2];
+    const vs = corre === "v" ? repartir(vIni, vFin) : [(vIni+vFin)/2];
+    for (const u of us) for (const v of vs) {
       let punto;
-      if (eje === "x") punto = [contacto, u, vCentro];
-      else if (eje === "y") punto = [u, contacto, vCentro];
-      else punto = [u, vCentro, contacto];
+      if (eje === "x") punto = [contacto, u, v];
+      else if (eje === "y") punto = [u, contacto, v];
+      else punto = [u, v, contacto];
       puntos.push({ x: punto[0], y: punto[1], z: punto[2], piezaA: nombreA, piezaB: nombreB, eje });
     }
   };
