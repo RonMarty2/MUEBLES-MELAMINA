@@ -16,6 +16,8 @@ PIEZAS = [
   { nombre: "Techo (estante superior)", pos: [18, 0, 2382], dim: [864, 580, 18], material: "Melamina 18mm Blanco", color: [245, 245, 240] },
   { nombre: "Fondo", pos: [2, 577, 102], dim: [896, 3, 2296], material: "Fibrofácil 3mm", color: [170, 140, 105] },
   { nombre: "Zócalo frontal", pos: [18, 30, 0], dim: [864, 18, 100], material: "Melamina 18mm Blanco", color: [245, 245, 240] },
+  { nombre: "Zócalo trasero", pos: [18, 559, 0], dim: [864, 18, 100], material: "Melamina 18mm Blanco", color: [245, 245, 240] },
+  { nombre: "Refuerzo bajo techo", pos: [18, 559, 2302], dim: [864, 18, 80], material: "Melamina 18mm Blanco", color: [245, 245, 240] },
   { nombre: "Divisor cajones", pos: [500, 0, 118], dim: [18, 580, 2264], material: "Melamina 18mm Blanco", color: [245, 245, 240] },
   { nombre: "Tapa de cajonera", pos: [518, 0, 880], dim: [364, 580, 18], material: "Melamina 18mm Blanco", color: [245, 245, 240] },
   { nombre: "Frente cajón 1", pos: [502, 0, 118], dim: [396, 18, 250], material: "Melamina 18mm Blanco", color: [245, 245, 240] },

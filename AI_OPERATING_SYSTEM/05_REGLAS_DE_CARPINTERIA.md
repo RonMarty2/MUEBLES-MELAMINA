@@ -66,6 +66,20 @@ cambia aquí, debe cambiar en `validador.py` / `despiece_*.py` **en el mismo com
   agujero hasta que giran en el aire. Ver el detalle completo y las mitigaciones (viga
   trasera, herraje excéntrico H-17) en `07_HERRAJES_Y_TORNILLERIA.md`.
 
+## Carga y pandeo de superficies horizontales (R-04 / R-27)
+
+Orientación práctica (no fórmula de ingeniería) para melamina de **18 mm** apoyada solo en
+sus dos extremos, con carga distribuida — la base de R-04 (tapa) y R-27 (estantes ropero):
+
+| Vano libre | Comportamiento cargado | Qué hace el motor |
+|---|---|---|
+| ≤ 600 mm | Carga alta sin problema (libros, cajas) | Nada extra |
+| 600–800 mm | Carga media (~25 kg distribuidos); no apilar peso al medio | Aviso |
+| > 800 mm | Se pandea seguro con el tiempo (la melamina "toma memoria") | Refuerzo automático: tapa doble (R-04), viga trasera (R-13), refuerzo de canto / apoyo central (R-27), zócalo doble (R-28) |
+
+Principio: la melamina plana es débil; **de canto es rígida**. Todos los refuerzos del
+motor son la misma idea: una tira de canto atornillada bajo la superficie que trabaja.
+
 ## Terminación
 
 - **R-11 — Tapacanto.** Solo se cubren los **cantos visibles**: frente de laterales,

@@ -592,6 +592,62 @@ Formato de cada entrada:
 
 ---
 
+## D-029 — Auditoría de realismo estructural: R-27, R-28, R-29
+
+**Fecha:** 2026-07-09 · **Estado:** vigente
+
+- **Contexto:** Ron pidió revisar que el mueble diseñado sea físicamente sólido, no solo
+  bonito en 3D — le preocupan tramos largos que se pandean sin apoyo intermedio. Una
+  auditoría del motor confirmó huecos reales: el techo/piso/estante del ropero podían
+  quedar con vano de hasta 1164 mm sin ningún apoyo central (la melamina 18 mm cargada
+  cede desde ~800 mm); el zócalo era solo frontal (el piso cargaba mal atrás); el fondo se
+  clavaba solo perimetral (desaprovechando su función anti-torsión); y el doc R-20 afirmaba
+  falsamente que el vano nunca se excedía.
+- **Decisión:** tres reglas nuevas, calculadas por el motor (Python y JS, mismos mm):
+  **R-27** (vano máximo de estante cargado 800 mm → "Refuerzo bajo techo" de canto y
+  "Apoyo central estante inferior" automáticos, más aviso de carga media en 600-800),
+  **R-28** (zócalo trasero siempre, dos líneas de apoyo para el piso), **R-29** (el fondo
+  se clava también a todas las líneas intermedias — zócalo trasero, refuerzo, divisor — y
+  el texto del paso explica su rol anti-racking). Tabla de carga práctica en
+  `05_REGLAS_DE_CARPINTERIA.md`. Conteos canónicos del ropero actualizados en los dos
+  motores (11 piezas base, 31 con cajones).
+- **Descartada:** una fórmula de flecha "de ingeniería" (E, momento de inercia) — precisión
+  falsa para aglomerado de calidad variable; los umbrales prácticos de oficio (600/800) son
+  más honestos y verificables.
+- **Consecuencias:** un ropero ancho ahora cuesta un poco más (más melamina y confirmats),
+  pero no se dobla. Tests nuevos en Python y JS cubren presencia/ausencia de refuerzos
+  según el ancho.
+
+---
+
+## D-030 — Modo construcción acumulativo (de una tabla al mueble completo)
+
+**Fecha:** 2026-07-09 · **Estado:** vigente
+
+- **Contexto:** Ron quiere ver el mueble **armarse**: empezar con una tabla y terminar en
+  el escritorio/ropero completo, parte por parte — no ver siempre el mueble entero con
+  piezas resaltadas.
+- **Decisión:** en la pestaña Armado, el 3D ahora es **acumulativo**: se calcula una vez el
+  "paso en que nace" cada pieza (primer paso cuyo campo `piezas` la matchea por prefijo,
+  `nacimientosDePiezas`); en el paso N las piezas de pasos <N se ven sólidas con su color
+  real (el mueble armado hasta ahí), las del paso N aclaradas/explotadas/con tornillos
+  (D-021/D-028), y las de pasos >N **invisibles**. Un botón "🎬 Ver armado completo"
+  reproduce todos los pasos seguidos con la animación de entrada de piezas y atornillado —
+  literalmente se ve el mueble crecer desde la primera tabla. Tocar cualquier paso corta la
+  reproducción.
+- **Prerequisito arreglado:** había piezas "huérfanas" que ningún paso citaba (jamás
+  habrían aparecido): "Puerta batiente/corrediza 3 y 4" (los pasos citaban literal 1 y 2 →
+  ahora citan el prefijo genérico) y "Lateral derecho (pata panel)" del escritorio sin
+  cajonera. Tests anti-huérfanas en Python y JS para las cuatro configuraciones
+  representativas. Las marcas de grommet siguen la visibilidad de la tapa.
+- **Descartada:** dejar las piezas futuras como "fantasma" translúcido — probado en
+  D-021 con opacidad 0,12 y el usuario igual encontraba la escena confusa; ocultarlas del
+  todo es lo que produce la sensación de construcción real.
+- **Consecuencias:** cambio 100% visual (JS); el arreglo de huérfanas también corrige el
+  texto Python de instrucciones. `limpiarResaltado()` restaura `visible=true` al salir.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

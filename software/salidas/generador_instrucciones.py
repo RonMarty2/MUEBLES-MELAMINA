@@ -80,11 +80,15 @@ def instrucciones_escritorio(mueble, receta):
                  piezas=[f"Frente cajón {i}"], herraje="Tornillo aglomerado 4×30 + tirador")
 
     apoyos = ["Lateral izquierdo (pata panel)"]
+    if _hay(mueble, "Lateral derecho (pata panel)"):
+        apoyos.append("Lateral derecho (pata panel)")
     if _hay(mueble, "Parante soporte CPU"):
         apoyos += ["Parante soporte CPU", "Bandeja CPU"]
         texto_apoyo = ("Parás el lateral izquierdo y, al lado, el parante del soporte de "
                        "CPU. Entre ambos va la bandeja donde se apoya la CPU, a 10 cm del "
                        "piso para que ventile.")
+    elif len(apoyos) > 1:
+        texto_apoyo = "Parás los dos laterales (las patas panel del escritorio)."
     else:
         texto_apoyo = "Parás el lateral izquierdo, que es una de las patas del escritorio."
     paso("Parás los apoyos verticales", texto_apoyo, piezas=apoyos,
@@ -142,22 +146,34 @@ def instrucciones_ropero(mueble, receta):
          "antes de empezar.",
          tip="Trabajá en un piso parejo y con espacio: el ropero es grande.")
 
+    zocalos = ["Zócalo frontal"]
+    if _hay(mueble, "Zócalo trasero"):
+        zocalos.append("Zócalo trasero")
     paso("Armá la base y el zócalo",
-         "El zócalo va retranqueado (más adentro) del frente, para que no se vea al "
-         "agacharse y separe el mueble del piso.",
-         piezas=["Zócalo frontal"], herraje="Confirmat / excéntrico",
+         "El zócalo delantero va retranqueado (más adentro) del frente, para que no se vea "
+         "al agacharse y separe el mueble del piso."
+         + (" El zócalo trasero es la segunda línea de apoyo del piso: sin él, el piso "
+            "cargado cede atrás (R-28)." if len(zocalos) > 1 else ""),
+         piezas=zocalos, herraje="Confirmat / excéntrico",
          tip="El ropero nunca debe apoyar la melamina directo al piso (humedad).")
 
-    paso("Parás los laterales y armá la caja",
-         "Uní los dos laterales con el piso y el techo, formando la caja principal. "
-         "Pre-perforá antes de atornillar.",
-         piezas=["Lateral izquierdo", "Lateral derecho", "Piso", "Techo (estante superior)"],
-         herraje="Confirmat / excéntrico",
+    caja_piezas = ["Lateral izquierdo", "Lateral derecho", "Piso", "Techo (estante superior)"]
+    texto_caja = ("Uní los dos laterales con el piso y el techo, formando la caja principal. "
+                  "Pre-perforá antes de atornillar.")
+    if _hay(mueble, "Refuerzo bajo techo"):
+        caja_piezas.append("Refuerzo bajo techo")
+        texto_caja += (" El refuerzo de canto va pegado al fondo, debajo del techo: tu "
+                       "ropero es ancho y sin él el techo se dobla por el medio con el "
+                       "peso (R-27).")
+    paso("Parás los laterales y armá la caja", texto_caja,
+         piezas=caja_piezas, herraje="Confirmat / excéntrico",
          tip="Medí las diagonales para verificar la escuadra antes de apretar todo.")
 
     paso("Cerrá el fondo",
-         "El fondo de 3 mm va clavado por detrás. NO lo selles hermético: dejá que ventile "
-         "para que la ropa no tome humedad.",
+         "El fondo de 3 mm va clavado por detrás. Clavalo también a las líneas intermedias "
+         "(zócalo trasero, refuerzo, divisor): el fondo bien clavado es lo que evita que el "
+         "mueble se tuerza en paralelogramo al moverlo (R-29/R-26). NO lo selles hermético: "
+         "dejá que ventile para que la ropa no tome humedad.",
          piezas=["Fondo"], herraje="Clavos 1½\"")
 
     if _hay(mueble, "Divisor cajones"):
@@ -196,9 +212,14 @@ def instrucciones_ropero(mueble, receta):
              piezas=["Barral colgador"], herraje="Barral tubular + soportes")
 
     if _hay(mueble, "Estante inferior"):
-        paso("Colocá el estante inferior",
-             "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras.",
-             piezas=["Estante inferior (zapatos)"], herraje="Rinconera/taco")
+        est_piezas = ["Estante inferior (zapatos)"]
+        texto_est = "El estante de abajo (para zapatos) se apoya sobre tacos o rinconeras."
+        if _hay(mueble, "Apoyo central estante inferior"):
+            est_piezas.append("Apoyo central estante inferior")
+            texto_est += (" Parale el apoyo central al medio: el vano es ancho y sin él "
+                          "el estante se dobla con el peso (R-27).")
+        paso("Colocá el estante inferior", texto_est,
+             piezas=est_piezas, herraje="Rinconera/taco")
 
     if _hay(mueble, "Puerta batiente"):
         paso("Colocá las puertas batientes",
@@ -207,14 +228,14 @@ def instrucciones_ropero(mueble, receta):
              "con broca copa Ø35 solo 12-13 mm de profundidad (no atravieses la puerta), "
              "atornillá las bisagras y colgá las puertas. Regulá con los tornillos de la "
              "bisagra hasta que cierren parejas.",
-             piezas=["Puerta batiente 1", "Puerta batiente 2"],
+             piezas=["Puerta batiente"],
              herraje="Bisagra cazoleta (según calidad) + tirador",
              tip="Herramientas: cinta métrica, lápiz, escuadra, broca copa/Forstner Ø35, tope de profundidad y punta PH2. Si elegiste soft-close, cierran solas sin golpe.")
     elif _hay(mueble, "Puerta corrediza"):
         paso("Colocá los rieles y las puertas corredizas",
              "Atornillá el riel de arriba y el de abajo. Colgá cada hoja en su riel; se "
              "solapan un poco para tapar la luz. Probá que deslicen suave.",
-             piezas=["Puerta corrediza 1", "Puerta corrediza 2"],
+             piezas=["Puerta corrediza"],
              herraje="Riel corredizo (juego) + tirador")
 
     paso("Terminación final",

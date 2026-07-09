@@ -46,7 +46,10 @@ existente (R-05 a R-08, R-12 de `05_REGLAS_DE_CARPINTERIA.md`).
   barral se cimbra igual que un estante, mismo principio que R-04).
 - **R-20 — Estante superior.** Apoyado sobre tacos o rinconeras a la altura
   `alto_total − zócalo − espesor_techo − M-21` como mínimo; mismo límite de vano sin
-  apoyo que R-04 (800 mm) — con módulos de hasta 1200 mm de ancho nunca se excede.
+  apoyo que R-04 (800 mm). **Ojo:** un módulo de más de ~836 mm de ancho exterior YA
+  excede ese vano (interior = ancho − 36), por eso existe R-27. (Corrección: una versión
+  anterior de este doc afirmaba que nunca se excedía — era falso, el ancho máximo M-16 es
+  1200 mm → vano de 1164 mm.)
 - **R-21 — Puertas batientes.** Cada puerta = (ancho módulo interior de puertas ÷ n) −
   3 mm de holgura entre puertas y 3 mm a cada lateral (mismo criterio que R-06 aplicado
   horizontalmente). Alto de puerta = alto total − zócalo − 6 mm de holgura arriba/abajo.
@@ -70,6 +73,24 @@ existente (R-05 a R-08, R-12 de `05_REGLAS_DE_CARPINTERIA.md`).
   dejar la unión perimetral sin sellar (no usar cola en el fondo, solo grapas/clavos
   espaciados) para que la ropa no tome humedad. No requiere pieza extra, es una nota de
   armado.
+- **R-27 — Vano máximo de estante cargado = 800 mm.** Un estante horizontal de melamina
+  18 mm cargado (ropa, cajas, zapatos) se pandea por el medio a partir de ~800 mm de vano
+  libre. Cuando el ancho interior supera 800 mm, el motor agrega automáticamente:
+  (a) **"Refuerzo bajo techo"**: travesaño de melamina de canto (80 mm de alto) pegado al
+  fondo, a lo ancho, atornillado al techo y a los laterales (mismo principio constructivo
+  que la viga trasera R-13 del escritorio); (b) si hay estante inferior de zapatos con ese
+  vano: **"Apoyo central estante inferior"**, un parante corto al medio entre el piso y el
+  estante. Orientación de carga: vano ≤ 600 mm → carga alta sin refuerzo; 600–800 mm →
+  carga media (~25 kg distribuidos, el motor avisa); > 800 mm → refuerzo obligatorio.
+- **R-28 — Zócalo trasero.** Además del zócalo frontal retranqueado (R-18), el piso lleva
+  un **zócalo trasero** gemelo pegado al fondo: dos líneas de apoyo en vez de una. Sin él,
+  el piso de un módulo ancho cargado cede hacia atrás. No lleva tapacanto (no se ve).
+- **R-29 — El fondo trabaja como rigidizador.** El fondo de 3 mm bien clavado es la única
+  defensa del módulo contra la deformación en paralelogramo (racking) al moverlo o al
+  abrir/cerrar puertas con fuerza. Se clava no solo al perímetro sino también a TODAS las
+  líneas intermedias que lo tocan: zócalo trasero (R-28), refuerzo bajo techo (R-27) y
+  divisor de cajones si existe. El motor suma esos clavos a la lista de compras. Conecta
+  con R-26 (nunca arrastrar el mueble armado).
 
 ## Herrajes nuevos (H-1x, extienden a 07_HERRAJES_Y_TORNILLERIA.md)
 

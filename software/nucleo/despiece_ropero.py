@@ -26,6 +26,11 @@ ALTO_FRENTE_OBJETIVO = 250  # M-24: frente cómodo (rango real 120-350, R-07) pa
                              # cajonera del ropero, que NO reparte toda la altura del
                              # módulo (a diferencia del escritorio) sino un bloque acotado
 
+VANO_MAX_ESTANTE = 800       # R-27: un estante de melamina 18 mm cargado se pandea por el
+                             # medio a partir de ~800 mm de vano libre; más ancho que eso
+                             # exige un refuerzo de canto (mismo principio que la viga R-13)
+ALTO_REFUERZO = 80           # R-27/R-28: alto de los travesaños de canto (refuerzos/zócalos)
+
 
 def despiece_ropero(receta):
     """Receta validada de tipo ropero -> Mueble completo."""
@@ -72,16 +77,45 @@ def despiece_ropero(receta):
                         notas="Apoyado sobre rinconeras (H-16); actúa como estante superior (R-20)"))
     piezas.append(Pieza("Fondo", alto_estructura - 4, A - 4, ef, mat_fondo,
                         (2, P - ef, ZOCALO + 2), (A - 4, ef, alto_estructura - 4),
-                        notas="Clavado sin sellar herméticamente, para ventilar (R-25)"))
+                        notas="Clavado sin sellar herméticamente, para ventilar (R-25). "
+                              "Clavado también a las líneas intermedias: es lo que evita "
+                              "que el mueble se tuerza en paralelogramo (R-29/R-26)"))
     tc_fino += 0  # piso y techo no llevan canto visible (quedan tapados por puertas/zócalo)
     clavos += math.ceil(2 * ((A - 4) + (alto_estructura - 4)) / 150)
     confirmats += 2 * confirmats_por_union(P)  # piso y techo a los laterales
 
-    # --------------------------------------------------------------- Zócalo frontal
+    # --------------------------------------------------------------- Zócalos (R-18/R-28)
     piezas.append(Pieza("Zócalo frontal", interior_ancho, ZOCALO, e, mat,
                         (e, 30, 0), (interior_ancho, e, ZOCALO),
                         notas="Retranqueado 30 mm del frente (R-18)"))
     confirmats += confirmats_por_union(interior_ancho)
+    piezas.append(Pieza("Zócalo trasero", interior_ancho, ZOCALO, e, mat,
+                        (e, P - e - ef, 0), (interior_ancho, e, ZOCALO),
+                        notas="Segunda línea de apoyo del piso: sin él, el piso cargado "
+                              "cede atrás (R-28). No lleva canto (no se ve)"))
+    confirmats += confirmats_por_union(interior_ancho)
+    clavos += math.ceil(interior_ancho / 150)  # R-29: el fondo también se clava al zócalo trasero
+
+    # --------------------------------------------------------------- Refuerzos anti-pandeo (R-27)
+    # El techo apoyado solo en los dos laterales se dobla por el medio cuando el vano
+    # supera VANO_MAX_ESTANTE. Refuerzo de canto contra el fondo (como la viga R-13).
+    if interior_ancho > VANO_MAX_ESTANTE:
+        piezas.append(Pieza("Refuerzo bajo techo", interior_ancho, ALTO_REFUERZO, e, mat,
+                            (e, P - e - ef, H - e - ALTO_REFUERZO),
+                            (interior_ancho, e, ALTO_REFUERZO),
+                            notas=f"De canto, pegado al fondo: evita que el techo de "
+                                  f"{interior_ancho} mm se pandee (R-27)"))
+        confirmats += confirmats_por_union(interior_ancho)
+        clavos += math.ceil(interior_ancho / 150)  # R-29: el fondo también se clava al refuerzo
+        avisos.append(
+            f"El interior mide {interior_ancho} mm de ancho (más de {VANO_MAX_ESTANTE} mm): "
+            "el techo lleva un refuerzo de canto y el piso apoya en zócalo delantero y "
+            "trasero, para que no se doblen por el medio con el peso (R-27/R-28). Sin esto, "
+            "el mueble se ve bien vacío pero cede cargado.")
+    elif interior_ancho > 600:
+        avisos.append(
+            f"Estantes de {interior_ancho} mm de vano: carga media (~25 kg distribuidos). "
+            "No apiles cosas muy pesadas en el medio del techo (R-27).")
 
     # --------------------------------------------------------------- Cajones (opcionales, R-24)
     caj = receta["cajones"]
@@ -99,6 +133,7 @@ def despiece_ropero(receta):
                             cantos="canto frontal visible"))
         tc_fino += alto_interior
         confirmats += confirmats_por_union(P)
+        clavos += math.ceil(alto_interior / 150)  # R-29: el fondo también se clava al divisor
 
         n = caj["cantidad_cajones"]
         # La cajonera es un bloque acotado (M-24), NO reparte toda la altura del
@@ -175,6 +210,14 @@ def despiece_ropero(receta):
                             notas="A 250 mm del piso, para calzado (M-23)"))
         confirmats += confirmats_por_union(ancho_barral_zona)
         rinconeras += 4
+        if ancho_barral_zona > VANO_MAX_ESTANTE:
+            # R-27: apoyo vertical al medio, parado entre el piso y el estante
+            x_apoyo = x_zona_barral_ini + ancho_barral_zona // 2 - e // 2
+            piezas.append(Pieza("Apoyo central estante inferior", P - 40, 250 - e, e, mat,
+                                (x_apoyo, 10, ZOCALO + e), (e, P - 40, 250 - e),
+                                notas=f"Parado al medio del vano de {ancho_barral_zona} mm: "
+                                      "sin él, el estante de zapatos se dobla (R-27)"))
+            confirmats += 4
 
     # --------------------------------------------------------------- Puertas (R-21/R-23)
     puertas = receta["puertas"]

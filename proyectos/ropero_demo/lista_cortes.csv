@@ -3,8 +3,10 @@ Lateral izquierdo;1;2300;580;18;Melamina 18mm Blanco;canto frontal visible;
 Lateral derecho;1;2300;580;18;Melamina 18mm Blanco;canto frontal visible;
 Piso;1;864;580;18;Melamina 18mm Blanco;;
 Techo (estante superior);1;864;580;18;Melamina 18mm Blanco;;"Apoyado sobre rinconeras (H-16); actúa como estante superior (R-20)"
-Fondo;1;2296;896;3;Fibrofácil 3mm;;Clavado sin sellar herméticamente, para ventilar (R-25)
+Fondo;1;2296;896;3;Fibrofácil 3mm;;Clavado sin sellar herméticamente, para ventilar (R-25). Clavado también a las líneas intermedias: es lo que evita que el mueble se tuerza en paralelogramo (R-29/R-26)
 Zócalo frontal;1;864;100;18;Melamina 18mm Blanco;;Retranqueado 30 mm del frente (R-18)
+Zócalo trasero;1;864;100;18;Melamina 18mm Blanco;;Segunda línea de apoyo del piso: sin él, el piso cargado cede atrás (R-28). No lleva canto (no se ve)
+Refuerzo bajo techo;1;864;80;18;Melamina 18mm Blanco;;De canto, pegado al fondo: evita que el techo de 864 mm se pandee (R-27)
 Divisor cajones;1;2264;580;18;Melamina 18mm Blanco;canto frontal visible;
 Tapa de cajonera;1;580;364;18;Melamina 18mm Blanco;;"Cierra el bloque de cajones; arriba queda espacio libre"
 Frente (×3);3;396;250;18;Melamina 18mm Blanco;4 cantos visibles;Fijado desde adentro con 4 tornillos 4×30

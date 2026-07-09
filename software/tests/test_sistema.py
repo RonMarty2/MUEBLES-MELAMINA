@@ -205,7 +205,27 @@ r_rop, avisos_rop = normalizar_y_validar({"version": "1.0", "tipo_mueble": "rope
 prueba("ropero: defectos (900x580x2400)", r_rop["dimensiones"] == {"ancho": 900, "profundidad": 580, "alto": 2400})
 m_rop = despiece_ropero(r_rop)
 por_rop = {p.nombre: p for p in m_rop.piezas}
-prueba("ropero: 9 piezas (sin cajones, 2 puertas)", len(m_rop.piezas) == 9, f"({len(m_rop.piezas)})")
+prueba("ropero: 11 piezas (sin cajones, 2 puertas, con zócalo trasero y refuerzo R-27/R-28)",
+       len(m_rop.piezas) == 11, f"({len(m_rop.piezas)})")
+# R-27/R-28: el default (900 de ancho -> interior 864 > 800) YA necesita refuerzos
+prueba("R-28: zócalo trasero presente", "Zócalo trasero" in por_rop)
+prueba("R-27: refuerzo bajo techo presente (interior 864 > 800)", "Refuerzo bajo techo" in por_rop)
+prueba("R-27: el refuerzo cruza todo el interior", por_rop["Refuerzo bajo techo"].largo == 864,
+       f"(dio {por_rop['Refuerzo bajo techo'].largo})")
+# Ropero angosto: NO lleva refuerzo (interior <= 800) pero sí zócalo trasero (siempre)
+r_angosto, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                                     "dimensiones": {"ancho": 700, "profundidad": 580, "alto": 2400}})
+m_angosto = despiece_ropero(r_angosto)
+nombres_angosto = {p.nombre for p in m_angosto.piezas}
+prueba("R-27: ropero angosto (700) sin refuerzo bajo techo",
+       "Refuerzo bajo techo" not in nombres_angosto)
+prueba("R-28: ropero angosto igual lleva zócalo trasero", "Zócalo trasero" in nombres_angosto)
+# R-27: estante de zapatos ancho lleva apoyo central
+r_est, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                                 "estante_inferior": {"incluir": True}})
+m_est = despiece_ropero(r_est)
+prueba("R-27: estante inferior ancho lleva apoyo central",
+       any(p.nombre == "Apoyo central estante inferior" for p in m_est.piezas))
 prueba("ropero: laterales 2300x580 (alto-ZOCALO)", por_rop["Lateral izquierdo"].largo == 2300
        and por_rop["Lateral izquierdo"].ancho == 580)
 prueba("ropero: interior 864 (900-2*18, R-02)", por_rop["Piso"].largo == 864, f"(dio {por_rop['Piso'].largo})")
@@ -253,7 +273,8 @@ r_caj, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
                                  "cajones": {"incluir": True, "ancho": 400, "cantidad_cajones": 3}})
 m_caj = despiece_ropero(r_caj)
 por_caj = {p.nombre: p for p in m_caj.piezas}
-prueba("ropero+cajones: 29 piezas (incluye tapa de cajonera)", len(m_caj.piezas) == 29, f"({len(m_caj.piezas)})")
+prueba("ropero+cajones: 31 piezas (incluye tapa de cajonera y refuerzos R-27/R-28)",
+       len(m_caj.piezas) == 31, f"({len(m_caj.piezas)})")
 prueba("ropero+cajones: frente interno 302mm de largo (338-36, R-02/R-05)",
        por_caj["Frente interno cajón 1"].largo == 302, f"(dio {por_caj['Frente interno cajón 1'].largo})")
 prueba("ropero+cajones: frente de cajón acotado a 250mm (M-24, no reparte toda la altura)",
@@ -340,6 +361,40 @@ prueba("escritorio: cajón 1 y 2 tienen pasos separados",
        any("cajón 1 de 3" in t for t in titulos_esc) and any("cajón 2 de 3" in t for t in titulos_esc))
 prueba("escritorio: paso del cajón 1 no cita piezas del cajón 2",
        not any("cajón 2" in n for p in pasos_esc if "cajón 1 de 3" in p["titulo"] for n in p["piezas"]))
+
+
+# D-030: TODA pieza real debe "nacer" en algún paso (si no, en el modo construcción
+# acumulativo jamás aparecería). Casos que estaban rotos: escritorio sin cajonera
+# (Lateral derecho huérfano) y ropero con 4 puertas (puertas 3/4 huérfanas).
+def piezas_huerfanas(mueble_obj, pasos_obj):
+    citadas = [n for p in pasos_obj for n in p["piezas"]]
+    return [pz.nombre for pz in mueble_obj.piezas
+            if not any(pz.nombre.startswith(c) for c in citadas)]
+
+casos_huerfanas = [
+    ("escritorio con cajonera", RECETA_BASE),
+    ("escritorio SIN cajonera",
+     {"version": "1.0", "tipo_mueble": "escritorio_gamer",
+      "cajonera": {"posicion": "ninguna"}}),
+    ("ropero 4 puertas batientes",
+     {"version": "1.0", "tipo_mueble": "ropero",
+      "dimensiones": {"ancho": 1200, "profundidad": 580, "alto": 2400},
+      "puertas": {"tipo": "batiente", "cantidad": 4},
+      "estante_inferior": {"incluir": True}}),
+    ("ropero corredizas + cajones",
+     {"version": "1.0", "tipo_mueble": "ropero",
+      "dimensiones": {"ancho": 1200, "profundidad": 580, "alto": 2400},
+      "puertas": {"tipo": "corrediza", "cantidad": 2},
+      "cajones": {"incluir": True, "ancho": 450, "cantidad_cajones": 2}}),
+]
+for nombre_caso, receta_caso in casos_huerfanas:
+    r_caso, _ = normalizar_y_validar(receta_caso)
+    if receta_caso["tipo_mueble"] == "ropero":
+        m_caso = despiece_ropero(r_caso)
+    else:
+        m_caso = despiece_escritorio(r_caso)
+    huerfanas = piezas_huerfanas(m_caso, instrucciones_armado(m_caso, r_caso))
+    prueba(f"D-030: sin piezas huérfanas ({nombre_caso})", not huerfanas, f"({huerfanas})")
 
 # ---------------------------------------------------------------- calidad (D-018)
 print("Niveles de calidad de herrajes (D-018)…")

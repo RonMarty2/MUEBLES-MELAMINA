@@ -11,23 +11,23 @@ Separá y etiquetá todas las piezas según la lista de cortes. Verificá medida
 
 ## Paso 2: Armá la base y el zócalo
 
-El zócalo va retranqueado (más adentro) del frente, para que no se vea al agacharse y separe el mueble del piso.
+El zócalo delantero va retranqueado (más adentro) del frente, para que no se vea al agacharse y separe el mueble del piso. El zócalo trasero es la segunda línea de apoyo del piso: sin él, el piso cargado cede atrás (R-28).
 
-- **Piezas:** Zócalo frontal
+- **Piezas:** Zócalo frontal, Zócalo trasero
 - **Herraje:** Confirmat / excéntrico
 - 💡 El ropero nunca debe apoyar la melamina directo al piso (humedad).
 
 ## Paso 3: Parás los laterales y armá la caja
 
-Uní los dos laterales con el piso y el techo, formando la caja principal. Pre-perforá antes de atornillar.
+Uní los dos laterales con el piso y el techo, formando la caja principal. Pre-perforá antes de atornillar. El refuerzo de canto va pegado al fondo, debajo del techo: tu ropero es ancho y sin él el techo se dobla por el medio con el peso (R-27).
 
-- **Piezas:** Lateral izquierdo, Lateral derecho, Piso, Techo (estante superior)
+- **Piezas:** Lateral izquierdo, Lateral derecho, Piso, Techo (estante superior), Refuerzo bajo techo
 - **Herraje:** Confirmat / excéntrico
 - 💡 Medí las diagonales para verificar la escuadra antes de apretar todo.
 
 ## Paso 4: Cerrá el fondo
 
-El fondo de 3 mm va clavado por detrás. NO lo selles hermético: dejá que ventile para que la ropa no tome humedad.
+El fondo de 3 mm va clavado por detrás. Clavalo también a las líneas intermedias (zócalo trasero, refuerzo, divisor): el fondo bien clavado es lo que evita que el mueble se tuerza en paralelogramo al moverlo (R-29/R-26). NO lo selles hermético: dejá que ventile para que la ropa no tome humedad.
 
 - **Piezas:** Fondo
 - **Herraje:** Clavos 1½"
@@ -116,7 +116,7 @@ Atornillá los soportes del barral a los laterales, a la altura indicada, y apoy
 
 Marcá los centros de las cazoletas en la cara interna de cada puerta siguiendo el plano acotado: distancias desde arriba/abajo y desde el canto lateral. Perforá con broca copa Ø35 solo 12-13 mm de profundidad (no atravieses la puerta), atornillá las bisagras y colgá las puertas. Regulá con los tornillos de la bisagra hasta que cierren parejas.
 
-- **Piezas:** Puerta batiente 1, Puerta batiente 2
+- **Piezas:** Puerta batiente
 - **Herraje:** Bisagra cazoleta (según calidad) + tirador
 - 💡 Herramientas: cinta métrica, lápiz, escuadra, broca copa/Forstner Ø35, tope de profundidad y punta PH2. Si elegiste soft-close, cierran solas sin golpe.
 
