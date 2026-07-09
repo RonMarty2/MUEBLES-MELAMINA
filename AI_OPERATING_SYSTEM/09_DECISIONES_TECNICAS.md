@@ -791,6 +791,36 @@ Formato de cada entrada:
 
 ---
 
+## D-036 — Las DOS mitades de la corredera en 3D + cada paso arranca desde arriba
+
+**Fecha:** 2026-07-09 · **Estado:** vigente (ajusta D-034)
+
+- **Contexto:** dos reportes de Ron. (1) "No veo la colocación del riel en el escritorio, no
+  me refiero en los cajones": D-034 había eliminado del 3D la guía fija del mueble (porque la
+  versión anterior la dibujaba flotando fuera de las paredes) y la dejó solo en el plano 2D —
+  fue pasarse de rosca: Ron necesita ver en el 3D dónde va la mitad que se atornilla AL
+  MUEBLE. (2) "No me deja subir, hay un bug": al tocar "Siguiente", el panel heredaba la
+  posición de scroll del paso anterior, y el paso nuevo aparecía por la mitad con el título y
+  el diagrama ocultos arriba.
+- **Decisión:**
+  1. `pintarRieles` dibuja las **dos mitades** de la corredera: riel **OSCURO** (guía móvil)
+     sobre la cara exterior del lateral del cajón — viaja con el cajón a la mesada — y riel
+     **CLARO** (guía fija) sobre la cara interior de la pared real del mueble que enfrenta a
+     ese lateral, a la altura exacta del cajón. La pared se busca geométricamente (panel
+     vertical fino a ≤60 mm de la cara del lateral, con solape en alto), así funciona igual
+     en escritorio ("Lateral cajonera") y ropero ("Divisor cajones"/"Lateral") sin listas de
+     nombres. Cada mitad mide 12 mm de grosor: las dos juntas caben en la holgura real de
+     13 mm por lado (R-05) y no se superponen al insertar. Sin offset de explosión sobre la
+     pared (el error original de D-028 v2 que las hacía flotar).
+  2. `pintarArmado` resetea `scrollTop = 0` del panel en cada paso.
+- **Descartada:** dejar la guía fija solo en el plano 2D (D-034) — correcto contra el bug de
+  flotación, pero le sacó a Ron la referencia espacial de dónde atornillar en el mueble.
+- **Consecuencias:** cambio visual puro en `app_fuente.html`; los textos de los pasos de
+  corredera explican el código de colores (oscuro=cajón, claro=mueble). Motores intactos
+  (120 Python + 83 JS, 0 errores de consola).
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
