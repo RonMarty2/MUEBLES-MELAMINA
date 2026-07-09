@@ -705,6 +705,33 @@ Formato de cada entrada:
 
 ---
 
+## D-033 — Un solo tornillo por unión, dibujado del lado por donde entra
+
+**Fecha:** 2026-07-09 · **Estado:** vigente (reemplaza el marcador doble de D-021/D-028)
+
+- **Contexto:** Ron mostró el paso de la caja del cajón: los tornillos aparecían de a DOS
+  por unión (uno "visto desde" cada pieza, herencia de D-021) desplazados por los vectores
+  de explosión — quedaban flotando hacia las paredes del mueble y hacia el cajón de abajo.
+  Parecía que había que atornillar la caja al mueble o los cajones entre sí. Textual: "NO
+  SE ENTIENDE DONDE VA CADA TORNILLO, SE MEZCLA, ES CONFUSO".
+- **Decisión:** cada unión dibuja **UN solo tornillo, donde va de verdad** (P-01): se
+  identifica la pieza **pasante** (la más fina en el eje del contacto — ej. el lateral del
+  cajón, que se perfora de lado a lado) y la que **recibe** (el canto del frente interno);
+  la cabeza se apoya sobre la **cara exterior de la pasante** (donde va el destornillador)
+  y la punta apunta hacia la receptora. El tornillo "pertenece" visualmente a su pieza
+  (sigue su desplazamiento de explosión). Se eliminan el segundo marcador y la línea
+  punteada. Si la pasante es el fondo de 3 mm, se dibuja un **clavo finito gris** (R-10),
+  no un tornillo dorado. La nota 🟡 y la leyenda ahora dicen explícitamente que los
+  tornillos SOLO unen las piezas del paso entre sí y que la caja del cajón nunca se
+  atornilla al mueble (solo apoya en sus correderas).
+- **Descartada:** mantener el par + línea (era útil cuando las piezas se separaban mucho,
+  pero con el modo mesada/insertar de la v3 del usuario ya no hace falta y solo ensuciaba).
+- **Consecuencias:** cambio visual puro en `app_fuente.html` (`construirTornillosDePaso`,
+  `crearClavo` nuevo, textos). La animación de entrada (D-028) hereda el comportamiento:
+  el tornillo entra girando desde el lado correcto. Motores intactos (120 Python + 83 JS).
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
