@@ -27,6 +27,8 @@ con su justificación ergonómica o comercial. Cada medida tiene código **M-xx*
 | M-05 | Soporte CPU (ancho interior) | **250** | 200–350 | Gabinete ATX típico: 210–230 de ancho; ventilación a los lados |
 | M-06 | Altura bandeja CPU sobre piso | **100** | fijo en v1 | Limpieza, aspirado y ventilación inferior |
 | M-25 | Elevación para monitor (ancho / prof. / alto libre) | 800 / 250 / **110** (alto libre fijo) | ancho 500–1200, prof. 200–350 | Bandeja apoyada sobre la tapa, con dos patas que dejan 110 mm libres abajo — suficiente para deslizar un teclado (25–35 mm) + la mano al tipear. El ancho debe dejar 200 mm de margen a los bordes de la tapa (validado) |
+| M-26 | Retorno en L: largo del ala | **1000** | 600–1600 | Superficie útil lateral; >~900 exige tapa doble y >~1300 viga (R-04/R-13 aplicadas al retorno, R-31) |
+| M-27 | Retorno en L: profundidad del ala | **500** | 400–700 | Apoyo cómodo para papeles o segundo monitor sin invadir el paso |
 
 ## Cajones de escritorio
 

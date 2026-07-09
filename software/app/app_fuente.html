@@ -207,6 +207,20 @@
         <div class="fila"><input type="range" id="esc-elev-prof" min="200" max="350" step="10">
         <input type="number" id="esc-elev-prof-n" min="200" max="350"></div></div>
 
+      <h2>Forma</h2>
+      <div class="campo"><label>Forma del escritorio</label>
+        <select id="esc-forma">
+          <option value="recto" selected>Recto (clásico)</option>
+          <option value="L-derecha">En L, ala a la derecha</option>
+          <option value="L-izquierda">En L, ala a la izquierda</option>
+        </select></div>
+      <div class="campo"><label>Largo del ala (retorno) <span class="unidad">600–1600 (M-26)</span></label>
+        <div class="fila"><input type="range" id="esc-ret-largo" min="600" max="1600" step="10">
+        <input type="number" id="esc-ret-largo-n" min="600" max="1600"></div></div>
+      <div class="campo"><label>Profundidad del ala <span class="unidad">400–700 (M-27)</span></label>
+        <div class="fila"><input type="range" id="esc-ret-prof" min="400" max="700" step="10">
+        <input type="number" id="esc-ret-prof-n" min="400" max="700"></div></div>
+
       <h2>Calidad y durabilidad</h2>
       <div class="campo"><label>Nivel de herrajes</label>
         <select id="esc-calidad">
@@ -458,6 +472,18 @@ function validarEscritorio(r) {
   if (r.elevacion_monitor.incluir && r.elevacion_monitor.ancho > r.dimensiones.ancho - 200) {
     errores.push(`La elevación para monitor de ${r.elevacion_monitor.ancho} mm no entra en una tapa de ${r.dimensiones.ancho} mm dejando margen a los bordes (M-25). Achicala o agrandá el escritorio.`);
   }
+  const forma = r.forma || { tipo: "recto" };
+  if (forma.tipo === "L") {
+    if (forma.largo_retorno < 600 || forma.largo_retorno > 1600)
+      errores.push(`forma.largo_retorno = ${forma.largo_retorno} fuera del rango 600–1600 mm (M-26/R-31).`);
+    if (forma.profundidad_retorno < 400 || forma.profundidad_retorno > 700)
+      errores.push(`forma.profundidad_retorno = ${forma.profundidad_retorno} fuera del rango 400–700 mm (M-27/R-31).`);
+    if (!errores.length) {
+      const vanoRet = forma.largo_retorno - 100 - 18;
+      const refuerzo = vanoRet > 1200 ? " y una viga de canto (R-13)" : (vanoRet > 800 ? " y tapa doble (R-04)" : "");
+      avisos.push(`Escritorio en L (lado ${forma.lado}): el retorno de ${forma.largo_retorno}×${forma.profundidad_retorno} mm se arma como un módulo aparte con sus DOS patas${refuerzo}, y se une al escritorio con escuadras y tornillos (R-31). Para mudanzas se separa y viaja aparte (R-26).`);
+    }
+  }
   return { errores, avisos, tapaTipo };
 }
 
@@ -594,6 +620,59 @@ function despieceEscritorio(r, tapaTipo) {
     for (const p of piezas) p.pos = [A - p.pos[0] - p.dim[0], p.pos[1], p.pos[2]];
     for (const g of grommets) g.x = A - g.x;
     avisos.push("Mueble espejado: cajonera a la izquierda, soporte CPU a la derecha.");
+  }
+
+  // ---- Retorno en L (R-31): módulo autoportante unido al escritorio
+  const forma = r.forma || { tipo: "recto" };
+  if (forma.tipo === "L") {
+    const largoRet = forma.largo_retorno, profRet = forma.profundidad_retorno;
+    const ladoDer = forma.lado === "derecha";
+    const xRet = ladoDer ? A - profRet : 0;
+    const yIni = -largoRet;
+    const vanoRet = largoRet - 100 - 18;
+    const tapaRetDoble = vanoRet > 800;   // R-04 en el retorno
+    const tRet = tapaRetDoble ? 36 : 18;
+    const altoApoyoRet = H - tRet;
+
+    if (tapaRetDoble) {
+      pieza("Tapa retorno capa inferior (oculta)", largoRet, profRet, 18, matCrudo,
+            [xRet, yIni, H-36], [profRet, largoRet, 18], "",
+            "Aglomerado crudo: va escondida abajo (R-04 en el retorno)");
+      pieza("Tapa retorno capa superior (visible)", largoRet, profRet, 18, mat,
+            [xRet, yIni, H-18], [profRet, largoRet, 18],
+            "3 cantos (banda 2 mm)", "El canto de la unión no se ve");
+      torn30 += Math.ceil(largoRet/300) * Math.ceil(profRet/300);
+    } else {
+      pieza("Tapa retorno", largoRet, profRet, 18, mat,
+            [xRet, yIni, H-18], [profRet, largoRet, 18],
+            "3 cantos (banda 2 mm)", "El canto de la unión no se ve");
+    }
+    tcGrueso += 2*largoRet + profRet;
+
+    const xPata = ladoDer ? xRet + 50 : xRet;
+    const profPataRet = profRet - 50;
+    pieza("Pata retorno (esquina)", profPataRet, altoApoyoRet, 18, mat,
+          [xPata, -50-18, 0], [profPataRet, 18, altoApoyoRet], "canto lateral",
+          "Sostiene la esquina de la L: sin ella la unión carga todo (R-31)");
+    pieza("Pata retorno (extremo)", profPataRet, altoApoyoRet, 18, mat,
+          [xPata, yIni+50, 0], [profPataRet, 18, altoApoyoRet], "canto lateral");
+    tcFino += 2*altoApoyoRet;
+    regatones += 4;
+    escuadrasMm += 2*profPataRet + 900;  // tapa↔patas + 3 escuadras de unión (R-31)
+    torn30 += 6;                          // tornillos 4×30 de la unión (R-31)
+
+    if (vanoRet > VANO_MAX_VIGA) {
+      const xViga = ladoDer ? xRet + profRet - 18 : xRet;
+      pieza("Viga retorno", vanoRet, 300, 18, mat,
+            [xViga, yIni+50+18, altoApoyoRet-300], [18, vanoRet, 300], "",
+            "De canto por el lado de la pared, unida a ambas patas y a la tapa del retorno (R-13)");
+      confirmats += 2 * confirmatsPorUnion(300);
+      escuadrasMm += vanoRet;
+    }
+    avisos.push(`Retorno en L (lado ${forma.lado}): ${largoRet}×${profRet} mm, `
+      + (tapaRetDoble ? "tapa doble por el vano (R-04), " : "tapa simple, ")
+      + (vanoRet > VANO_MAX_VIGA ? "con viga de canto (R-13), " : "")
+      + "dos patas propias y unión con 3 escuadras + tornillos 4×30 al escritorio (R-31).");
   }
 
   const herrajes = [
@@ -1521,6 +1600,39 @@ function instruccionesArmadoJS(m, receta) {
       "Tu escritorio es ancho: lleva una viga atrás, de canto, que evita que se hamaque. Atornillala a los apoyos y a la tapa.",
       ["Viga trasera"], "Confirmat / excéntrico",
       "", { layout: "una-pieza", piezas: ["viga trasera"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
+  if (hayPieza(m, "Pata retorno")) {
+    if (hayPieza(m, "Tapa retorno capa inferior"))
+      paso("Armá la tapa del retorno (doble, refuerzo anti-pandeo)",
+        "Igual que la tapa principal: encolá la capa cruda de abajo, alineá la capa de melamina arriba y atornillá desde abajo con 4×30 cada ~30 cm. Dejá secar con peso encima.",
+        ["Tapa retorno capa inferior (oculta)", "Tapa retorno capa superior (visible)"], "Tornillo 4×30 + cola",
+        "La cara linda va PARA ARRIBA.",
+        { layout: "apilado", piezas: ["capa inferior (cruda)", "capa superior (melamina)"], fijacion: "Tornillo 4×30 cada ~30 cm",
+          orden: ["encolar capa de abajo", "alinear la de arriba", "atornillar desde abajo", "dejar secar con peso"],
+          noHacer: ["poner la cara linda para abajo"] });
+    paso("Pará las dos patas del retorno",
+      "1. Pará la pata de la esquina (queda al lado del escritorio) y la del extremo. 2. Todavía no aprietes del todo: primero presentá la tapa.",
+      ["Pata retorno (esquina)", "Pata retorno (extremo)"], "Escuadra metálica 25 mm",
+      "El retorno se sostiene SOLO con sus dos patas: la unión al escritorio no carga peso (R-31).",
+      { layout: "una-pieza", piezas: ["pata del retorno"], accion: "atornillar-abajo", fijacion: "Escuadra 25 mm" });
+    const tapaRet = hayPieza(m, "Tapa retorno capa superior") ? ["Tapa retorno capa superior (visible)"] : ["Tapa retorno"];
+    paso("Colocá la tapa del retorno sobre sus patas",
+      "1. Apoyá la tapa del retorno sobre sus dos patas, alineada por los bordes. 2. Fijala desde ABAJO con escuadras, sin que asome ningún tornillo arriba.",
+      ["Pata retorno (esquina)", "Pata retorno (extremo)", ...tapaRet], "Escuadra metálica 25 mm",
+      "", { layout: "apoyado", piezas: ["pata esquina", "pata extremo", "tapa del retorno"],
+        fijacion: "Escuadra metálica 25 mm desde abajo", noHacer: ["que asome el tornillo arriba"] });
+    if (hayPieza(m, "Viga retorno"))
+      paso("Poné la viga del retorno (rigidez)",
+        "El retorno es largo: lleva una viga de canto por el lado de la pared, atornillada a las dos patas y a la tapa (R-13).",
+        ["Viga retorno"], "Confirmat / excéntrico",
+        "", { layout: "una-pieza", piezas: ["viga del retorno"], accion: "atornillar-abajo", fijacion: "Confirmat/excéntrico" });
+    paso("Uní el retorno al escritorio (la esquina de la L)",
+      "1. Acercá el retorno al costado del escritorio hasta que las dos tapas queden A RAS (pasá el dedo: no debe haber escalón). 2. Prensá las tapas alineadas. 3. Desde ABAJO, atornillá 3 escuadras repartidas a lo largo de la unión + tornillos 4×30 entre la pata de la esquina y el escritorio. 4. Nivelá el conjunto con los regatones ANTES de apretar del todo.",
+      [...tapaRet, hayPieza(m, "Tapa capa superior") ? "Tapa capa superior (visible)" : "Tapa"],
+      "Escuadra metálica 25 mm + tornillo 4×30",
+      "Para mudanzas: sacá estas escuadras y el retorno viaja aparte (R-26/R-31).",
+      { layout: "apilado", piezas: ["tapa del retorno", "tapa del escritorio"], fijacion: "3 escuadras + tornillos 4×30 desde abajo",
+        orden: ["alinear a ras", "prensar", "atornillar desde abajo", "nivelar"], noHacer: ["dejar escalón entre las tapas"] });
+  }
   if ((m.grommets || []).length)
     paso("Hacé los agujeros de pasacables",
       "Marcá y perforá los agujeros de la tapa con una broca copa del diámetro del grommet. Colocá los grommets.",
@@ -1612,6 +1724,9 @@ const AYUDAS = {
   "esc-elev": "Una tarima elevada sobre la tapa: el monitor va arriba (a la altura de los ojos) y el teclado se guarda deslizándolo en el hueco de abajo.",
   "esc-elev-ancho": "El ancho de la tarima elevada del monitor. Debe entrar en la tapa dejando un margen a los costados.",
   "esc-elev-prof": "La profundidad de la tarima. 25 cm alcanza para la base de casi cualquier monitor.",
+  "esc-forma": "Recto = el escritorio clásico. En L = se agrega un ala (retorno) perpendicular en el lado que elijas, para tener superficie extra. El ala es un módulo aparte con sus propias dos patas, que se atornilla al escritorio: la esquina nunca queda en el aire y para mudanzas se separa (R-31).",
+  "esc-ret-largo": "Cuánto se extiende el ala de la L hacia adelante. Si supera ~90 cm, el ala lleva tapa doble automática; si supera ~130 cm, también viga (para que no se pandee).",
+  "esc-ret-prof": "El ancho útil del ala de la L. 50 cm es cómodo para apoyar papeles o un segundo monitor.",
   "esc-uniones": "Cómo se unen las piezas. Confirmat = tornillo grueso (más barato). Excéntrica/cam-lock = como los muebles de fábrica desarmables: NO se afloja al mover el mueble.",
   "esc-calidad": "El nivel de los herrajes. Económico = correderas de rodillo (baratas, se gastan). Estándar = telescópicas. Premium = soft-close de acero, que no se aflojan ni bailan y duran años.",
   "rop-cuerpos": "Un 'cuerpo' es un módulo completo e independiente (sus propios laterales, piso, techo y fondo). Un ropero grande se hace de 2 o 3 cuerpos que se arman por separado y se atornillan entre sí: es más rígido, y para mudanzas se separa y cada cuerpo viaja solo.",
@@ -1648,7 +1763,8 @@ function inyectarAyudas() {
 
 const CAMPOS_RANGO_ESC = [["esc-ancho",1600],["esc-profundidad",700],["esc-alto",750],
                           ["esc-caj-ancho",400],["esc-cpu-ancho",250],
-                          ["esc-elev-ancho",800],["esc-elev-prof",250]];
+                          ["esc-elev-ancho",800],["esc-elev-prof",250],
+                          ["esc-ret-largo",1000],["esc-ret-prof",500]];
 const CAMPOS_RANGO_ROP = [["rop-ancho",900],["rop-profundidad",580],["rop-alto",2400],
                           ["rop-caj-ancho",400]];
 
@@ -1663,6 +1779,12 @@ function leerRecetaEscritorio() {
     soporte_cpu: { incluir: $("esc-cpu").checked, ancho:+$("esc-cpu-ancho").value },
     pasacables: { cantidad:+$("esc-pas-n").value, diametro:+$("esc-pas-d").value },
     elevacion_monitor: { incluir: $("esc-elev").checked, ancho:+$("esc-elev-ancho").value, profundidad:+$("esc-elev-prof").value },
+    forma: (() => {
+      const f = $("esc-forma").value;
+      return f === "recto"
+        ? { tipo: "recto", lado: "derecha", largo_retorno:+$("esc-ret-largo").value, profundidad_retorno:+$("esc-ret-prof").value }
+        : { tipo: "L", lado: f.split("-")[1], largo_retorno:+$("esc-ret-largo").value, profundidad_retorno:+$("esc-ret-prof").value };
+    })(),
     uniones: { tipo: $("esc-uniones").value },
     calidad: { nivel: $("esc-calidad").value },
   };
@@ -1684,6 +1806,9 @@ function aplicarRecetaEscritorio(r) {
   $("esc-elev").checked = r.elevacion_monitor?.incluir ?? false;
   $("esc-elev-ancho").value = $("esc-elev-ancho-n").value = r.elevacion_monitor?.ancho ?? 800;
   $("esc-elev-prof").value = $("esc-elev-prof-n").value = r.elevacion_monitor?.profundidad ?? 250;
+  $("esc-forma").value = r.forma?.tipo === "L" ? `L-${r.forma.lado ?? "derecha"}` : "recto";
+  $("esc-ret-largo").value = $("esc-ret-largo-n").value = r.forma?.largo_retorno ?? 1000;
+  $("esc-ret-prof").value = $("esc-ret-prof-n").value = r.forma?.profundidad_retorno ?? 500;
   $("esc-uniones").value = r.uniones?.tipo ?? "confirmat";
   $("esc-calidad").value = r.calidad?.nivel ?? "estandar";
 }
@@ -2140,8 +2265,15 @@ function render3D() {
   }
   if (!mueble) return;
   const esc = 0.001, d = recetaActual.dimensiones;
-  centro = { x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 };
-  dist = Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1);
+  // Encuadre por el bbox real de las piezas (el retorno en L vive en y negativa, R-31)
+  const boxTodo = bboxDePiezas([""]);
+  if (boxTodo) {
+    centro = { x: (boxTodo.minX+boxTodo.maxX)/2*esc, y: (boxTodo.minZ+boxTodo.maxZ)/2*esc, z: (boxTodo.minY+boxTodo.maxY)/2*esc };
+    dist = Math.max(Math.max(boxTodo.maxX-boxTodo.minX, boxTodo.maxY-boxTodo.minY, boxTodo.maxZ-boxTodo.minZ)*esc*1.6, 1);
+  } else {
+    centro = { x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 };
+    dist = Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1);
+  }
   for (const p of mueble.piezas) {
     const [dx,dy,dz] = p.dim, [x,y,z] = p.pos, [r,g,b] = colorPara(p.material);
     const geo = new THREE.BoxGeometry(dx*esc, dz*esc, dy*esc);
@@ -2236,6 +2368,12 @@ function bboxDePiezas(nombres) {
 function enfocarMuebleCompleto() {
   if (!recetaActual) return;
   const esc = 0.001, d = recetaActual.dimensiones;
+  const box = mueble && bboxDePiezas([""]);  // bbox real: incluye el retorno en L (R-31)
+  if (box) {
+    animarCamaraA({ x: (box.minX+box.maxX)/2*esc, y: (box.minZ+box.maxZ)/2*esc, z: (box.minY+box.maxY)/2*esc },
+      Math.max(Math.max(box.maxX-box.minX, box.maxY-box.minY, box.maxZ-box.minZ)*esc*1.6, 1));
+    return;
+  }
   animarCamaraA({ x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 },
     Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1));
 }
@@ -2696,6 +2834,29 @@ function correrTests() {
   ok("R-30: paso de unión de cuerpos", titulos2c.some(t => t.includes("Uní los cuerpos")));
   ok("R-30: 2 cuerpos sin piezas huérfanas", huerfanasDe(m2c, RR2c).length === 0, `(${huerfanasDe(m2c, RR2c)})`);
 
+  // --- R-31: escritorio en L ---
+  const RL = JSON.parse(JSON.stringify(R));
+  RL.forma = { tipo: "L", lado: "derecha", largo_retorno: 1200, profundidad_retorno: 500 };
+  const vL = validarEscritorio(RL);
+  ok("R-31: L válida sin errores", vL.errores.length === 0, JSON.stringify(vL.errores));
+  const mL = despieceEscritorio(RL, vL.tapaTipo);
+  const nombresL = mL.piezas.map(p => p.nombre);
+  ok("R-31: retorno con dos patas propias",
+     nombresL.includes("Pata retorno (esquina)") && nombresL.includes("Pata retorno (extremo)"));
+  ok("R-31: tapa retorno doble con vano > 800 (largo 1200)",
+     nombresL.includes("Tapa retorno capa inferior (oculta)") && nombresL.includes("Tapa retorno capa superior (visible)"));
+  const RLcorto = JSON.parse(JSON.stringify(RL)); RLcorto.forma.largo_retorno = 800;
+  ok("R-31: retorno corto (800) usa tapa simple",
+     despieceEscritorio(RLcorto, vL.tapaTipo).piezas.some(p => p.nombre === "Tapa retorno"));
+  const RLlargo = JSON.parse(JSON.stringify(RL)); RLlargo.forma.largo_retorno = 1500;
+  ok("R-31: retorno de 1500 lleva viga",
+     despieceEscritorio(RLlargo, vL.tapaTipo).piezas.some(p => p.nombre === "Viga retorno"));
+  ok("R-31: recto sin piezas de retorno",
+     !m.piezas.some(p => p.nombre.toLowerCase().includes("retorno")));
+  const pasosL = instruccionesArmadoJS(mL, RL);
+  ok("R-31: paso de unión de la L", pasosL.some(p => p.titulo.includes("Uní el retorno")));
+  ok("R-31: L sin piezas huérfanas", huerfanasDe(mL, RL).length === 0, `(${huerfanasDe(mL, RL)})`);
+
   // --- AYUDAS cubre los controles clave ---
   const controlesClave = ["esc-ancho","esc-tapa","esc-uniones","esc-calidad","rop-puertas-tipo","rop-calidad"];
   ok("AYUDAS cubre los controles clave", controlesClave.every(id => AYUDAS[id]));
@@ -2754,7 +2915,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
   for (const id of ["esc-color","esc-tapa","esc-caj-pos","esc-caj-n","esc-cpu","esc-pas-n","esc-pas-d",
-                    "esc-elev","esc-uniones","esc-calidad",
+                    "esc-elev","esc-forma","esc-uniones","esc-calidad",
                     "rop-cuerpos","rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf",
                     "rop-uniones","rop-calidad"])
     $(id).addEventListener("change", recalcular);

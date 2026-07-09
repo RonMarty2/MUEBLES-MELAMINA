@@ -301,6 +301,71 @@ def despiece_escritorio(receta):
             p.pos = (A - x - dx, y, z)
         avisos.append("Mueble espejado: cajonera a la izquierda, soporte CPU a la derecha.")
 
+    # ------------------------------------------------- Retorno en L (R-31)
+    # Módulo autoportante: su tapa (doble si el vano lo exige, R-04), sus DOS patas
+    # (esquina y extremo) y su viga si supera 1200 (R-13). La unión al escritorio
+    # (escuadras + tornillos) rigidiza pero no carga peso: la esquina nunca queda
+    # en el aire, y para mudanzas el retorno se separa y viaja aparte (R-26).
+    forma = receta["forma"]
+    if forma["tipo"] == "L":
+        largo_ret = forma["largo_retorno"]
+        prof_ret = forma["profundidad_retorno"]
+        lado_der = forma["lado"] == "derecha"
+        x_ret = (A - prof_ret) if lado_der else 0  # franja x que ocupa el retorno
+        y_fin = 0                                   # se une al frente del escritorio
+        y_ini = -largo_ret                          # y crece hacia el usuario en negativo
+
+        vano_ret = largo_ret - 100 - e              # entre pata esquina y pata extremo
+        tapa_ret_doble = vano_ret > 800             # R-04 aplicada al retorno
+        t_ret = 36 if tapa_ret_doble else 18
+        alto_apoyo_ret = H - t_ret
+
+        if tapa_ret_doble:
+            piezas.append(Pieza("Tapa retorno capa inferior (oculta)", largo_ret, prof_ret, 18,
+                                mat_crudo, (x_ret, y_ini, H - 36), (prof_ret, largo_ret, 18),
+                                notas="Aglomerado crudo: va escondida abajo (R-04 en el retorno)"))
+            piezas.append(Pieza("Tapa retorno capa superior (visible)", largo_ret, prof_ret, 18,
+                                mat, (x_ret, y_ini, H - 18), (prof_ret, largo_ret, 18),
+                                cantos="3 cantos visibles (banda de 2 mm; el de la unión no se ve)"))
+            tornillos_frente += math.ceil(largo_ret / 300) * math.ceil(prof_ret / 300)
+        else:
+            piezas.append(Pieza("Tapa retorno", largo_ret, prof_ret, 18, mat,
+                                (x_ret, y_ini, H - 18), (prof_ret, largo_ret, 18),
+                                cantos="3 cantos visibles (banda de 2 mm; el de la unión no se ve)"))
+        tapacanto_grueso_mm += 2 * largo_ret + prof_ret
+
+        # Patas del retorno: paneles perpendiculares al ala, retranqueados 50 del lado abierto
+        x_pata = (x_ret + RETRANQUEO_FRONTAL) if lado_der else x_ret
+        prof_pata_ret = prof_ret - RETRANQUEO_FRONTAL
+        piezas.append(Pieza("Pata retorno (esquina)", prof_pata_ret, alto_apoyo_ret, e, mat,
+                            (x_pata, y_fin - 50 - e, 0), (prof_pata_ret, e, alto_apoyo_ret),
+                            cantos="canto lateral visible",
+                            notas="Sostiene la esquina de la L: sin ella la unión carga todo (R-31)"))
+        piezas.append(Pieza("Pata retorno (extremo)", prof_pata_ret, alto_apoyo_ret, e, mat,
+                            (x_pata, y_ini + 50, 0), (prof_pata_ret, e, alto_apoyo_ret),
+                            cantos="canto lateral visible"))
+        tapacanto_fino_mm += 2 * alto_apoyo_ret
+        regatones += 4
+        escuadras_mm += 2 * prof_pata_ret     # tapa retorno ↔ sus patas
+        escuadras_mm += 900                   # unión retorno ↔ escritorio (3 escuadras, R-31)
+        tornillos_frente += 6                 # tornillos 4×30 de la unión (R-31)
+
+        if vano_ret > VANO_MAXIMO_SIN_VIGA:
+            x_viga = (x_ret + prof_ret - e) if lado_der else x_ret
+            piezas.append(Pieza("Viga retorno", vano_ret, 300, e, mat,
+                                (x_viga, y_ini + 50 + e, alto_apoyo_ret - 300),
+                                (e, vano_ret, 300),
+                                notas="De canto por el lado de la pared, unida a ambas patas "
+                                      "y a la tapa del retorno (R-13)"))
+            confirmats += 2 * confirmats_por_union(300)
+            escuadras_mm += vano_ret
+
+        avisos.append(
+            f"Retorno en L (lado {forma['lado']}): {largo_ret}×{prof_ret} mm, "
+            + ("tapa doble por el vano (R-04), " if tapa_ret_doble else "tapa simple, ")
+            + ("con viga de canto (R-13), " if vano_ret > VANO_MAXIMO_SIN_VIGA else "")
+            + "dos patas propias y unión con 3 escuadras + tornillos 4×30 al escritorio (R-31).")
+
     # ------------------------------------------------- Herrajes (07)
     herrajes.append(herraje_union(tipo_union, confirmats))
     herrajes.append(Herraje("H-04", "Tornillo aglomerado 4×30",

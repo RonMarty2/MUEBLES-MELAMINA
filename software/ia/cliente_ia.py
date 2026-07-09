@@ -38,6 +38,9 @@ REGLAS ESTRICTAS:
    - pasacables: cantidad 0-4 (defecto 2), diametro 60|80 (defecto 60)
    - elevacion_monitor: incluir true|false (defecto false), ancho 500-1200 (defecto 800),
      profundidad 200-350 (defecto 250)
+   - forma: tipo "recto"|"L" (defecto "recto"), lado "derecha"|"izquierda",
+     largo_retorno 600-1600 (defecto 1000), profundidad_retorno 400-700 (defecto 500).
+     "Escritorio en L" -> tipo "L" (R-31); el retorno es un módulo con patas propias.
 
    ropero:
    - dimensiones: ancho TOTAL 600-3600 (defecto 900), profundidad 550-620 (defecto 580),
@@ -57,7 +60,7 @@ REGLAS ESTRICTAS:
      el usuario menciona que va a mover/mudar el mueble)
 
 5. Si el usuario pide un valor fuera de rango, usá el límite más cercano.
-6. Si el usuario pide algo que estos campos no cubren (ej. una forma en L, una mesa,
+6. Si el usuario pide algo que estos campos no cubren (ej. una forma en U, una mesa,
    un mueble de TV), NO inventes campos ni tipo_mueble: emití la receta más parecida
    que sí se pueda con lo existente.
 7. Si te doy una receta anterior y un pedido de cambio, devolvé la receta COMPLETA con

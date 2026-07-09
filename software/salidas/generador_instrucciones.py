@@ -112,6 +112,47 @@ def instrucciones_escritorio(mueble, receta):
              "se hamaque. Atornillala a los dos apoyos y a la tapa.",
              piezas=["Viga trasera"], herraje="Confirmat / excéntrico")
 
+    # ------------------------------------------------------------- Retorno en L (R-31)
+    if _hay(mueble, "Pata retorno"):
+        if _hay(mueble, "Tapa retorno capa inferior"):
+            paso("Armá la tapa del retorno (doble, refuerzo anti-pandeo)",
+                 "Igual que la tapa principal: encolá la capa cruda de abajo, alineá la "
+                 "capa de melamina arriba y atornillá desde abajo con 4×30 cada ~30 cm. "
+                 "Dejá secar con peso encima.",
+                 piezas=["Tapa retorno capa inferior (oculta)",
+                         "Tapa retorno capa superior (visible)"],
+                 herraje="Tornillo 4×30 + cola",
+                 tip="La cara linda va PARA ARRIBA.")
+        paso("Pará las dos patas del retorno",
+             "1. Pará la pata de la esquina (queda al lado del escritorio) y la del "
+             "extremo. 2. Todavía no aprietes del todo: primero presentá la tapa.",
+             piezas=["Pata retorno (esquina)", "Pata retorno (extremo)"],
+             herraje="Escuadra metálica 25 mm",
+             tip="El retorno se sostiene SOLO con sus dos patas: la unión al escritorio "
+                 "no carga peso (R-31).")
+        tapa_ret = (["Tapa retorno capa superior (visible)"]
+                    if _hay(mueble, "Tapa retorno capa superior") else ["Tapa retorno"])
+        paso("Colocá la tapa del retorno sobre sus patas",
+             "1. Apoyá la tapa del retorno sobre sus dos patas, alineada por los bordes. "
+             "2. Fijala desde ABAJO con escuadras, sin que asome ningún tornillo arriba.",
+             piezas=["Pata retorno (esquina)", "Pata retorno (extremo)"] + tapa_ret,
+             herraje="Escuadra metálica 25 mm")
+        if _hay(mueble, "Viga retorno"):
+            paso("Poné la viga del retorno (rigidez)",
+                 "El retorno es largo: lleva una viga de canto por el lado de la pared, "
+                 "atornillada a las dos patas y a la tapa (R-13).",
+                 piezas=["Viga retorno"], herraje="Confirmat / excéntrico")
+        paso("Uní el retorno al escritorio (la esquina de la L)",
+             "1. Acercá el retorno al costado del escritorio hasta que las dos tapas "
+             "queden A RAS (pasá el dedo: no debe haber escalón). 2. Prensá las tapas "
+             "alineadas. 3. Desde ABAJO, atornillá 3 escuadras repartidas a lo largo de "
+             "la unión + tornillos 4×30 entre la pata de la esquina y el escritorio. "
+             "4. Nivelá el conjunto con los regatones ANTES de apretar del todo.",
+             piezas=tapa_ret + (["Tapa capa superior (visible)"]
+                                if _hay(mueble, "Tapa capa superior") else ["Tapa"]),
+             herraje="Escuadra metálica 25 mm + tornillo 4×30",
+             tip="Para mudanzas: sacá estas escuadras y el retorno viaja aparte (R-26/R-31).")
+
     if getattr(mueble, "grommets", None):
         paso("Hacé los agujeros de pasacables",
              "Marcá y perforá los agujeros de la tapa con una broca copa del diámetro del "

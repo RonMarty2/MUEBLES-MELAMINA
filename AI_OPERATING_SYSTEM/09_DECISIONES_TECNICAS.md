@@ -676,6 +676,35 @@ Formato de cada entrada:
 
 ---
 
+## D-032 — Escritorio en L (R-31): el retorno como módulo autoportante
+
+**Fecha:** 2026-07-09 · **Estado:** vigente
+
+- **Contexto:** Ron pidió escritorios en L/C/U desde el principio; quedó en la hoja de
+  ruta hasta tener base sólida (guía visual, animaciones, reglas estructurales). La L es
+  además donde más importan las reglas anti-pandeo: la esquina concentra carga.
+- **Decisión:** campo `forma: {tipo: recto|L, lado, largo_retorno (600-1600, M-26),
+  profundidad_retorno (400-700, M-27)}`. El retorno es un **módulo autoportante** (misma
+  filosofía que los cuerpos R-30): su tapa (doble automática si el vano entre patas
+  supera 800, R-04; viga de canto si supera 1200, R-13) y DOS patas panel propias
+  (esquina + extremo). La unión al escritorio (3 escuadras + tornillos 4×30, tapas a ras)
+  rigidiza pero no carga peso — la esquina nunca queda en el aire, y para mudanzas el
+  retorno se separa (R-26). Geometría: el retorno vive en y negativa (hacia el usuario)
+  desde el frente del escritorio, en el lado elegido; se agrega tras el espejado de la
+  cajonera. El encuadre de cámara del 3D pasó a usar el bbox real de las piezas (antes
+  usaba solo `dimensiones` y habría cortado el retorno de la vista).
+- **Con "recto" no cambia nada:** ni nombres, ni conteos, ni tests canónicos.
+- **Descartada:** tapa en L de una sola pieza (desperdicio enorme de placa, no entra en
+  el auto, esquina frágil en el ángulo interno) y retorno "colgado" de la tapa principal
+  sin patas propias (la unión cargaría todo el peso — exactamente el tipo de zona endeble
+  que Ron pidió evitar).
+- **Consecuencias:** C y U quedan como "dos retornos" reutilizando este mismo bloque
+  (anotado en la hoja de ruta). Pasos de armado nuevos (armar tapa del retorno, parar sus
+  patas, colocar tapa, viga si hay, unir la L) en Python y JS; tests de paridad completos
+  y anti-huérfanas para la config L; la IA entiende "escritorio en L".
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

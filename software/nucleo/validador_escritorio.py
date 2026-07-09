@@ -19,6 +19,8 @@ DEFECTOS = {
     "soporte_cpu": {"incluir": True, "ancho": 250},
     "pasacables": {"cantidad": 2, "diametro": 60},
     "elevacion_monitor": {"incluir": False, "ancho": 800, "profundidad": 250},
+    "forma": {"tipo": "recto", "lado": "derecha",   # R-31: "L" agrega un retorno
+              "largo_retorno": 1000, "profundidad_retorno": 500},
 }
 
 LIMITES = {
@@ -31,6 +33,8 @@ LIMITES = {
     ("pasacables", "cantidad"): (0, 4, "M-14", "cantidad razonable de grommets"),
     ("elevacion_monitor", "ancho"): (500, 1200, "M-25", "ancho razonable de la bandeja elevada"),
     ("elevacion_monitor", "profundidad"): (200, 350, "M-25", "apoyo suficiente para monitores"),
+    ("forma", "largo_retorno"): (600, 1600, "M-26/R-31", "ala de la L usable y sana"),
+    ("forma", "profundidad_retorno"): (400, 700, "M-27/R-31", "profundidad del ala de la L"),
 }
 
 OPCIONES = {
@@ -41,11 +45,13 @@ OPCIONES = {
     ("calidad", "nivel"): (["economico", "estandar", "premium"], "D-018"),
     ("cajonera", "posicion"): (["derecha", "izquierda", "ninguna"], "R-14"),
     ("pasacables", "diametro"): ([60, 80], "H-06"),
+    ("forma", "tipo"): (["recto", "L"], "R-31"),
+    ("forma", "lado"): (["derecha", "izquierda"], "R-31"),
 }
 
 CAMPOS_CONOCIDOS = {
     "": ["version", "tipo_mueble", "nombre", "dimensiones", "tapa", "material", "uniones",
-         "calidad", "cajonera", "soporte_cpu", "pasacables", "elevacion_monitor"],
+         "calidad", "cajonera", "soporte_cpu", "pasacables", "elevacion_monitor", "forma"],
     "dimensiones": ["ancho", "profundidad", "alto"],
     "tapa": ["tipo"],
     "material": ["color", "espesor", "espesor_fondo"],
@@ -55,6 +61,7 @@ CAMPOS_CONOCIDOS = {
     "soporte_cpu": ["incluir", "ancho"],
     "pasacables": ["cantidad", "diametro"],
     "elevacion_monitor": ["incluir", "ancho", "profundidad"],
+    "forma": ["tipo", "lado", "largo_retorno", "profundidad_retorno"],
 }
 
 
@@ -209,6 +216,22 @@ def validar(receta):
             f"La elevación para monitor de {elev['ancho']} mm no entra en una tapa de "
             f"{d['ancho']} mm dejando margen a los bordes (M-25). Achicala o agrandá el "
             "escritorio."
+        )
+
+    # R-31: forma en L — el retorno es un módulo autoportante (dos patas propias).
+    forma = receta["forma"]
+    if forma["tipo"] == "L":
+        vano_ret = forma["largo_retorno"] - 100 - e  # entre pata esquina y pata extremo
+        refuerzo = ""
+        if vano_ret > 1200:
+            refuerzo = " y una viga de canto (R-13)"
+        elif vano_ret > 800:
+            refuerzo = " y tapa doble (R-04)"
+        avisos.append(
+            f"Escritorio en L (lado {forma['lado']}): el retorno de "
+            f"{forma['largo_retorno']}×{forma['profundidad_retorno']} mm se arma como un "
+            f"módulo aparte con sus DOS patas{refuerzo}, y se une al escritorio con "
+            "escuadras y tornillos (R-31). Para mudanzas se separa y viaja aparte (R-26)."
         )
 
     if errores:

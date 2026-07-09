@@ -102,6 +102,14 @@ motor son la misma idea: una tira de canto atornillada bajo la superficie que tr
   ventilación), ancho interior mínimo 200 mm (gabinete estándar ≤ 230), profundidad = la
   del escritorio − retranqueo. Formada por un parante interior + piso, del lado opuesto o
   contiguo a la cajonera según `posicion`.
+- **R-31 — Escritorio en L (retorno).** El ala de la L es un **módulo autoportante**: su
+  propia tapa (doble si el vano entre patas supera 800, R-04; con viga de canto si supera
+  1200, R-13) y **dos patas panel propias** — una en la esquina y otra en el extremo. La
+  unión al escritorio principal (3 escuadras repartidas + tornillos 4×30, tapas a ras,
+  prensar y nivelar antes de apretar) **rigidiza pero no carga peso**: la esquina nunca
+  queda en el aire. Para mudanzas se sacan las escuadras de la unión y el retorno viaja
+  aparte (R-26). Rangos: largo 600–1600 (M-26), profundidad 400–700 (M-27). Las formas en
+  C y U son dos retornos con esta misma regla (pendiente en la hoja de ruta).
 
 ## Buenas y malas prácticas de oficio (para la IA acompañante)
 

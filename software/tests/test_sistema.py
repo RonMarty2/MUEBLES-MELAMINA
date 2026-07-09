@@ -267,6 +267,44 @@ prueba("R-30: pasos por cuerpo",
        any("cuerpo 1 de 2" in t for t in titulos_2c) and any("cuerpo 2 de 2" in t for t in titulos_2c))
 prueba("R-30: paso de unión de cuerpos",
        any("Uní los cuerpos" in t for t in titulos_2c))
+
+# ---------------------------------------------------------------- R-31: escritorio en L
+r_L, avisos_L = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                      "forma": {"tipo": "L", "lado": "derecha",
+                                                "largo_retorno": 1200, "profundidad_retorno": 500}})
+m_L = despiece_escritorio(r_L)
+nombres_L = {p.nombre for p in m_L.piezas}
+prueba("R-31: retorno con dos patas propias",
+       "Pata retorno (esquina)" in nombres_L and "Pata retorno (extremo)" in nombres_L)
+prueba("R-31: tapa retorno doble con vano > 800 (largo 1200)",
+       "Tapa retorno capa inferior (oculta)" in nombres_L
+       and "Tapa retorno capa superior (visible)" in nombres_L)
+r_recto, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer"})
+prueba("R-31: recto sin piezas de retorno",
+       not any("retorno" in p.nombre.lower() for p in despiece_escritorio(r_recto).piezas))
+r_L_corto, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                     "forma": {"tipo": "L", "lado": "izquierda",
+                                               "largo_retorno": 800, "profundidad_retorno": 450}})
+m_L_corto = despiece_escritorio(r_L_corto)
+prueba("R-31: retorno corto (800) usa tapa simple",
+       any(p.nombre == "Tapa retorno" for p in m_L_corto.piezas))
+r_L_largo, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                     "forma": {"tipo": "L", "lado": "derecha",
+                                               "largo_retorno": 1500, "profundidad_retorno": 500}})
+prueba("R-31: retorno de 1500 lleva viga (vano > 1200)",
+       any(p.nombre == "Viga retorno" for p in despiece_escritorio(r_L_largo).piezas))
+try:
+    normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                          "forma": {"tipo": "L", "largo_retorno": 2500}})
+    prueba("R-31: rechaza retorno fuera de rango", False, "(no rechazó)")
+except RecetaInvalida:
+    prueba("R-31: rechaza retorno fuera de rango", True)
+pasos_L = instrucciones_armado(m_L, r_L)
+titulos_L = [p["titulo"] for p in pasos_L]
+prueba("R-31: paso de unión de la L",
+       any("Uní el retorno" in t for t in titulos_L))
+prueba("R-31: paso de patas del retorno",
+       any("patas del retorno" in t for t in titulos_L))
 prueba("ropero: laterales 2300x580 (alto-ZOCALO)", por_rop["Lateral izquierdo"].largo == 2300
        and por_rop["Lateral izquierdo"].ancho == 580)
 prueba("ropero: interior 864 (900-2*18, R-02)", por_rop["Piso"].largo == 864, f"(dio {por_rop['Piso'].largo})")
@@ -427,6 +465,10 @@ casos_huerfanas = [
       "dimensiones": {"ancho": 1200, "profundidad": 580, "alto": 2400},
       "puertas": {"tipo": "corrediza", "cantidad": 2},
       "cajones": {"incluir": True, "ancho": 450, "cantidad_cajones": 2}}),
+    ("escritorio en L con viga de retorno (R-31)",
+     {"version": "1.0", "tipo_mueble": "escritorio_gamer",
+      "forma": {"tipo": "L", "lado": "derecha",
+                "largo_retorno": 1500, "profundidad_retorno": 500}}),
     ("ropero 2 cuerpos con cajones y estante (R-30)",
      {"version": "1.0", "tipo_mueble": "ropero",
       "dimensiones": {"ancho": 2400, "profundidad": 580, "alto": 2400},

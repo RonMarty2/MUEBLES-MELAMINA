@@ -85,6 +85,17 @@
             "ancho": { "type": "integer", "minimum": 500, "maximum": 1200 },
             "profundidad": { "type": "integer", "minimum": 200, "maximum": 350 }
           }
+        },
+        "forma": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "R-31: 'L' agrega un retorno (módulo autoportante unido al escritorio)",
+          "properties": {
+            "tipo": { "type": "string", "enum": ["recto", "L"] },
+            "lado": { "type": "string", "enum": ["derecha", "izquierda"] },
+            "largo_retorno": { "type": "integer", "minimum": 600, "maximum": 1600 },
+            "profundidad_retorno": { "type": "integer", "minimum": 400, "maximum": 700 }
+          }
         }
       }
     },
