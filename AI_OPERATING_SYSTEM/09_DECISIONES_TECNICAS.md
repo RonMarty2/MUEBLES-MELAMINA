@@ -732,6 +732,40 @@ Formato de cada entrada:
 
 ---
 
+## D-034 — Extraíbles se arman APARTE por defecto; rieles solo en el cajón
+
+**Fecha:** 2026-07-09 · **Estado:** vigente (corrige el `pintarRieles` de D-028 v2)
+
+- **Contexto:** Ron mostró un bug: los rieles de la corredera aparecían **flotando fuera de
+  las paredes del mueble**. `pintarRieles` dibujaba DOS juegos de rieles (uno en el cajón y
+  otro "guía fija" en las paredes del mueble) y a los del mueble les aplicaba —mal— el offset
+  de explosión (las paredes no se mueven) y un doble bucle `for(paredes){for(cajas)}`, que
+  multiplicaba los rieles y los sacaba de lugar. Además pidió: "armamos todos los extraíbles
+  aparte, mostrarme paso a paso cómo armar el cajón con todo, porque las rieles aparecen
+  directo".
+- **Decisión:**
+  1. **Un solo riel por lateral del cajón** — la mitad MÓVIL de la corredera, pegada a la
+     cara **exterior** del lateral (la que mira a la pared). Viaja con el cajón. La mitad fija
+     del mueble se explica en el **plano 2D acotado** de abajo; dibujarla en 3D era lo que
+     confundía. Se elimina el juego de rieles de las paredes, el doble bucle y el offset de
+     explosión aplicado a piezas que no se mueven.
+  2. **Sub-ensamble por defecto:** al entrar a un paso `subEnsamble` (cajón), las piezas van
+     **solas a la mesada virtual** (a la derecha del mueble). El paso "Armá la caja" muestra
+     las piezas **explotadas** en la mesada con sus tornillos; el paso "Colocá la corredera"
+     muestra el cajón **ya armado, macizo**, con los rieles montados; "📥 Insertar en el
+     mueble" lo desliza a su lugar. Así los rieles nunca "aparecen directo" sobre el mueble.
+  3. El paso de corredera ahora resalta la **caja completa** (5 piezas) para que el cajón
+     entero viaje a la mesada como bloque, y suprime los marcadores de tornillo (manda el riel).
+- **Descartada:** dibujar ambas mitades de la corredera en 3D (fija + móvil) — la mitad fija
+  sobre la pared es justo lo que Ron leía como "riel flotando"; el plano acotado ya la cubre.
+- **Consecuencias:** cambio visual puro en `app_fuente.html` (`pintarRieles` reescrito;
+  `explotarPiezas`/`enfocarPiezas`/`construirTornillosDePaso`/`pintarMarcadoresTornillo`/
+  `animarEntradaTornillos` toman un `offsetXesc` para acompañar la mesada; helpers
+  `verSubEnMesada`/`insertarSubEnMueble`; textos de los pasos de cajón). Motores intactos
+  (120 Python + 83 JS, 0 errores de consola).
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
