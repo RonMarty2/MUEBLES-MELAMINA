@@ -93,19 +93,24 @@
               width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; color: #fff;
               font-size: 11px; flex-shrink: 0; }
   .armado-detalle { flex: 1; }
-  .armado-detalle h3 { margin: 0 0 6px; font-size: 15px; }
   .paso-tip { background: #fef3c7; border: 1px solid #f59e0b; color: #7c4a03;
               padding: 6px 10px; border-radius: 6px; font-size: 12.5px; margin-top: 6px; }
   .armado-detalle .texto-paso { font-size: 14.5px; line-height: 1.6; }
-  .leyenda-3d { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #444;
-                margin: 8px 0; }
+  /* D-037: título + leyenda quedan FIJOS arriba del todo (mismo truco que .nav-paso abajo),
+     así por más que el paso tenga mucho texto, nunca "se pierde" el título ni el botón
+     "Ver armado completo" arriba — antes, al scrollear, quedaban tapados y parecía que "no
+     dejaba subir". */
+  .armado-sticky-top { position: sticky; top: -10px; z-index: 4; background: #fff;
+                        margin: 0 -14px 10px; padding: 6px 14px 8px; border-bottom: 1px solid #e2e0dc; }
+  .armado-sticky-top h3 { margin: 0 0 6px; font-size: 15px; }
+  .leyenda-3d { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #444; margin: 0; }
   .leyenda-3d span { display: inline-flex; align-items: center; gap: 5px; }
   .punto { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
   .btn-paso-grande { font-size: 14px !important; padding: 10px 18px !important; }
   .nav-paso { position: sticky; bottom: -10px; margin: 12px -14px -10px; padding: 10px 14px;
               background: #fff; border-top: 1px solid #e2e0dc; }
   #paneles.expandido .armado-cols { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
-  #paneles.expandido .armado-detalle h3 { font-size: 19px; }
+  #paneles.expandido .armado-sticky-top h3 { font-size: 19px; }
   #paneles.expandido .armado-detalle .texto-paso { font-size: 16px; }
   .herraje-card { display: flex; gap: 12px; align-items: center; background: #f8f7f4;
                   border: 1px solid #e2e0dc; border-radius: 8px; padding: 8px 12px;
@@ -1475,7 +1480,7 @@ function instruccionesArmadoJS(m, receta) {
         for (let i = 1; i <= nCajRop; i++) {
           const subPiezasRop = [`Lateral caja cajón ${i} (izq)${suf}`, `Lateral caja cajón ${i} (der)${suf}`, `Frente interno cajón ${i}${suf}`, `Contrafrente cajón ${i}${suf}`, `Fondo cajón ${i}${suf}`];
           paso(`Armá la caja del cajón ${i} de ${nCajRop}${tag}`,
-            `⚠️ Esta caja NO se atornilla al mueble. Solo va unida por los rieles de la corredera (próximo paso).<br><br>Las piezas se muestran <b>APARTE, en la mesada</b> (a la derecha), separadas para ver cómo encajan. Después "📥 Insertar en el mueble".<br><br>1. <b>Pará los dos laterales</b> enfrentados, con el frente interno entremedio adelante y el contrafrente atrás — rectángulo en planta. 2. <b>Pre-perforá</b> con broca Ø2 mm. 3. <b>Atornillá</b> el frente/contrafrente a los laterales. 4. <b>Clavá el fondo de 3 mm</b> por debajo, clavos cada ~15 cm.`,
+            `📦 <b>Son DOS piezas distintas, no una tapa/puerta:</b> el <b>"Frente interno"</b> que armás ACÁ es un panel liso que cierra la caja por adelante (parte de la caja). El <b>"Frente"</b> (sin "interno") es la tabla decorativa que VE la gente, un panel APARTE que recién se atornilla en el último paso, tapando a este. Por eso esta caja todavía no tiene "cara linda".<br><br>⚠️ Esta caja NO se atornilla al mueble. Solo va unida por los rieles de la corredera (próximo paso) — nunca vas a atornillarla a los laterales del mueble.<br><br>Las piezas se muestran <b>APARTE, en la mesada</b> (a la derecha), separadas para ver cómo encajan. Después "📥 Insertar en el mueble".<br><br>1. <b>Pará los dos laterales</b> enfrentados, con el frente interno entremedio adelante y el contrafrente atrás — rectángulo en planta. 2. <b>Pre-perforá</b> con broca Ø2 mm. 3. <b>Atornillá</b> el frente/contrafrente a los laterales. 4. <b>Clavá el fondo de 3 mm</b> por debajo, clavos cada ~15 cm.`,
             subPiezasRop, "Confirmat + clavos",
             "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
             { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
@@ -1564,7 +1569,7 @@ function instruccionesArmadoJS(m, receta) {
     for (let i = 1; i <= nCaj; i++) {
       const subPiezasCajon = [`Lateral caja cajón ${i} (izq)`, `Lateral caja cajón ${i} (der)`, `Frente interno cajón ${i}`, `Contrafrente cajón ${i}`, `Fondo cajón ${i}`];
       paso(`Armá la caja del cajón ${i} de ${nCaj}`,
-        `⚠️ Esta caja NO se atornilla al mueble. Los ÚNICOS tornillos entre la caja del cajón y el mueble son los de la corredera (próximo paso). La caja simplemente se desliza sobre los rieles.<br><br>Las piezas se muestran <b>APARTE, en la mesada</b> (a la derecha), separadas para que veas cómo encajan. Cuando termines, "📥 Insertar en el mueble".<br><br>1. <b>Pará los dos laterales</b> del cajón enfrentados, con el frente interior entremedio adelante y el contrafrente entremedio atrás — formando un rectángulo visto desde arriba. 2. <b>Pre-perforá</b> siempre con broca Ø2 mm antes de atornillar. 3. <b>Atornillá</b> el frente interno a los laterales (los laterales "abrazan" al frente/contrafrente). 4. <b>Clavá el fondo de 3 mm</b> por debajo: centrado, clavos cada ~15 cm.`,
+        `📦 <b>Son DOS piezas distintas, no una tapa/puerta:</b> el <b>"Frente interno"</b> que armás ACÁ es un panel liso que cierra la caja por adelante (parte de la caja, como los otros 4 lados). El <b>"Frente"</b> (sin "interno") es la tabla decorativa que VE la gente — un panel APARTE que recién se atornilla en el último paso, por encima de este, tapándolo. Por eso el cajón, armado hasta acá, no tiene "cara linda" todavía: es solo la caja funcional.<br><br>⚠️ Esta caja NO se atornilla al mueble. Los ÚNICOS tornillos entre la caja del cajón y el mueble son los de la corredera (próximo paso) — nunca vas a atornillar esta caja a los laterales del mueble. La caja simplemente se desliza sobre los rieles.<br><br>Las piezas se muestran <b>APARTE, en la mesada</b> (a la derecha), separadas para que veas cómo encajan. Cuando termines, "📥 Insertar en el mueble".<br><br>1. <b>Pará los dos laterales</b> del cajón enfrentados, con el frente interior entremedio adelante y el contrafrente entremedio atrás — formando un rectángulo visto desde arriba. 2. <b>Pre-perforá</b> siempre con broca Ø2 mm antes de atornillar. 3. <b>Atornillá</b> el frente interno a los laterales (los laterales "abrazan" al frente/contrafrente). 4. <b>Clavá el fondo de 3 mm</b> por debajo: centrado, clavos cada ~15 cm.`,
         subPiezasCajon, "Confirmat + clavos",
         "Armá esta caja igual que las demás, para que todos los cajones corran parejos.",
         { layout: "escuadra", piezas: ["lateral izq.", "lateral der.", "frente interno"], fijacion: "Confirmat + clavos en el fondo" });
@@ -1953,17 +1958,19 @@ function pintarArmado(c) {
   c.innerHTML = `
     ${cajaExplica("🔧 Guía de armado paso a paso — el mueble se construye con vos",
       "El 3D de arriba muestra <b>solo lo armado hasta el paso actual</b>: en el paso 1 no hay casi nada, y en el último ves el mueble terminado — igual que armándolo de verdad. Tocá cada paso de la lista: la cámara enfoca las piezas nuevas (aclaradas y un poco separadas, como en los manuales de IKEA), los <b>tornillos dorados</b> muestran dónde y en qué dirección se atornilla, y los cantos naranjas llevan cinta. Cuando el paso lleva <b>bisagras o correderas</b>, abajo aparece un <b>plano 2D acotado</b> con las distancias reales. Usá “⤢ Agrandar” para ver todo más grande.")}
-    <div class="leyenda-3d">
-      <span><span class="punto" style="background:#c8940f"></span> Tornillo (uno por unión; la cabeza queda del lado por donde entrás)</span>
-      <span><span class="punto" style="background:#8d949c"></span> Clavo finito = fondo de 3 mm clavado</span>
-      <span><span class="punto" style="background:#ff8c1a"></span> Canto con tapacanto (cinta de borde)</span>
-      <span><span class="punto" style="background:#3b82f6"></span> Pieza nueva de este paso (aclarada; lo ya armado queda sólido)</span>
-      <button id="btn-ver-completo" class="btn-paso-grande" style="margin-left:auto">🎬 Ver armado completo</button>
+    <div class="armado-sticky-top">
+      <h3>Paso ${p.n} de ${pasos.length}: ${p.titulo}</h3>
+      <div class="leyenda-3d">
+        <span><span class="punto" style="background:#c8940f"></span> Tornillo (uno por unión; la cabeza queda del lado por donde entrás)</span>
+        <span><span class="punto" style="background:#8d949c"></span> Clavo finito = fondo de 3 mm clavado</span>
+        <span><span class="punto" style="background:#ff8c1a"></span> Canto con tapacanto (cinta de borde)</span>
+        <span><span class="punto" style="background:#3b82f6"></span> Pieza nueva de este paso (aclarada; lo ya armado queda sólido)</span>
+        <button id="btn-ver-completo" class="btn-paso-grande" style="margin-left:auto">🎬 Ver armado completo</button>
+      </div>
     </div>
     <div class="armado-cols">
       <div class="armado-lista">${lista}</div>
       <div class="armado-detalle">
-        <h3>Paso ${p.n} de ${pasos.length}: ${p.titulo}</h3>
         ${tarjetasDiagramaPaso(p.diagrama)}
         ${p.herraje ? tarjetasColocacionHerrajes(p.herraje, mueble) : ""}
         <p class="texto-paso">${convAvisos(p.texto)}</p>
@@ -2048,7 +2055,7 @@ function animarArmadoPaso(nombres, btn) {
     const v = centroGrupo ? vectorExplode(m.userData.p, centroGrupo) : { x: 0, y: 0, z: 0 };
     const destino = new THREE.Vector3(
       m.userData.posBase.x + v.x*EXPLODE_MM*esc,
-      m.userData.posBase.y + v.z*EXPLODE_MM*esc,
+      m.userData.posBase.y + offsetZexplotado(m.userData.p, v)*esc,  // D-037: no hundir bajo el piso
       m.userData.posBase.z + v.y*EXPLODE_MM*esc);
     const afuera = new THREE.Vector3(
       destino.x + v.x * sceneRadius * 2,
@@ -2531,6 +2538,16 @@ function vectorExplode(pieza, centroGrupo) {
   const len = Math.hypot(vx,vy,vz);
   return len < 1 ? { x:0, y:0, z:0 } : { x: vx/len, y: vy/len, z: vz/len };
 }
+// D-037: ninguna pieza puede "hundirse" bajo el piso real (z=0 mm) al separarse en la vista
+// explotada — antes una pieza fina y baja (ej. "Piso cajonera") quedaba con casi todo el
+// grupo por ARRIBA suyo, así que su vector de explosión apuntaba derecho hacia abajo y la
+// mandaba por debajo del piso real: se veía flotando, desconectada, "salida" (Ron: "el piso
+// está salido no se ve"). offsetZexplotado limita cuánto puede bajar cada pieza para que su
+// cara inferior nunca cruce z=0.
+function offsetZexplotado(pieza, v) {
+  const offZ = v.z * EXPLODE_MM;
+  return (pieza.pos[2] + offZ < 0) ? -pieza.pos[2] : offZ;
+}
 function explotarPiezas(nombres, offsetXesc = 0) {
   const esc = 0.001;
   const box = bboxDePiezas(nombres);
@@ -2544,7 +2561,7 @@ function explotarPiezas(nombres, offsetXesc = 0) {
     const v = vectorExplode(m.userData.p, centroGrupo);
     moverA(m, new THREE.Vector3(
       m.userData.posBase.x + offsetXesc + v.x*EXPLODE_MM*esc,  // offsetXesc: llevar a la mesada
-      m.userData.posBase.y + v.z*EXPLODE_MM*esc,
+      m.userData.posBase.y + offsetZexplotado(m.userData.p, v)*esc,
       m.userData.posBase.z + v.y*EXPLODE_MM*esc));
   }
 }

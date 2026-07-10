@@ -821,6 +821,42 @@ Formato de cada entrada:
 
 ---
 
+## D-037 — El piso no se hunde bajo el nivel real; título fijo arriba; frente vs frente interno
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** tres reportes de Ron sobre la misma sesión. (1) "El piso está salido, no se
+  ve": en el paso "Armá la cajonera", la vista explotada (D-021) separa cada pieza desde el
+  centro del grupo — como "Piso cajonera" es fina y está pegada al piso real (z=0 mm) mientras
+  los laterales altos dominan el centro del grupo, su vector de explosión apuntaba derecho
+  hacia ABAJO y la mandaba por debajo del nivel de piso real, flotando fuera de la vista, sin
+  ninguna referencia. (2) "Este bug continúa" (el scroll que tapaba el título): el reset de
+  `scrollTop` (D-036) no alcanzaba — el título y la leyenda seguían quedando tapados apenas el
+  texto del paso era largo. (3) Confusión sobre si el "Frente" del cajón es una tapa/puerta o
+  una pieza aparte, y que los tornillos de "Armá la cajonera" parecían ser para atornillar la
+  caja del cajón a las paredes del mueble (son en realidad para la ESTRUCTURA FIJA de la
+  cajonera, no para la caja del cajón).
+- **Decisión:**
+  1. `offsetZexplotado(pieza, v)`: limita el desplazamiento vertical de la explosión para que
+     la cara inferior de una pieza nunca cruce z=0 (el piso real). Usado en `explotarPiezas` y
+     `animarArmadoPaso`.
+  2. El título del paso y la leyenda (tornillo/clavo/canto/pieza nueva + botón "Ver armado
+     completo") se movieron a un bloque `.armado-sticky-top` con `position: sticky; top:-10px`
+     — el mismo truco que ya usa `.nav-paso` abajo — así quedan SIEMPRE visibles arriba del
+     panel sin importar cuánto se scrollee el texto del paso.
+  3. Textos nuevos: el paso "Armá la caja" explica que "Frente interno" (parte de la caja,
+     liso) y "Frente" (la tabla decorativa, pieza aparte, se atornilla después por encima) son
+     DOS piezas distintas — no una tapa/puerta de la misma caja — y refuerza que esta caja
+     nunca se atornilla a las paredes del mueble.
+- **Descartada:** seguir confiando solo en `c.scrollTop = 0` (D-036) — funciona para el caso de
+  "click en Siguiente", pero no protege contra scroll manual dentro de un paso largo; la
+  solución robusta es que el título nunca dependa de la posición de scroll.
+- **Consecuencias:** cambio visual/CSS puro en `app_fuente.html` (`.armado-detalle h3` se
+  reemplaza por `.armado-sticky-top`). Motores intactos (120 Python + 83 JS, 0 errores de
+  consola).
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
