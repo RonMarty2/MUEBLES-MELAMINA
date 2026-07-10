@@ -196,6 +196,20 @@ motor son la misma idea: una tira de canto atornillada bajo la superficie que tr
   los dos significados) en cada punto real de apoyo, detectado comparando la altura y el
   solape de cada parante contra la CAPA que realmente toca (la inferior oculta, si la tapa es
   doble — no la visible que lista el paso).
+- **EST-008 — Tornillos del laminado cara a cara (tapa doble, D-044).** Encontrado un bug
+  real: el detector genérico de uniones espacia los puntos a lo largo del eje MÁS LARGO del
+  contacto y deja el otro eje fijo en el centro — funciona para una unión de canto (un eje es
+  angosto, el espesor), pero para dos tableros ENTEROS pegados cara a cara (ambos ejes son
+  anchos) esto colapsaba en una sola fila de tornillos por el medio del panel, dejando el
+  resto de la profundidad sin ningún punto de fijación. Se detecta este caso (`esUnionCaraACara`,
+  ambos ejes libres > 300 mm) y se arma una grilla real (`gridCaraACara`): perímetro +
+  interior, ≤300 mm de paso en cada eje, mínimo 2 filas/columnas. **No se hizo "solo
+  perímetro"** (como pedía el reporte original): un panel grande de 1600×700 sin ningún
+  tornillo en el medio también se puede combar entre capas — el objetivo es pegar TODA el
+  área, no solo el marco. También se acortó el tornillo a 30 mm en este caso específico (antes
+  usaba el largo por defecto de 55 mm, que con dos capas de 18 mm asomaría 19 mm por la cara
+  visible de arriba). El modo "Aislar y rayos-X" (guías rojas) usa la misma detección, así
+  que muestra la grilla real también.
 
 ## Documentos relacionados
 

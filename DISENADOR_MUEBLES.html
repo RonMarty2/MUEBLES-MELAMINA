@@ -2010,7 +2010,7 @@ function pintarArmado(c) {
     return real && real.cantos;
   });
   // En el paso de corredera se muestran los RIELES (no tornillos de caja): no anunciar tornillos.
-  const nMarcadores = (p.subEnsamble && /corredera/i.test(p.herraje || "")) ? 0 : calcularMarcadoresTornillo(p.piezas).length;
+  const nMarcadores = (p.subEnsamble && /corredera/i.test(p.herraje || "")) ? 0 : construirTornillosDePaso(p.piezas).length;
   let lista = "";
   pasos.forEach((s, i) => {
     lista += `<div class="paso-item ${i === pasoArmadoActivo ? "activo" : ""}" data-paso="${i}">
@@ -2217,7 +2217,7 @@ function construirGuiasPerforacion(nombres, offsetXesc = 0) {
   if (!box) return;
   const centroGrupo = { x: (box.minX+box.maxX)/2, y: (box.minY+box.maxY)/2, z: (box.minZ+box.maxZ)/2 };
   const IDX = { x: 0, y: 1, z: 2 };
-  for (const pt of calcularMarcadoresTornillo(nombres)) {
+  for (const pt of calcularUnionesDePaso(nombres)) {
     const piezaA = mueble.piezas.find(p => p.nombre === pt.piezaA);
     const piezaB = mueble.piezas.find(p => p.nombre === pt.piezaB);
     if (!piezaA || !piezaB) continue;
@@ -2879,6 +2879,59 @@ function orientarTornilloEje(grupo, ejeMm, signoHaciaAfuera) {
   else if (ejeScene === "x") { grupo.rotation.z = signo > 0 ? -Math.PI/2 : Math.PI/2; }
   else { grupo.rotation.x = signo > 0 ? Math.PI/2 : -Math.PI/2; }
 }
+/* D-044/EST-008: `agregarSiSolapa` (calcularMarcadoresTornillo) espacia los puntos a lo
+   largo del eje MÁS LARGO del solape y deja el otro eje fijo en el centro — funciona bien
+   para una unión de CANTO (uno de los dos ejes libres es angosto: el espesor de un lateral,
+   por ejemplo), pero para un LAMINADO CARA A CARA de dos tableros ENTEROS (los dos ejes
+   libres son anchos, ej. la tapa doble de 1600×700) esto colapsa en una sola fila de
+   tornillos por el medio del panel — el resto de los 700 mm de profundidad queda sin ningún
+   tornillo, y dos placas pegadas así se pueden empezar a separar en los bordes. Para ese caso
+   puntual se arma una grilla real (perímetro + interior, ≤300 mm de paso en cada eje) en vez
+   de una fila. No se hace "solo perímetro" (como pediría un patrón de marco vacío): un panel
+   grande sin ningún tornillo en el medio también puede combarse entre capas — el objetivo es
+   que las dos placas queden pegadas en TODA el área, no solo en el borde. */
+function esUnionCaraACara(piezaA, piezaB, eje) {
+  const IDX = { x: 0, y: 1, z: 2 };
+  const otros = [0, 1, 2].filter(k => k !== IDX[eje]);
+  return otros.every(k => Math.min(piezaA.dim[k], piezaB.dim[k]) > 300);
+}
+function gridCaraACara(piezaA, piezaB, eje) {
+  const EJE = ["x", "y", "z"], IDX = { x: 0, y: 1, z: 2 };
+  const i = IDX[eje], [u, v] = [0, 1, 2].filter(k => k !== i);
+  const contacto = Math.abs((piezaA.pos[i] + piezaA.dim[i]) - piezaB.pos[i]) <= 3 ? piezaB.pos[i] : piezaA.pos[i];
+  const uIni = Math.max(piezaA.pos[u], piezaB.pos[u]), uFin = Math.min(piezaA.pos[u] + piezaA.dim[u], piezaB.pos[u] + piezaB.dim[u]);
+  const vIni = Math.max(piezaA.pos[v], piezaB.pos[v]), vFin = Math.min(piezaA.pos[v] + piezaA.dim[v], piezaB.pos[v] + piezaB.dim[v]);
+  const MARGEN = 50, PASO = 300;
+  const nu = Math.max(2, Math.ceil((uFin - uIni - 2*MARGEN) / PASO) + 1);
+  const nv = Math.max(2, Math.ceil((vFin - vIni - 2*MARGEN) / PASO) + 1);
+  const puntos = [];
+  for (let a = 0; a < nu; a++) for (let b = 0; b < nv; b++) {
+    const uu = uIni + MARGEN + (nu > 1 ? a * (uFin - uIni - 2*MARGEN) / (nu-1) : (uFin-uIni)/2);
+    const vv = vIni + MARGEN + (nv > 1 ? b * (vFin - vIni - 2*MARGEN) / (nv-1) : (vFin-vIni)/2);
+    const punto = [0, 0, 0];
+    punto[i] = contacto; punto[u] = uu; punto[v] = vv;
+    puntos.push({ x: punto[0], y: punto[1], z: punto[2], piezaA: piezaA.nombre, piezaB: piezaB.nombre, eje, caraACara: true });
+  }
+  return puntos;
+}
+function calcularUnionesDePaso(nombres) {
+  const puntos = calcularMarcadoresTornillo(nombres);
+  if (!puntos.length) return puntos;
+  const vistos = new Set(), resultado = [];
+  for (const pt of puntos) {
+    const clave = [pt.piezaA, pt.piezaB].sort().join("|") + "|" + pt.eje;
+    if (vistos.has(clave)) continue;
+    const piezaA = mueble.piezas.find(p => p.nombre === pt.piezaA);
+    const piezaB = mueble.piezas.find(p => p.nombre === pt.piezaB);
+    if (piezaA && piezaB && esUnionCaraACara(piezaA, piezaB, pt.eje)) {
+      vistos.add(clave);
+      resultado.push(...gridCaraACara(piezaA, piezaB, pt.eje));
+    } else {
+      resultado.push(pt);
+    }
+  }
+  return resultado;
+}
 /* D-033: UN solo tornillo por unión, dibujado donde va de verdad. Antes se dibujaban DOS
    por unión (uno "visto desde" cada pieza, unidos por una línea punteada) y quedaban
    flotando hacia las paredes del mueble o hacia el cajón de abajo — parecía que había que
@@ -2964,7 +3017,7 @@ function construirTornillosDePaso(nombres, offsetXesc = 0) {
   const centroGrupo = { x:(box.minX+box.maxX)/2, y:(box.minY+box.maxY)/2, z:(box.minZ+box.maxZ)/2 };
   const IDX = { x: 0, y: 1, z: 2 };
   const items = [];
-  for (const pt of calcularMarcadoresTornillo(nombres)) {
+  for (const pt of calcularUnionesDePaso(nombres)) {
     const piezaA = mueble.piezas.find(p => p.nombre === pt.piezaA);
     const piezaB = mueble.piezas.find(p => p.nombre === pt.piezaB);
     if (!piezaA || !piezaB) continue;
@@ -2981,7 +3034,10 @@ function construirTornillosDePaso(nombres, offsetXesc = 0) {
       (posMm[2] + v.z*EXPLODE_MM)*esc,
       (posMm[1] + v.y*EXPLODE_MM)*esc);
     const esClavo = pas.espesor <= 3;                     // fondo de 3 mm: va clavado (R-10)
-    const tornillo = esClavo ? crearClavo() : crearTornillo();
+    // D-044: en un laminado cara a cara (tapa doble) el tornillo NO debe atravesar las dos
+    // placas enteras — 30 mm alcanza para cruzar la pasante (18 mm) y morder ~12 mm de la
+    // otra, sin asomar por la cara visible de arriba (EST-008).
+    const tornillo = esClavo ? crearClavo() : crearTornillo(pt.caraACara ? 30 : undefined);
     orientarTornilloEje(tornillo, pt.eje, signo);
     tornillo.userData.baseQuat = tornillo.quaternion.clone();
     items.push({ tornillo, destino, eje: pt.eje, signo, esLinea: false });

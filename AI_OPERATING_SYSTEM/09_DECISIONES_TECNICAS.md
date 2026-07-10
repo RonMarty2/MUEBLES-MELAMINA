@@ -1043,6 +1043,44 @@ Formato de cada entrada:
 
 ---
 
+## D-044 — Grilla real para el laminado cara a cara de la tapa doble (EST-008)
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** pedido de "eliminar la grilla de área" en la tapa doble y reemplazarla por un
+  patrón perimetral (solo bordes) con tornillos de 30 mm.
+- **Verificación:** se leyeron los puntos reales que dibuja el programa para la unión
+  "Tapa capa inferior" ↔ "Tapa capa superior" (1600×700 mm): los 9 puntos existentes estaban
+  TODOS en y=350 (el centro exacto de los 700 mm de profundidad), variando solo en x — una
+  sola fila en el medio del panel, no una grilla de área como decía el reporte. Causa real:
+  `agregarSiSolapa` (usada por `calcularMarcadoresTornillo` desde D-021) espacia los puntos a
+  lo largo del eje MÁS LARGO del solape y fija el otro eje en el centro — funciona para una
+  unión de canto (un eje libre es angosto, el espesor de una pieza) pero para dos tableros
+  ENTEROS pegados cara a cara (los dos ejes libres son anchos) esto degenera en una fila.
+- **Decisión:** `esUnionCaraACara` detecta este caso (ambos ejes libres del contacto > 300 mm)
+  y `gridCaraACara` arma una grilla real (perímetro + interior, margen 50 mm, paso ≤300 mm,
+  mínimo 2×2) en vez de la fila. `calcularUnionesDePaso` envuelve `calcularMarcadoresTornillo`
+  y sustituye los puntos de un par cara-a-cara por la grilla — usado tanto por
+  `construirTornillosDePaso` (tornillos dorados) como por `construirGuiasPerforacion` (guías
+  rojas de D-039/D-041), así "Aislar y rayos-X" también muestra la grilla real. El tornillo en
+  este caso mide 30 mm (no el default de 55): con 18+18 mm de espesor total, 55 mm asomaría
+  19 mm por la cara visible de arriba; 30 mm cruza la pasante entera y muerde ~12 mm de la
+  otra sin llegar a la superficie decorativa. `nMarcadores` (el contador que se muestra en el
+  texto del paso) ahora usa `construirTornillosDePaso(...).length` en vez del detector
+  genérico, para que el número mostrado coincida con lo que realmente se dibuja (ya venía
+  desalineado desde D-042/D-043, que agregaron casos especiales sin actualizar el contador).
+- **Descartada — "solo perímetro" (como pedía el reporte):** un panel de 1600×700 mm sin
+  NINGÚN tornillo en el medio también se puede combar o separar entre capas con el tiempo — el
+  objetivo real de un laminado cara a cara es pegar TODA el área, no solo enmarcarla. La
+  grilla con paso ≤300 mm cumple el requisito real (sujeción firme en toda la superficie) sin
+  sacrificar resistencia por seguir la letra literal del pedido.
+- **Consecuencias:** cambio aditivo en `app_fuente.html` (`esUnionCaraACara`, `gridCaraACara`,
+  `calcularUnionesDePaso`; `construirTornillosDePaso`/`construirGuiasPerforacion`/`nMarcadores`
+  actualizados para usarlas). Motores intactos (128 Python + 83 JS, 0 errores de consola).
+  EST-008 documentada en `05_REGLAS_DE_CARPINTERIA.md`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```
