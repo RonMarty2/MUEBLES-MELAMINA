@@ -857,6 +857,44 @@ Formato de cada entrada:
 
 ---
 
+## D-038 — Planos técnicos de perforación imprimibles (EXP-001, regla nueva)
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** pedido de agregar un botón "Imprimir Planos de Perforación" que genere, por
+  pieza, un dibujo 2D acotado con las perforaciones reales y una leyenda de brocas, imprimible
+  con `window.print()` y sin librerías externas. El pedido citaba una regla "EXP-001" y
+  referencias "EST-001/EST-002" como si ya existieran en el sistema — se verificó el repo
+  entero (`grep -rn`) y esos códigos NO existían; se los documenta acá como NUEVOS en vez de
+  fingir que ya estaban.
+- **Decisión:** `piezasParaPlano()` agrupa piezas como en Cortes (excluye tubos/barrales, que
+  no llevan perforación). `perforacionesDePieza(p, pares)` calcula los puntos reales
+  reutilizando `calcularMarcadoresTornillo([""])` (con `[""]` escanea TODO el mueble, no un
+  paso) para hallar contactos pasante/receptor (misma lógica de D-033/D-035), más las
+  cazoletas de bisagra y los pasacables que ya vienen con x/y locales. `svgPlanoPieza` dibuja
+  contorno + cotas + marcas + leyenda en SVG (coherente con el estilo de `planoBisagra` /
+  `planoCorredera` ya existentes). `#print-planos` vive oculto y `@media print` esconde todo
+  lo demás con salto de página por pieza.
+- **Bugs encontrados y corregidos durante la implementación:**
+  1. **Falsos positivos por proximidad:** escanear TODO el mueble con la tolerancia de 3 mm
+     agarraba piezas que están cerca mas NO se atornillan entre sí (ej. una puerta con
+     bisagra, a pocos mm del zócalo por la holgura de apertura R-22, aparecía con tornillos
+     confirmat inventados). Fix: `paresValidosDeUnion()` solo acepta una unión si las dos
+     piezas aparecen JUNTAS en el `piezas` de algún paso real de `instruccionesArmadoJS`
+     (la fuente de verdad de qué se atornilla con qué) — de paso también sacó falsos
+     positivos entre cajones vecinos en el escritorio.
+  2. **Etiquetas de cota ilegibles:** con 9 tornillos alineados (tapa doble cada ~30 cm) las
+     cotas horizontales se superponían en una sola línea imposible de leer. Fix: las cotas
+     inferiores van en diagonal (45°), que ocupa mucho menos ancho por etiqueta.
+- **Descartada:** dibujar la unión SOLO por geometría sin cruzar contra los pasos de armado
+  — es más simple pero fabrica uniones que no existen, inaceptable para un plano que se va a
+  usar con taladro en mano.
+- **Consecuencias:** cambio aditivo en `app_fuente.html` (nuevo botón, CSS `@media print`,
+  funciones nuevas). Motores intactos (120 Python + 83 JS, 0 errores de consola). Regla
+  EXP-001 documentada en `05_REGLAS_DE_CARPINTERIA.md`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

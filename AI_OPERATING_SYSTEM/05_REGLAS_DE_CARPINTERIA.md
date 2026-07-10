@@ -129,6 +129,20 @@ motor son la misma idea: una tira de canto atornillada bajo la superficie que tr
 3. *4 cajones en cajonera baja:* frentes de 90 mm donde no entra ni un cargador → R-07.
 4. *Pieza de 2700 mm en el despiece:* no existe placa de la que sacarla → R-15.
 
+## Exportación de planos técnicos (nueva, D-038)
+
+- **EXP-001 — Planos de perforación imprimibles.** El sistema puede generar, por tipo de
+  pieza (agrupadas como en la pestaña Cortes), un plano 2D imprimible con: el contorno a
+  escala con las cotas de largo × ancho, cada perforación real marcada con su distancia a
+  los bordes, y una leyenda de diámetro/tipo de broca. Los puntos de perforación se calculan
+  con la MISMA geometría que ya usa la vista 3D de armado (pasante/receptor de R-09/P-01),
+  filtrados para que solo se dibuje una unión si las dos piezas aparecen juntas en algún
+  paso real de armado — así no se inventan tornillos por simple cercanía geométrica (ej. la
+  holgura de apertura de una puerta con bisagra, R-22). Todo dibujo lleva el aviso de que
+  las cotas en NÚMEROS son la referencia real, no medir con regla sobre la pantalla/impresión.
+  Implementado 100% en `app_fuente.html` (Vanilla JS + SVG), sin librerías externas, para
+  mantener el archivo único de distribución.
+
 ## Documentos relacionados
 
 - Medidas por defecto y ergonomía: `06_MEDIDAS_ESTANDAR.md`

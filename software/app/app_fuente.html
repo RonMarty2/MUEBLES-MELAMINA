@@ -122,9 +122,29 @@
   .colocacion-card h4 { margin: 0 0 6px; font-size: 13.5px; }
   .colocacion-card svg { width: 100%; max-width: 980px; height: auto; display: block; }
   .colocacion-nota { color: #555; line-height: 1.45; margin-top: 6px; }
+
+  /* ------------------------------------------------ EXP-001: planos técnicos imprimibles
+     (D-038). #print-planos vive oculto en pantalla; @media print lo muestra y esconde TODO
+     lo demás, con un salto de página por pieza. */
+  #print-planos { display: none; }
+  .plano-pagina { padding: 14px; }
+  .plano-pagina h2 { margin: 0 0 2px; font-size: 16px; }
+  .plano-pagina .plano-sub { font-size: 12px; color: #444; margin: 0 0 8px; }
+  .plano-aviso { background: #fef3c7; border: 1px solid #f59e0b; color: #7c4a03;
+                 padding: 6px 10px; border-radius: 6px; font-size: 11.5px; margin: 0 0 10px; }
+  .plano-leyenda { font-size: 11.5px; color: #333; margin-top: 8px; }
+  .plano-leyenda div { margin: 2px 0; }
+  @media print {
+    body * { visibility: hidden; }
+    #print-planos, #print-planos * { visibility: visible; }
+    #print-planos { display: block; position: absolute; top: 0; left: 0; width: 100%; }
+    .plano-pagina { page-break-after: always; }
+    .plano-pagina:last-child { page-break-after: auto; }
+  }
 </style>
 </head>
 <body>
+<div id="print-planos"></div>
 <header>
   <h1 id="titulo-app">🛠️ Diseñador de Muebles</h1>
   <div id="ia-caja">
@@ -137,6 +157,7 @@
     </span>
     <button id="btn-csv">⬇ Cortes CSV</button>
     <button id="btn-rb">⬇ SketchUp</button>
+    <button id="btn-print-planos">🖨️ Imprimir Planos de Perforación</button>
     <button id="btn-guardar" class="gris">💾 Guardar</button>
     <button id="btn-cargar" class="gris">📂 Abrir</button>
     <input type="file" id="archivo-receta" accept=".json">
@@ -2846,6 +2867,156 @@ function csvCortes() {
   return out;
 }
 
+/* ------------------------------------------------ EXP-001: planos técnicos imprimibles de
+   perforación (D-038 — regla nueva, no existía antes en el sistema de reglas R/M/H/P).
+   Un plano por TIPO de pieza (agrupadas como en Cortes), con:
+     - el contorno a escala con el largo × ancho reales,
+     - cada perforación real marcada con su distancia a los bordes,
+     - una leyenda con diámetro y tipo de broca.
+   Reutiliza la MISMA geometría que ya arma el 3D (pasante/receptor de D-033/D-035, R-09 para
+   la cantidad) — el plano impreso es lo mismo que se ve armar en pantalla, no un dibujo aparte. */
+function ejesDeCaraDePieza(p) {
+  let idxEspesor = 0, mejor = Infinity;
+  for (let i = 0; i < 3; i++) {
+    const d = Math.abs(p.dim[i] - p.espesor);
+    if (d < mejor) { mejor = d; idxEspesor = i; }
+  }
+  const ejes = [0, 1, 2].filter(i => i !== idxEspesor);
+  return { idxEspesor, ejeU: ejes[0], ejeV: ejes[1] };
+}
+function piezasParaPlano() {
+  if (!mueble) return [];
+  const grupos = new Map();
+  for (const p of mueble.piezas) {
+    if (/tubo/i.test(p.material) || /^Barral colgador/i.test(p.nombre)) continue;  // no es tablero: no lleva perforación
+    const base = p.nombre.replace(/ \(cuerpo \d+\)$/, "").replace(/ cajón \d+.*$/, "").replace(/ \(izq\)| \(der\)/, "").replace(/ \d+$/, "");
+    const k = `${base}|${p.largo}|${p.ancho}|${p.espesor}`;
+    if (!grupos.has(k)) grupos.set(k, { representante: p, base, cant: 0 });
+    grupos.get(k).cant++;
+  }
+  return [...grupos.values()];
+}
+// D-038: `calcularMarcadoresTornillo([""])` detecta contacto por PROXIMIDAD geométrica (TOL
+// 3 mm) entre CUALQUIER par de piezas del mueble — sirve para un paso curado a mano, pero
+// escaneando TODO el mueble agarra falsos positivos: ej. una puerta con bisagra queda a
+// pocos milímetros del zócalo por la holgura de apertura (R-22), y sin este filtro el plano
+// le dibujaba tornillos confirmat inventados que esa puerta nunca lleva (solo bisagras).
+// Un contacto solo es una unión REAL si las dos piezas aparecen JUNTAS en el mismo paso de
+// armado (`instruccionesArmadoJS` ya es la fuente de verdad de qué se atornilla con qué).
+function paresValidosDeUnion() {
+  const pasos = instruccionesArmadoJS(mueble, recetaActual);
+  const pares = [];
+  for (const s of pasos) {
+    const arr = s.piezas || [];
+    for (let i = 0; i < arr.length; i++)
+      for (let j = i + 1; j < arr.length; j++) pares.push([arr[i], arr[j]]);
+  }
+  return pares;
+}
+function esUnionValida(pares, nombreA, nombreB) {
+  return pares.some(([pa, pb]) =>
+    (nombreA.startsWith(pa) && nombreB.startsWith(pb)) || (nombreA.startsWith(pb) && nombreB.startsWith(pa)));
+}
+function perforacionesDePieza(p, pares) {
+  const EJE = ["x", "y", "z"], IDX = { x: 0, y: 1, z: 2 };
+  const { idxEspesor, ejeU, ejeV } = ejesDeCaraDePieza(p);
+  const marcas = [];
+  if (p.espesor > 3) {  // los fondos/clavos (≤3mm) no llevan punto exacto: ver nota de la pieza (R-10)
+    for (const pt of calcularMarcadoresTornillo([""])) {  // [""] matchea TODO el mueble (startsWith("") siempre true)
+      if (pt.piezaA !== p.nombre && pt.piezaB !== p.nombre) continue;
+      if (!esUnionValida(pares, pt.piezaA, pt.piezaB)) continue;
+      const otro = mueble.piezas.find(q => q.nombre === (pt.piezaA === p.nombre ? pt.piezaB : pt.piezaA));
+      if (!otro || otro.espesor <= 3) continue;
+      const i = IDX[pt.eje];
+      const esPasante = p.dim[i] <= otro.dim[i];
+      if (esPasante && i === idxEspesor) {
+        marcas.push({ tipo: "pasante", u: pt[EJE[ejeU]] - p.pos[ejeU], v: pt[EJE[ejeV]] - p.pos[ejeV],
+          d: 4.5, nota: "Confirmat pasante Ø4,5 (P-01)" });
+      } else if (!esPasante && (i === ejeU || i === ejeV)) {
+        const ejeOtro = (i === ejeU) ? ejeV : ejeU;
+        const pos = pt[EJE[ejeOtro]] - p.pos[ejeOtro];
+        const alInicio = Math.abs(pt[EJE[i]] - p.pos[i]) < Math.abs(pt[EJE[i]] - (p.pos[i] + p.dim[i]));
+        marcas.push({ tipo: "canto", eje: i === ejeU ? "u" : "v", extremo: alInicio ? 0 : 1, pos,
+          d: 3, nota: "Confirmat: piloto Ø3 en el canto (pieza que recibe)" });
+      }
+    }
+  }
+  for (const pf of (mueble.perforaciones || []))
+    if (pf.pieza === p.nombre && pf.x !== undefined)
+      marcas.push({ tipo: "pasante", u: pf.x, v: pf.y, d: pf.d, nota: pf.detalle });
+  if (/^Tapa( capa superior \(visible\))?$/.test(p.nombre))
+    for (const g of (mueble.grommets || []))
+      marcas.push({ tipo: "pasante", u: g.x - p.pos[ejeU], v: g.y - p.pos[ejeV], d: g.d, nota: `Pasacables Ø${g.d}` });
+  return { sizeU: p.dim[ejeU], sizeV: p.dim[ejeV], marcas };
+}
+function svgPlanoPieza(p, datos) {
+  const { sizeU, sizeV, marcas } = datos;
+  const MARGEN = 60, ESC = Math.min(700 / sizeU, 420 / sizeV, 0.6);
+  const w = sizeU * ESC, h = sizeV * ESC;
+  const x0 = MARGEN, y0 = MARGEN, MARGEN_INF = 95;
+  let svg = `<svg viewBox="0 0 ${w + MARGEN * 2} ${h + MARGEN + MARGEN_INF}" style="width:100%;max-width:820px;height:auto">
+    <rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#f3f2ef" stroke="#333" stroke-width="2"/>
+    <text x="${x0 + w / 2}" y="${y0 - 14}" text-anchor="middle" font-size="13" font-weight="700" fill="#111">${fmtCota(sizeU)}</text>
+    <text x="${x0 - 42}" y="${y0 + h / 2}" text-anchor="middle" font-size="13" font-weight="700" fill="#111" transform="rotate(-90 ${x0 - 42} ${y0 + h / 2})">${fmtCota(sizeV)}</text>`;
+  let n = 0;
+  const tiposUsados = new Map();
+  for (const m of marcas) {
+    n++;
+    const clave = `${m.d}|${m.nota}`;
+    if (!tiposUsados.has(clave)) tiposUsados.set(clave, { d: m.d, nota: m.nota, cant: 0 });
+    tiposUsados.get(clave).cant++;
+    if (m.tipo === "pasante") {
+      const cx = x0 + m.u * ESC, cy = y0 + (sizeV - m.v) * ESC;  // v desde abajo -> pantalla invertida
+      const r = Math.max(m.d * ESC / 2, 4);
+      // D-038: con muchas marcas alineadas (ej. 9 tornillos de tapa doble cada ~30 cm) las
+      // cotas horizontales chocaban entre sí (texto ilegible, superpuesto). Van en diagonal
+      // (45°), que ocupa mucho menos ancho por etiqueta que el texto horizontal.
+      svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#c8940f" stroke-width="2"/>
+        <line x1="${cx - r - 4}" y1="${cy}" x2="${cx + r + 4}" y2="${cy}" stroke="#c8940f" stroke-width="1.4"/>
+        <line x1="${cx}" y1="${cy - r - 4}" x2="${cx}" y2="${cy + r + 4}" stroke="#c8940f" stroke-width="1.4"/>
+        <text x="${cx + r + 6}" y="${cy - r - 4}" font-size="10" fill="#111">${n}</text>
+        <line x1="${cx}" y1="${cy}" x2="${x0 - 8}" y2="${cy}" stroke="#999" stroke-width="0.7" stroke-dasharray="2,2"/>
+        <text x="${x0 - 12}" y="${cy + 3}" text-anchor="end" font-size="9.5" fill="#555">${fmtMmCrudo(Math.round(m.v * 10) / 10)}</text>
+        <line x1="${cx}" y1="${cy}" x2="${cx}" y2="${y0 + h + 8}" stroke="#999" stroke-width="0.7" stroke-dasharray="2,2"/>
+        <text x="${cx + 3}" y="${y0 + h + 16}" font-size="9" fill="#555" transform="rotate(55 ${cx + 3} ${y0 + h + 16})">${fmtMmCrudo(Math.round(m.u * 10) / 10)}</text>`;
+    } else {
+      // eje="u": el contacto es perpendicular a U -> el canto es el borde IZQUIERDO/DERECHO
+      // (vertical), y "pos" es la posición a lo largo de V. eje="v": borde ARRIBA/ABAJO
+      // (horizontal), "pos" a lo largo de U.
+      const enU = m.eje === "u";
+      const cx = enU ? (m.extremo === 0 ? x0 : x0 + w) : x0 + m.pos * ESC;
+      const cy = enU ? y0 + (sizeV - m.pos) * ESC : (m.extremo === 0 ? y0 + h : y0);
+      svg += `<circle cx="${cx}" cy="${cy}" r="5" fill="#8b959f" stroke="#333" stroke-width="1"/>
+        <text x="${cx + 7}" y="${cy - 6}" font-size="10" fill="#111">${n}</text>`;
+    }
+  }
+  svg += "</svg>";
+  let leyenda = `<div class="plano-leyenda"><b>Leyenda</b>`;
+  let i2 = 0;
+  for (const t of tiposUsados.values()) {
+    i2++;
+    leyenda += `<div>🟡 ${i2}. Ø${fmtMmCrudo(t.d)} × ${t.cant} — ${convAvisos(t.nota)}</div>`;
+  }
+  leyenda += "</div>";
+  return svg + leyenda;
+}
+function construirPlanosImpresion() {
+  if (!mueble) return "";
+  const pares = paresValidosDeUnion();
+  let out = "";
+  for (const g of piezasParaPlano()) {
+    const p = g.representante;
+    const datos = perforacionesDePieza(p, pares);
+    out += `<div class="plano-pagina">
+      <h2>${g.base} <span style="font-weight:400;color:#666">(${g.cant} unid.)</span></h2>
+      <p class="plano-sub">${fmtCota(p.largo)} × ${fmtCota(p.ancho)} × ${p.espesor} mm — ${p.material}${p.cantos ? " — cantos: " + p.cantos : ""}</p>
+      <div class="plano-aviso">⚠️ Usá las <b>COTAS EN NÚMEROS</b> con tu propia cinta métrica para marcar cada punto — este dibujo es esquemático (no está garantizado a escala real según tu impresora).${p.notas ? " " + convAvisos(p.notas) : ""}</div>
+      ${svgPlanoPieza(p, datos)}
+    </div>`;
+  }
+  return out;
+}
+
 /* ------------------------------------------------ IA opcional (08_REGLAS_PARA_IAS) */
 const SYSTEM_PROMPTS = {
   escritorio_gamer: `Sos el asistente de diseño de un software de muebles de melamina. Tu única salida válida es una receta JSON (esquema 1.0). Respondé SOLO el JSON, sin texto ni comillas. Medidas en mm enteros. Campos: tipo_mueble:"escritorio_gamer"; dimensiones{ancho 900-2400 def 1600, profundidad 500-900 def 700, alto 700-800 def 750}; tapa{tipo:"auto"|"simple_18"|"doble_18"|"simple_25" def "auto"}; material{color def "Blanco"}; cajonera{posicion:"derecha"|"izquierda"|"ninguna" def "derecha", ancho 300-600 def 400, cantidad_cajones 1-4 def 3}; soporte_cpu{incluir def true, ancho 200-350 def 250}; pasacables{cantidad 0-4 def 2, diametro 60|80 def 60}; elevacion_monitor{incluir def false, ancho 500-1200 def 800, profundidad 200-350 def 250}; uniones{tipo:"confirmat"|"excentrica" def "confirmat" (usar excentrica si el usuario va a mover/mudar el mueble)}. Fuera de rango: usá el límite más cercano. No inventes campos. Si te doy la receta actual y un cambio, devolvé la receta COMPLETA modificando solo lo pedido. Incluí siempre "version":"1.0" y "tipo_mueble".`,
@@ -3176,6 +3347,12 @@ window.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => window.dispatchEvent(new Event("resize")), 160);
   };
   pintarExpandido();
+
+  $("btn-print-planos").onclick = () => {
+    if (!mueble) { alert("Corregí los errores marcados en rojo antes de imprimir los planos."); return; }
+    $("print-planos").innerHTML = construirPlanosImpresion();
+    window.print();
+  };
 
   inyectarAyudas();
   iniciar3D();
