@@ -1081,6 +1081,27 @@ Formato de cada entrada:
 
 ---
 
+## D-045 — Ajuste de densidad de la grilla cara-a-cara: 300 → 700 mm (EST-008 v2)
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** tras D-044 (grilla real en vez de 1 sola fila), se pidió reducir a un número
+  fijo (4-6 tornillos sin importar el tamaño de la tapa) argumentando que la cola vinílica ya
+  hace de sujeción principal. Se rechazó esa versión: un número fijo no escala con el tamaño y
+  desatiende justo las tapas más grandes (>2000 mm, donde más importa la presión pareja al
+  secar). El pedido se ajustó a una versión con la que sí hay acuerdo: mantener una grilla
+  proporcional al tamaño (crece con el ancho real) pero de paso más grande.
+- **Decisión:** `PASO` en `gridCaraACara` baja de 300 a 700 mm. Con cola en toda la superficie
+  + peso durante el secado (ya documentado en el texto del paso), no hace falta un tornillo
+  cada 300 mm. Resultado: 1600 mm → 8 tornillos (antes 18); 2400 mm → 10. Sigue siendo una
+  grilla real (perímetro + interior), no una fila ni un número fijo — el vector sigue
+  entrando de abajo hacia arriba (sin cambios, ya era correcto desde D-044).
+- **Consecuencias:** cambio de una constante en `app_fuente.html` (`gridCaraACara`). Motores
+  intactos (128 Python + 83 JS, 0 errores de consola). Nota agregada a EST-008 en
+  `05_REGLAS_DE_CARPINTERIA.md`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

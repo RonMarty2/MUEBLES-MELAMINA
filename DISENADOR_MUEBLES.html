@@ -2901,7 +2901,11 @@ function gridCaraACara(piezaA, piezaB, eje) {
   const contacto = Math.abs((piezaA.pos[i] + piezaA.dim[i]) - piezaB.pos[i]) <= 3 ? piezaB.pos[i] : piezaA.pos[i];
   const uIni = Math.max(piezaA.pos[u], piezaB.pos[u]), uFin = Math.min(piezaA.pos[u] + piezaA.dim[u], piezaB.pos[u] + piezaB.dim[u]);
   const vIni = Math.max(piezaA.pos[v], piezaB.pos[v]), vFin = Math.min(piezaA.pos[v] + piezaA.dim[v], piezaB.pos[v] + piezaB.dim[v]);
-  const MARGEN = 50, PASO = 300;
+  // EST-008 (D-045): con cola vinílica en toda la superficie + peso durante el secado, no
+  // hace falta un tornillo cada 300 mm — 700 mm de paso sigue creciendo con el tamaño real
+  // de la tapa (no es un número fijo) pero baja la densidad visual sin dejar sin soporte a
+  // los tableros grandes (>2000 mm), que es donde más importa la presión pareja al secar.
+  const MARGEN = 50, PASO = 700;
   const nu = Math.max(2, Math.ceil((uFin - uIni - 2*MARGEN) / PASO) + 1);
   const nv = Math.max(2, Math.ceil((vFin - vIni - 2*MARGEN) / PASO) + 1);
   const puntos = [];

@@ -210,6 +210,13 @@ motor son la misma idea: una tira de canto atornillada bajo la superficie que tr
   usaba el largo por defecto de 55 mm, que con dos capas de 18 mm asomaría 19 mm por la cara
   visible de arriba). El modo "Aislar y rayos-X" (guías rojas) usa la misma detección, así
   que muestra la grilla real también.
+  **Actualización (D-045):** el paso de la grilla bajó de 300 a 700 mm — con cola vinílica en
+  toda la superficie + peso durante el secado (ya lo dice el texto del paso), no hace falta
+  un tornillo cada 300 mm; 700 mm sigue siendo proporcional al tamaño real de la tapa (crece
+  con el ancho, no es un número fijo), pero baja la densidad visual. Ej.: 1600 mm → 8
+  tornillos; 2400 mm → 10. Se descartó fijar un número absoluto (ej. "6 tornillos siempre")
+  porque no escala con el tamaño y desatiende justo las tapas más grandes (>2000 mm), donde
+  más importa la presión pareja al secar.
 
 ## Documentos relacionados
 
