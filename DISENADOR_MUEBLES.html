@@ -1972,6 +1972,11 @@ function pintarArmado(c) {
   const pasos = instruccionesArmadoJS(mueble, recetaActual);
   if (pasoArmadoActivo >= pasos.length) pasoArmadoActivo = 0;
   const p = pasos[pasoArmadoActivo];
+  const hayCorrederaPaso = p.subEnsamble && /corredera/i.test(p.herraje || "");
+  const lateralCajaPaso = hayCorrederaPaso
+    ? mueble.piezas.find(pp => /Lateral caja cajón/i.test(pp.nombre) && p.piezas.some(n => pp.nombre.startsWith(n)))
+    : null;
+  const largoRielPaso = lateralCajaPaso ? Math.round(lateralCajaPaso.dim[1]) : 0;
   const tieneCantos = p.piezas.some(n => {
     const real = mueble.piezas.find(pp => pp.nombre.startsWith(n));
     return real && real.cantos;
@@ -2011,6 +2016,10 @@ function pintarArmado(c) {
               <button id="btn-insertar-sub" class="btn-paso-grande gris">📥 Insertar en el mueble</button>
              </div>`
           : `<button id="btn-animar-paso" class="btn-paso-grande">▶ Ver cómo se arma este paso</button>`}` : ""}
+        ${hayCorrederaPaso ? `<div style="margin-top:8px">
+          <label for="slider-cajon" style="font-size:12.5px;color:#333;display:block;margin-bottom:4px">🖐️ <b>Deslizar cajón</b> (probá que corra suave sobre el riel): <b id="slider-cajon-val">0 mm</b></label>
+          <input type="range" id="slider-cajon" min="0" max="${largoRielPaso}" value="0" style="width:100%">
+        </div>` : ""}
         ${nMarcadores ? `<p class="nota">🟡 Hay <b>${nMarcadores} tornillo(s)/clavo(s)</b> dibujados en el 3D, cada uno del lado por donde ENTRA de verdad: <b>la cabeza queda sobre la cara donde apoyás el destornillador</b> y la punta apunta hacia la pieza que agarra. Los tornillos SOLO unen las piezas de este paso entre sí — nunca la caja del cajón al mueble (el cajón solo se apoya en sus correderas). Los clavos finitos grises son el fondo de 3 mm clavado. Con tu pieza real en mano: medí esa posición, marcá con lápiz, <b>perforá primero</b> con la broca de la tarjeta de abajo y <b>recién después atornillá</b>.</p>` : ""}
         ${tieneCantos ? `<p class="nota">🟠 Los bordes <b>naranjas</b> de estas piezas llevan tapacanto (cinta de terminación): <b>no se perfora ni se pega con cola</b>. Se coloca con una <b>plancha de ropa caliente</b> (el tapacanto ya trae pegamento termofusible en la parte de atrás; el calor lo activa) — apoyá la cinta sobre el canto y pasá la plancha unos segundos hasta que se adhiera, presionando con un trapo. Después recortá el sobrante de los costados con un cutter o una lima, al ras.</p>` : ""}
         ${p.herraje ? `<p class="nota">🔩 <b>Herraje que necesitás:</b> ${p.herraje}</p>${tarjetasHerrajes(p.herraje, mueble, false)}` : ""}
@@ -2057,6 +2066,14 @@ function pintarArmado(c) {
     btnCompleto.onclick = () => reproducirArmadoCompleto();
     btnCompleto.disabled = reproduciendoTodo;
     if (reproduciendoTodo) btnCompleto.textContent = "🎬 Reproduciendo… (tocá un paso para cortar)";
+  }
+  const sliderCajon = $("slider-cajon");
+  if (sliderCajon) {
+    sliderCajon.oninput = () => {
+      const v = +sliderCajon.value;
+      $("slider-cajon-val").textContent = fmtMmCrudo(v);
+      aplicarDeslizamientoCajon(p.piezas, v);
+    };
   }
   // Cada paso arranca desde ARRIBA: sin esto, "Siguiente" heredaba el scroll del paso
   // anterior y el nuevo paso aparecía por la mitad, con el título y el diagrama ocultos
@@ -2237,6 +2254,7 @@ function aplicarResaltadoPaso() {
   const pasos = instruccionesArmadoJS(mueble, recetaActual);
   const p = pasos[pasoArmadoActivo];
   const nombres = p ? p.piezas : [];
+  resetDeslizamientoCajon();  // D-041: cada paso arranca sin desplazamiento acumulado
   resaltarPiezas(nombres);
   resaltarCantos(nombres);
   aplicarVisibilidadAcumulada(nacimientosDePiezas(pasos), pasoArmadoActivo, nombres);
@@ -2887,11 +2905,12 @@ function pintarRieles(nombres, hayCorredera, mesadaOffset = 0) {
   const centro = { x:(box.minX+box.maxX)/2, y:(box.minY+box.maxY)/2, z:(box.minZ+box.maxZ)/2 };
   // Cada mitad mide 12 de grosor: las dos juntas entran en la holgura real de 13 mm por
   // lado (R-05) sin superponerse cuando el cajón queda insertado.
-  function crearMitadRiel(color, xMm, zMm, yMm, largoMm, extraDeslizMm) {
+  function crearMitadRiel(color, xMm, zMm, yMm, largoMm, extraDeslizMm, movil) {
     const geo = new THREE.BoxGeometry(12*esc, largoMm*esc, 26*esc);
     const mat = new THREE.MeshPhongMaterial({ color, specular: 0xffffff, shininess: 80 });
     const riel = new THREE.Mesh(geo, mat);
     riel.rotation.x = Math.PI/2;
+    riel.userData.movil = !!movil;  // D-041: distingue la mitad que viaja con el cajón (para el slider "deslizar cajón")
     const destino = new THREE.Vector3(xMm*esc, zMm*esc, yMm*esc);
     riel.position.set(destino.x, destino.y, destino.z + extraDeslizMm*esc);  // entra desde el frente
     moverA(riel, destino, 500);
@@ -2908,7 +2927,7 @@ function pintarRieles(nombres, hayCorredera, mesadaOffset = 0) {
     const altoRiel = pz + pdz/2;
     // Guía MÓVIL: sobre la cara exterior del lateral del cajón — viaja con el cajón (mesada).
     crearMitadRiel(0x38424c, px + pdx/2 + signoX*(pdx/2 + 6) + mesadaOffset/esc, altoRiel,
-      py + pdy/2, pdy, 140);
+      py + pdy/2, pdy, 140, true);
     // Guía FIJA: sobre la cara interior de la pared del mueble que enfrenta a este lateral.
     // Ron: "no veo la colocación del riel en el escritorio" — esta es la mitad que se
     // atornilla al mueble, y se queda en el mueble aunque el cajón esté en la mesada.
@@ -2921,9 +2940,28 @@ function pintarRieles(nombres, hayCorredera, mesadaOffset = 0) {
     }
     if (pared) {
       const caraPared = signoX > 0 ? pared.pos[0] : pared.pos[0] + pared.dim[0];
-      crearMitadRiel(0x8b959f, caraPared - signoX*6, altoRiel, py + pdy/2, pdy, 200);
+      crearMitadRiel(0x8b959f, caraPared - signoX*6, altoRiel, py + pdy/2, pdy, 200, false);
     }
   }
+}
+/* ------------------------------------------------ D-041: "Deslizar cajón" — simulación
+   cinemática del paso de corredera. Traduce la caja del cajón + la mitad MÓVIL del riel a
+   lo largo del eje de profundidad, para ver/probar que el cajón corre suave sobre su riel.
+   Es un desplazamiento INCREMENTAL relativo al valor anterior del control, así funciona sin
+   importar si el cajón está en la mesada o ya insertado en el mueble. */
+let deslizamientoCajonMm = 0;
+function resetDeslizamientoCajon() { deslizamientoCajonMm = 0; }
+function aplicarDeslizamientoCajon(nombresCaja, mmNuevo) {
+  const esc = 0.001;
+  const deltaMm = mmNuevo - deslizamientoCajonMm;
+  deslizamientoCajonMm = mmNuevo;
+  const deltaSceneZ = -deltaMm * esc;  // +mm = "sacar" el cajón hacia el frente (afuera del mueble)
+  for (const m of mallas) {
+    if (m.userData.pieza === undefined) continue;
+    if (!nombresCaja.some(n => m.userData.pieza.startsWith(n))) continue;
+    m.position.z += deltaSceneZ;
+  }
+  for (const r of rielMeshes) if (r.userData.movil) r.position.z += deltaSceneZ;
 }
 
 /* ------------------------------------------------ descargas y archivo */

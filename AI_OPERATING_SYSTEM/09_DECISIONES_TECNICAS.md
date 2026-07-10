@@ -932,6 +932,43 @@ Formato de cada entrada:
 
 ---
 
+## D-041 — Simulación cinemática "Deslizar cajón" (UX-002); HER-001 ya cubierto por calidad
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** pedido de (a) un control interactivo para simular la extracción/inserción del
+  cajón sobre su corredera, (b) un selector manual de "Tipo de Corredera" con holguras
+  distintas por tipo (incluida una "corredera oculta"/undermount), y (c) reestructurar los
+  cajones en un `THREE.Group` real con la guía fija parentada al lateral del mueble.
+- **Decisión — implementado (a):** en el paso "Colocá la corredera y meté el cajón" aparece un
+  `<input type="range">` que traduce la caja del cajón + la mitad móvil del riel a lo largo
+  del riel real (0 a su largo real), simulando abrir/cerrar. El desplazamiento es
+  **incremental** (relativo al valor anterior del control, `aplicarDeslizamientoCajon`), así
+  funciona sin importar si el cajón está en la mesada o ya insertado — no depende de conocer
+  la posición "base" exacta en cada estado.
+- **Decisión — (b) ya estaba cubierto, no se duplica:** el sistema YA elige corredera de
+  rodillo / telescópica estándar / soft-close según `calidad.nivel` (D-018,
+  `correderaCalidad`), cada una con su propio nombre de compra, precio y holgura de 13 mm por
+  lado. Agregar un selector manual de "tipo" independiente habría creado dos controles
+  compitiendo por la misma decisión real (calidad vs tipo), con recetas potencialmente
+  contradictorias (ej. calidad=premium pero tipo=económica). La variante "oculta" (montaje
+  por debajo) NO se implementó: es un modelo físico distinto (hueco bajo el fondo, sin rieles
+  laterales) que este sistema no calcula todavía; simularla cambiando solo un número de
+  holgura sin dibujar la pieza real habría sido una función falsa, no una real.
+- **Decisión — (c) no se hizo:** migrar la gestión de mallas a `THREE.Group` reales es una
+  refactorización invasiva de todo el sistema de escena (mallas sueltas + `userData.posBase`,
+  usado por `moverA`/`explotarPiezas`/`colocarEnMesada`/D-021 a D-041) sin beneficio funcional
+  nuevo: el comportamiento pedido (piezas del cajón que se mueven juntas) ya se logra moviendo
+  cada malla del cajón por igual, que es exactamente lo que hace (a). Reescribir el sistema de
+  escena entero arriesgaba romper funciones ya verificadas por una preferencia de arquitectura,
+  no por una necesidad real.
+- **Consecuencias:** cambio aditivo en `app_fuente.html` (`crearMitadRiel` etiqueta
+  `userData.movil`; `aplicarDeslizamientoCajon`/`resetDeslizamientoCajon`; slider en
+  `pintarArmado`). Motores intactos (120 Python + 83 JS, 0 errores de consola). UX-002/HER-001
+  documentados en `05_REGLAS_DE_CARPINTERIA.md`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

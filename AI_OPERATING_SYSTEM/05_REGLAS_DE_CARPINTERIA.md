@@ -154,6 +154,18 @@ motor son la misma idea: una tira de canto atornillada bajo la superficie que tr
   semitransparente (`THREE.CylinderGeometry`, `0xff0000`, opacity 0.6) orientado con
   `quaternion.setFromUnitVectors` en el ángulo exacto de entrada de la broca, con el largo
   igual al espesor real de la pieza que se atraviesa (simula la profundidad de perforación).
+- **UX-002 — Simulación cinemática: deslizar el cajón (D-041).** En el paso "Colocá la
+  corredera y meté el cajón" aparece un control deslizante que mueve la caja del cajón + la
+  mitad móvil del riel a lo largo del riel real (0 hasta el largo real de la corredera), para
+  ver/probar que corre suave. El desplazamiento es relativo al valor anterior del control
+  (no un reset absoluto), así funciona tanto si el cajón está en la mesada como ya insertado.
+- **HER-001 — Tipos de corredera.** El sistema YA soporta corredera de rodillo (económica),
+  telescópica estándar y telescópica soft-close (premium) — elegidos automáticamente por
+  `calidad.nivel`, con su propio nombre de compra y holgura de 13 mm por lado (R-05). Una
+  cuarta variante, "corredera oculta" (montaje por debajo, sin rieles laterales visibles), NO
+  está modelada: requeriría geometría de caja distinta (hueco debajo del fondo en vez de
+  holgura lateral) que este sistema todavía no calcula; agregarla es trabajo pendiente, no
+  algo que se puede simular cambiando solo un número sin representar la pieza real.
 
 ## Documentos relacionados
 
