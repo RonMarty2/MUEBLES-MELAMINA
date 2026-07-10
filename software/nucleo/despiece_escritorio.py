@@ -74,6 +74,7 @@ def despiece_escritorio(receta):
     tapacanto_grueso_mm = 0   # H-09 (2 mm)
     regatones = 0
     tornillos_frente = 0      # H-04 (4×30)
+    tirador_cant = 0          # HER-002
 
     # ------------------------------------------------------------------ Tapa
     if receta["tapa"]["tipo"] == "doble_18":
@@ -221,14 +222,24 @@ def despiece_escritorio(receta):
             f"de {largo_corr} mm (R-05/R-08)."
         )
 
+        tipo_tirador = caj.get("tipo_tirador", "manija")  # HER-002: manija | unero | push
         for i in range(n):
             z_frente = e + i * (alto_frente + 3)
             z_caja = z_frente + 15
             num = i + 1
+            if tipo_tirador == "unero":
+                nota_frente = ("Se fija desde adentro con 4 tornillos 4×30 (H-04). Corte uñero: "
+                               "rebaje semicircular en el canto superior (sin tirador comprado).")
+            elif tipo_tirador == "push":
+                nota_frente = ("Se fija desde adentro con 4 tornillos 4×30 (H-04). "
+                               "Sistema push: frente liso, sin tirador.")
+            else:
+                nota_frente = "Se fija desde adentro con 4 tornillos 4×30 (H-04)"
+                tirador_cant += 1
             piezas.append(Pieza(f"Frente cajón {num}", C - 4, alto_frente, e, mat,
                                 (x0 + 2, y0 - e, z_frente), (C - 4, e, alto_frente),
                                 cantos="4 cantos visibles",
-                                notas="Se fija desde adentro con 4 tornillos 4×30 (H-04)"))
+                                notas=nota_frente))
             piezas.append(Pieza(f"Lateral caja cajón {num} (izq)", largo_corr, alto_caja, e, mat,
                                 (x_caja, y0, z_caja), (e, largo_corr, alto_caja)))
             piezas.append(Pieza(f"Lateral caja cajón {num} (der)", largo_corr, alto_caja, e, mat,
@@ -373,6 +384,9 @@ def despiece_escritorio(receta):
                             "fijar frentes de cajón desde adentro y laminar tapa doble"))
     if con_cajonera:
         herrajes.append(corredera_calidad(nivel, largo_corr, caj["cantidad_cajones"]))
+    if tirador_cant > 0:
+        herrajes.append(Herraje("H-15", "Tirador", tirador_cant, "unidades",
+                                "uno por frente de cajón (manija)"))
     if pas["cantidad"] > 0:
         herrajes.append(Herraje("H-06", f"Grommet pasacables Ø{pas['diametro']}",
                                 pas["cantidad"], "unidades",

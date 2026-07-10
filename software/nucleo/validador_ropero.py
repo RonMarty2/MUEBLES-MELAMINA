@@ -26,7 +26,8 @@ DEFECTOS = {
     "calidad": {"nivel": "estandar"},  # D-018: economico | estandar | premium
     "cuerpos": {"cantidad": 1},        # R-30: módulos independientes atornillados entre sí
     "puertas": {"tipo": "batiente", "cantidad": 2},
-    "cajones": {"incluir": False, "ancho": 400, "cantidad_cajones": 3},
+    "cajones": {"incluir": False, "ancho": 400, "cantidad_cajones": 3,
+                "tipo_tirador": "manija"},  # HER-002: manija | unero | push
     "estante_inferior": {"incluir": False},
 }
 
@@ -47,6 +48,7 @@ OPCIONES = {
     ("uniones", "tipo"): (["confirmat", "excentrica"], "R-26"),
     ("calidad", "nivel"): (["economico", "estandar", "premium"], "D-018"),
     ("puertas", "tipo"): (["batiente", "corrediza", "ninguna"], "R-21/R-23"),
+    ("cajones", "tipo_tirador"): (["manija", "unero", "push"], "HER-002"),
 }
 
 CAMPOS_CONOCIDOS = {
@@ -58,7 +60,7 @@ CAMPOS_CONOCIDOS = {
     "calidad": ["nivel"],
     "cuerpos": ["cantidad"],
     "puertas": ["tipo", "cantidad"],
-    "cajones": ["incluir", "ancho", "cantidad_cajones"],
+    "cajones": ["incluir", "ancho", "cantidad_cajones", "tipo_tirador"],
     "estante_inferior": ["incluir"],
 }
 

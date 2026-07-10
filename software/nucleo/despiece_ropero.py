@@ -185,14 +185,22 @@ def despiece_ropero(receta):
                 "estante adicional."
             )
 
+            tipo_tirador = caj.get("tipo_tirador", "manija")  # HER-002: manija | unero | push
             for i in range(n):
                 z_frente = ZOCALO + e + i * (alto_frente + 3)
                 z_caja = z_frente + 15
                 num = i + 1
+                if tipo_tirador == "unero":
+                    nota_frente = ("Fijado desde adentro con 4 tornillos 4×30. Corte uñero: "
+                                   "rebaje semicircular en el canto superior (sin tirador comprado).")
+                elif tipo_tirador == "push":
+                    nota_frente = "Fijado desde adentro con 4 tornillos 4×30. Sistema push: frente liso, sin tirador."
+                else:
+                    nota_frente = "Fijado desde adentro con 4 tornillos 4×30"
                 piezas.append(Pieza(f"Frente cajón {num}{suf}", C - 4, alto_frente, e, mat,
                                     (x0 + 2, 0, z_frente), (C - 4, e, alto_frente),
                                     cantos="4 cantos visibles",
-                                    notas="Fijado desde adentro con 4 tornillos 4×30"))
+                                    notas=nota_frente))
                 piezas.append(Pieza(f"Lateral caja cajón {num} (izq){suf}", largo_corr, alto_caja, e, mat,
                                     (x_c, 0, z_caja), (e, largo_corr, alto_caja)))
                 piezas.append(Pieza(f"Lateral caja cajón {num} (der){suf}", largo_corr, alto_caja, e, mat,
@@ -214,7 +222,7 @@ def despiece_ropero(receta):
                     f"eje corredera cajón {num}: centro a {eje_relativo} mm del canto inferior "
                     f"de la caja y a {eje} mm del piso del mueble (P-02); fijar con tornillos 4×16"))
 
-            tiradores_cajones += n
+            tiradores_cajones += n if tipo_tirador == "manija" else 0
             corredera_info = (largo_corr, n)
             ancho_barral_zona = (x0 - e) - (xo + e)  # lo que queda para el barral
 

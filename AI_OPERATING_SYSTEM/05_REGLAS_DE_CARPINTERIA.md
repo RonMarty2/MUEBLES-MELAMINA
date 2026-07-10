@@ -166,6 +166,36 @@ motor son la misma idea: una tira de canto atornillada bajo la superficie que tr
   está modelada: requeriría geometría de caja distinta (hueco debajo del fondo en vez de
   holgura lateral) que este sistema todavía no calcula; agregarla es trabajo pendiente, no
   algo que se puede simular cambiando solo un número sin representar la pieza real.
+- **EST-005 — Tornillos del frente de cajón (D-042).** El "Frente" (decorativo) se atornilla
+  SIEMPRE desde ADENTRO del cajón: el tornillo atraviesa el "Frente interno" y se ancla en el
+  Frente sin perforarlo del todo — esto ya estaba en el texto de la guía, y ahora también se
+  dibuja en 3D (4 tornillos cerca de las esquinas, cabeza en la cara interior). Nunca se
+  atornilla desde afuera del mueble (se vería la cabeza en la cara linda).
+- **HER-002 — Tipo de tirador (D-042).** Selector "Tipo de tirador" en Cajonera: **Manija
+  metálica** (agrega una malla de manija sobre la cara exterior del frente; se compra 1 por
+  frente), **Corte uñero** (el frente se modela con un rebaje semicircular tallado en el canto
+  superior mediante `THREE.Shape`+`THREE.ExtrudeGeometry`, en vez de comprar un tirador — la
+  lista de cortes anota el rebaje en las notas de esa pieza), o **Sistema push** (frente liso,
+  sin tirador ni rebaje).
+- **EST-006 — Luz entre frentes de cajón: YA implementada.** Se verificó con datos reales
+  (posiciones de piezas) que ya hay exactamente 3 mm de separación entre cada frente de cajón
+  consecutivo (`altoFrente = (altoUtil - 3n)/n`, `zF = e + i*(altoFrente+3)`). No hacía falta
+  ningún cambio.
+- **EST-007 — Zócalo de 70 mm en la cajonera del escritorio: evaluado, no implementado.** El
+  problema real que describe (melamina en contacto con el piso) ya está cubierto por los
+  regatones (H-10, 07_HERRAJES): 4 por cajonera, mismo criterio que en el ropero (M-22). La
+  cajonera del escritorio ES una de las dos patas del escritorio (corre de piso a tapa, igual
+  que el lateral); levantarla 70 mm con un zócalo tipo mueble de cocina exigiría recortar
+  también la otra pata para que el escritorio no quede desnivelado — una reestructuración
+  grande del diseño de patas para un problema que ya tiene solución (regatones), no una
+  corrección de un defecto real.
+- **HER-003 — Escuadras 3D de la tapa (D-043).** La unión tapa↔apoyos usa escuadras
+  metálicas (no tornillo confirmat pasante) — el texto y la lista de compras ya lo decían,
+  pero el 3D no dibujaba nada ahí. Ahora se dibuja un cubo metálico (gris, no rojo — el rojo
+  ya es el color de las guías de perforación de UX-001/EST-002, usarlo acá hubiera mezclado
+  los dos significados) en cada punto real de apoyo, detectado comparando la altura y el
+  solape de cada parante contra la CAPA que realmente toca (la inferior oculta, si la tapa es
+  doble — no la visible que lista el paso).
 
 ## Documentos relacionados
 

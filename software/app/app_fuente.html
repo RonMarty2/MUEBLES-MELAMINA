@@ -214,6 +214,12 @@
         <input type="number" id="esc-caj-ancho-n" min="300" max="600"></div></div>
       <div class="campo"><label>Cantidad de cajones</label>
         <select id="esc-caj-n"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div>
+      <div class="campo"><label>Tipo de tirador</label>
+        <select id="esc-caj-tirador">
+          <option value="manija" selected>Manija metálica estándar</option>
+          <option value="unero">Corte uñero (rebaje en la madera)</option>
+          <option value="push">Sistema push (frente liso, sin tirador)</option>
+        </select></div>
 
       <h2>Extras gamer</h2>
       <div class="campo"><label><input type="checkbox" id="esc-cpu" checked> Soporte para CPU</label></div>
@@ -305,6 +311,12 @@
         <input type="number" id="rop-caj-ancho-n" min="300" max="600"></div></div>
       <div class="campo"><label>Cantidad de cajones</label>
         <select id="rop-caj-n"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div>
+      <div class="campo"><label>Tipo de tirador</label>
+        <select id="rop-caj-tirador">
+          <option value="manija" selected>Manija metálica estándar</option>
+          <option value="unero">Corte uñero (rebaje en la madera)</option>
+          <option value="push">Sistema push (frente liso, sin tirador)</option>
+        </select></div>
 
       <h2>Extras</h2>
       <div class="campo"><label><input type="checkbox" id="rop-estante-inf"> Estante inferior (zapatos)</label></div>
@@ -522,7 +534,7 @@ function despieceEscritorio(r, tapaTipo) {
   const nivel = r.calidad.nivel;
   const piezas = [], perfs = [], avisos = [];
   let confirmats = 0, escuadrasMm = 0, clavos = 0, tcFino = 0, tcGrueso = 0,
-      regatones = 0, torn30 = 0, largoCorr = 0;
+      regatones = 0, torn30 = 0, largoCorr = 0, tiradorCant = 0;
 
   const [tipoUnion, avisoUnion] = unionSugerida(nivel, r.uniones.tipo);
   if (avisoUnion) avisos.push(avisoUnion);
@@ -597,12 +609,19 @@ function despieceEscritorio(r, tapaTipo) {
     const altoFrente = Math.floor((altoUtil - 3*n)/n);
     largoCorr = elegirCorredera(PC);
     const anchoCaja = interior - 26, altoCaja = altoFrente - 30, xC = x0 + e + 13;
+    const tipoTirador = caj.tipo_tirador || "manija";                       // HER-002
     avisos.push(`Cajones: ${n} frentes de ${altoFrente} mm; caja ${anchoCaja} × ${largoCorr} × ${altoCaja} mm; correderas de ${largoCorr} mm (R-05/R-08).`);
 
     for (let i = 0; i < n; i++) {
       const zF = e + i*(altoFrente+3), zCj = zF + 15, num = i+1;
+      const notaFrente = tipoTirador === "unero"
+        ? "Fijado desde adentro con 4 tornillos 4×30 (H-04). Corte uñero: rebaje semicircular en el canto superior (sin tirador comprado)."
+        : tipoTirador === "push"
+        ? "Fijado desde adentro con 4 tornillos 4×30 (H-04). Sistema push: frente liso, sin tirador."
+        : "Fijado desde adentro con 4 tornillos 4×30 (H-04)";
+      tiradorCant += tipoTirador === "manija" ? 1 : 0;
       pieza(`Frente cajón ${num}`, C-4, altoFrente, e, mat, [x0+2,y0-e,zF], [C-4,e,altoFrente],
-            "4 cantos", "Fijado desde adentro con 4 tornillos 4×30 (H-04)");
+            "4 cantos", notaFrente);
       pieza(`Lateral caja cajón ${num} (izq)`, largoCorr, altoCaja, e, mat, [xC,y0,zCj], [e,largoCorr,altoCaja]);
       pieza(`Lateral caja cajón ${num} (der)`, largoCorr, altoCaja, e, mat, [xC+anchoCaja-e,y0,zCj], [e,largoCorr,altoCaja]);
       pieza(`Frente interno cajón ${num}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,y0,zCj], [anchoCaja-2*e,e,altoCaja]);
@@ -706,6 +725,7 @@ function despieceEscritorio(r, tapaTipo) {
     { clave: "tornillo_4x30_caja100", nombre: "Tornillo 4×30", cant: torn30, porVenta: 100, unidad: "unid.", paraQue: "frentes de cajón y tapa doble (H-04)" },
   ];
   if (conCaj) herrajes.push(correderaCalidad(nivel, largoCorr, caj.cantidad_cajones));
+  if (tiradorCant > 0) herrajes.push({ clave: "tirador", nombre: "Tirador", cant: tiradorCant, porVenta: 1, unidad: "unid.", paraQue: "uno por frente de cajón (manija)" });
   if (pasN > 0) herrajes.push({ clave: "grommet", nombre: `Grommet Ø${pasD}`, cant: pasN, porVenta: 1, unidad: "unid.", paraQue: "terminación pasacables (R-16)" });
   herrajes.push(
     { clave: "clavos_caja100", nombre: "Clavos 1½\"", cant: clavos, porVenta: 100, unidad: "unid.", paraQue: "fijar fondos de 3 mm (R-10)" },
@@ -859,12 +879,18 @@ function despieceRopero(r) {
       confirmats += confirmatsPorUnion(interiorCaj);
 
       const donde = nCuerpos > 1 ? ` (en el cuerpo ${k})` : "";
+      const tipoTirador = caj.tipo_tirador || "manija";                    // HER-002
       avisos.push(`Cajones del ropero${donde}: bloque de ${n} frentes de ${altoFrente} mm (${altoCajonera} mm de alto total); caja ${anchoCaja} × ${largoCorr} × ${altoCaja} mm (R-05/R-24/M-24). Queda espacio libre arriba para un estante adicional.`);
 
       for (let i = 0; i < n; i++) {
         const zFrente = ZOCALO + e + i*(altoFrente+3), zCaja = zFrente + 15, num = i+1;
+        const notaFrente = tipoTirador === "unero"
+          ? "Fijado desde adentro con 4 tornillos 4×30. Corte uñero: rebaje semicircular en el canto superior (sin tirador comprado)."
+          : tipoTirador === "push"
+          ? "Fijado desde adentro con 4 tornillos 4×30. Sistema push: frente liso, sin tirador."
+          : "Fijado desde adentro con 4 tornillos 4×30";
         pieza(`Frente cajón ${num}${suf}`, C-4, altoFrente, e, mat, [x0+2,0,zFrente], [C-4,e,altoFrente],
-              "4 cantos", "Fijado desde adentro con 4 tornillos 4×30");
+              "4 cantos", notaFrente);
         pieza(`Lateral caja cajón ${num} (izq)${suf}`, largoCorr, altoCaja, e, mat, [xC,0,zCaja], [e,largoCorr,altoCaja]);
         pieza(`Lateral caja cajón ${num} (der)${suf}`, largoCorr, altoCaja, e, mat, [xC+anchoCaja-e,0,zCaja], [e,largoCorr,altoCaja]);
         pieza(`Frente interno cajón ${num}${suf}`, anchoCaja-2*e, altoCaja, e, mat, [xC+e,0,zCaja], [anchoCaja-2*e,e,altoCaja]);
@@ -877,7 +903,7 @@ function despieceRopero(r) {
         perfs.push({ pieza: `Divisor cajones / Lateral derecho${suf}`, cara: "cara interior",
           detalle: `Eje corredera cajón ${num}: centro a ${ejeRel} mm del canto inferior de la caja y a ${ejeMueble} mm del piso del mueble (P-02); tornillos 4×16` });
       }
-      tiradoresCajones += n;
+      tiradoresCajones += tipoTirador === "manija" ? n : 0;
       correderaInfo = [largoCorr, n];
       anchoBarralZona = (x0 - e) - (xo + e);
     }
@@ -1809,7 +1835,7 @@ function leerRecetaEscritorio() {
     dimensiones: { ancho:+$("esc-ancho").value, profundidad:+$("esc-profundidad").value, alto:+$("esc-alto").value },
     tapa: { tipo: $("esc-tapa").value },
     material: { color: $("esc-color").value, espesor: 18, espesor_fondo: 3 },
-    cajonera: { posicion: $("esc-caj-pos").value, ancho:+$("esc-caj-ancho").value, cantidad_cajones:+$("esc-caj-n").value },
+    cajonera: { posicion: $("esc-caj-pos").value, ancho:+$("esc-caj-ancho").value, cantidad_cajones:+$("esc-caj-n").value, tipo_tirador: $("esc-caj-tirador").value },
     soporte_cpu: { incluir: $("esc-cpu").checked, ancho:+$("esc-cpu-ancho").value },
     pasacables: { cantidad:+$("esc-pas-n").value, diametro:+$("esc-pas-d").value },
     elevacion_monitor: { incluir: $("esc-elev").checked, ancho:+$("esc-elev-ancho").value, profundidad:+$("esc-elev-prof").value },
@@ -1833,6 +1859,7 @@ function aplicarRecetaEscritorio(r) {
   $("esc-caj-pos").value = r.cajonera?.posicion ?? "derecha";
   $("esc-caj-ancho").value = $("esc-caj-ancho-n").value = r.cajonera?.ancho ?? 400;
   $("esc-caj-n").value = r.cajonera?.cantidad_cajones ?? 3;
+  $("esc-caj-tirador").value = r.cajonera?.tipo_tirador ?? "manija";
   $("esc-cpu").checked = r.soporte_cpu?.incluir ?? true;
   $("esc-cpu-ancho").value = $("esc-cpu-ancho-n").value = r.soporte_cpu?.ancho ?? 250;
   $("esc-pas-n").value = r.pasacables?.cantidad ?? 2;
@@ -1855,7 +1882,7 @@ function leerRecetaRopero() {
     material: { color: $("rop-color").value, espesor: 18, espesor_fondo: 3 },
     cuerpos: { cantidad:+$("rop-cuerpos").value },
     puertas: { tipo: $("rop-puertas-tipo").value, cantidad:+$("rop-puertas-n").value },
-    cajones: { incluir: $("rop-cajones").checked, ancho:+$("rop-caj-ancho").value, cantidad_cajones:+$("rop-caj-n").value },
+    cajones: { incluir: $("rop-cajones").checked, ancho:+$("rop-caj-ancho").value, cantidad_cajones:+$("rop-caj-n").value, tipo_tirador: $("rop-caj-tirador").value },
     estante_inferior: { incluir: $("rop-estante-inf").checked },
     uniones: { tipo: $("rop-uniones").value },
     calidad: { nivel: $("rop-calidad").value },
@@ -1873,6 +1900,7 @@ function aplicarRecetaRopero(r) {
   $("rop-cajones").checked = r.cajones?.incluir ?? false;
   $("rop-caj-ancho").value = $("rop-caj-ancho-n").value = r.cajones?.ancho ?? 400;
   $("rop-caj-n").value = r.cajones?.cantidad_cajones ?? 3;
+  $("rop-caj-tirador").value = r.cajones?.tipo_tirador ?? "manija";
   $("rop-estante-inf").checked = r.estante_inferior?.incluir ?? false;
   $("rop-uniones").value = r.uniones?.tipo ?? "confirmat";
   $("rop-calidad").value = r.calidad?.nivel ?? "estandar";
@@ -2459,6 +2487,47 @@ function ubicarCamara() {
   camara.lookAt(centro.x, centro.y, centro.z);
 }
 
+/* ------------------------------------------------ HER-002: tipo de tirador del frente de
+   cajón. "manija" agrega una manija metálica; "unero" reemplaza el panel por una geometría
+   con un rebaje semicircular tallado en el canto superior (THREE.Shape + ExtrudeGeometry);
+   "push" deja el frente liso (el look por defecto, sin agregar nada). */
+function tipoTiradorActual() {
+  if (!recetaActual) return "manija";
+  return (tipoActual === "ropero" ? recetaActual.cajones?.tipo_tirador : recetaActual.cajonera?.tipo_tirador) || "manija";
+}
+function crearGeometriaFrenteUnero(dxScene, dzScene, dyScene) {
+  const w = dxScene, h = dzScene, depth = dyScene;
+  const notchR = Math.min(0.018, w * 0.12, h * 0.35);
+  const shape = new THREE.Shape();
+  shape.moveTo(-w/2, -h/2);
+  shape.lineTo(w/2, -h/2);
+  shape.lineTo(w/2, h/2);
+  shape.lineTo(notchR, h/2);
+  shape.absarc(0, h/2, notchR, 0, Math.PI, true);  // semicírculo hundido en el canto superior
+  shape.lineTo(-w/2, h/2);
+  shape.closePath();
+  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: false, curveSegments: 16 });
+  geo.translate(0, 0, -depth/2);  // centrar en profundidad, igual que BoxGeometry (centrada en el origen)
+  return geo;
+}
+function crearMallaManija(dxScene, dzScene, dyScene) {
+  const grupo = new THREE.Group();
+  const mat = new THREE.MeshPhongMaterial({ color: 0xc9ccd1, specular: 0xffffff, shininess: 90 });
+  const largoManija = Math.min(0.12, dxScene * 0.4);
+  // La cara EXTERIOR (decorativa, la que ve la persona) del "Frente cajón" queda del lado de
+  // -Z local: su rango en mm y es [y0-e, y0] (y0-e = más chico = más afuera), y el centro de
+  // la caja está en (y0-e+y0)/2, así que la cara externa es center - dy/2, es decir -Z local.
+  const barra = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, largoManija, 12), mat);
+  barra.rotation.z = Math.PI/2;
+  barra.position.set(0, 0, -(dyScene/2 + 0.02));
+  grupo.add(barra);
+  for (const signo of [-1, 1]) {
+    const soporte = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.02, 10), mat);
+    soporte.position.set(signo * largoManija/2, 0, -(dyScene/2 + 0.01));
+    grupo.add(soporte);
+  }
+  return grupo;
+}
 function render3D() {
   for (const m of mallas) escena.remove(m);
   mallas = [];
@@ -2483,9 +2552,13 @@ function render3D() {
     centro = { x: d.ancho*esc/2, y: d.alto*esc/2, z: d.profundidad*esc/2 };
     dist = Math.max(Math.max(d.ancho, d.profundidad, d.alto)*esc*1.6, 1);
   }
+  const tipoTirador = tipoTiradorActual();
   for (const p of mueble.piezas) {
     const [dx,dy,dz] = p.dim, [x,y,z] = p.pos, [r,g,b] = colorPara(p.material);
-    const geo = new THREE.BoxGeometry(dx*esc, dz*esc, dy*esc);
+    const esFrenteCajon = /^Frente cajón /i.test(p.nombre);
+    const geo = (esFrenteCajon && tipoTirador === "unero")
+      ? crearGeometriaFrenteUnero(dx*esc, dz*esc, dy*esc)
+      : new THREE.BoxGeometry(dx*esc, dz*esc, dy*esc);
     const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({
       color: new THREE.Color(r/255,g/255,b/255) }));
     m.position.set((x+dx/2)*esc,(z+dz/2)*esc,(y+dy/2)*esc);
@@ -2502,6 +2575,15 @@ function render3D() {
     borde.userData.posBase = borde.position.clone();
     borde.userData.esBorde = true;
     escena.add(borde); mallas.push(borde);
+    if (esFrenteCajon && tipoTirador === "manija") {
+      const manija = crearMallaManija(dx*esc, dz*esc, dy*esc);
+      manija.position.copy(m.position);
+      manija.userData.pieza = p.nombre;  // sigue a la pieza (resaltado/mesada/explosión la ignoran, es cosmética)
+      manija.userData.p = p;
+      manija.userData.posBase = manija.position.clone();
+      manija.userData.esManija = true;
+      escena.add(manija); mallas.push(manija);
+    }
   }
   aplicarResaltadoPaso();
   const piezaTapa = mueble.piezas.find(p => p.nombre.startsWith("Tapa capa superior"))
@@ -2798,8 +2880,79 @@ function orientarTornilloEje(grupo, ejeMm, signoHaciaAfuera) {
    del contacto (la "pasante", ej. el lateral del cajón) y muerde el canto de la otra (la
    que "recibe", ej. el frente interno). La cabeza queda sobre la cara exterior de la
    pasante: exactamente donde apoyás el destornillador. */
+/* D-042/EST-005: el paso "Atornillá el frente" lista SOLO "Frente cajón N" (el frente
+   interno ya quedó fijo en un paso anterior, no vuelve a resaltarse/moverse acá) — por eso
+   la detección genérica de contactos (que necesita 2 piezas activas) no encontraba nada y
+   el paso quedaba sin marcador 3D, solo con el plano 2D. El tornillo real SÍ existe (el
+   propio texto del paso ya lo describe: entra desde ADENTRO del cajón, atraviesa el frente
+   interno y se ancla en el frente sin perforarlo del todo) — acá se dibuja explícitamente,
+   con la MISMA malla/orientación (`crearTornillo`/`orientarTornilloEje`) que usa el resto
+   de la app, en las 4 esquinas del frente interno. */
+function construirTornillosFrenteCajon(nombreFrente, offsetXesc) {
+  const esc = 0.001;
+  const m = nombreFrente.match(/^Frente cajón (\d+)(.*)$/i);
+  if (!m) return [];
+  const nombreInterno = `Frente interno cajón ${m[1]}${m[2]}`;
+  const frente = mueble.piezas.find(p => p.nombre === nombreFrente);
+  const interno = mueble.piezas.find(p => p.nombre === nombreInterno);
+  if (!frente || !interno) return [];
+  const [ix, iy, iz] = interno.pos, [idx, idy, idz] = interno.dim;
+  const insetX = Math.min(45, idx / 4), insetZ = Math.min(45, idz / 4);
+  const largoTornillo = 30;  // Tornillo 4×30 (H-04): el mismo que ya cuenta el presupuesto
+  const entradaY = iy + idy; // cara INTERIOR del frente interno (adentro del cajón, donde entra el destornillador)
+  const items = [];
+  for (const dx of [insetX, idx - insetX]) for (const dz of [insetZ, idz - insetZ]) {
+    const destino = new THREE.Vector3((ix + dx) * esc + offsetXesc, (iz + dz) * esc, entradaY * esc);
+    const tornillo = crearTornillo(largoTornillo);
+    orientarTornilloEje(tornillo, "y", 1);  // "hacia afuera" = hacia la cara interior (de donde entra)
+    tornillo.userData.baseQuat = tornillo.quaternion.clone();
+    items.push({ tornillo, destino, eje: "y", signo: 1, esLinea: false });
+  }
+  return items;
+}
+/* D-043/HER-003: la tapa se apoya sobre los parantes/laterales con ESCUADRAS metálicas, no
+   con tornillos confirmat pasantes — el texto del paso y la lista de compras ya lo decían
+   ("Escuadra metálica 25 mm"), pero el 3D no dibujaba NADA para esta unión.
+   No se puede reusar `calcularMarcadoresTornillo` (detección genérica por contacto de
+   bounding boxes): cuando la tapa es doble (R-04), la pieza que realmente TOCA a los apoyos
+   es la capa INFERIOR oculta (18 mm por debajo de la visible que lista este paso) — el
+   contacto real no está entre las piezas nombradas en el paso. Por eso se busca la capa de
+   contacto real a mano y se compara altura/solape directamente contra cada apoyo. */
+function construirEscuadrasDePaso(nombres, offsetXesc) {
+  const esc = 0.001;
+  const nombreTapaVisible = nombres.find(n => /^Tapa/i.test(n));
+  if (!nombreTapaVisible) return [];
+  const tapaContacto = mueble.piezas.find(p => p.nombre === "Tapa capa inferior (oculta)")
+    || mueble.piezas.find(p => p.nombre.startsWith(nombreTapaVisible));
+  if (!tapaContacto) return [];
+  const apoyos = nombres.filter(n => n !== nombreTapaVisible)
+    .map(n => mueble.piezas.find(p => p.nombre.startsWith(n)))
+    .filter(Boolean);
+  const TOL = 3, items = [];
+  for (const apoyo of apoyos) {
+    const topZ = apoyo.pos[2] + apoyo.dim[2];
+    if (Math.abs(topZ - tapaContacto.pos[2]) > TOL) continue;  // no llega a tocar la tapa
+    const xIni = Math.max(apoyo.pos[0], tapaContacto.pos[0]);
+    const xFin = Math.min(apoyo.pos[0] + apoyo.dim[0], tapaContacto.pos[0] + tapaContacto.dim[0]);
+    const yIni = Math.max(apoyo.pos[1], tapaContacto.pos[1]);
+    const yFin = Math.min(apoyo.pos[1] + apoyo.dim[1], tapaContacto.pos[1] + tapaContacto.dim[1]);
+    if (xFin - xIni < 5 || yFin - yIni < 5) continue;  // sin solape real
+    const destino = new THREE.Vector3((xIni + xFin) / 2 * esc + offsetXesc, topZ * esc, (yIni + yFin) / 2 * esc);
+    const escuadra = new THREE.Mesh(
+      new THREE.BoxGeometry(0.02, 0.02, 0.02),
+      new THREE.MeshPhongMaterial({ color: 0x9aa1a8, specular: 0xffffff, shininess: 70 }));
+    escuadra.position.copy(destino);
+    items.push({ tornillo: escuadra, destino, eje: "z", signo: 1, esLinea: false });
+  }
+  return items;
+}
 function construirTornillosDePaso(nombres, offsetXesc = 0) {
   const esc = 0.001;
+  if (nombres.length === 1 && /^Frente cajón /i.test(nombres[0]))
+    return construirTornillosFrenteCajon(nombres[0], offsetXesc);
+  const nombresTapa = nombres.filter(n => /^Tapa/i.test(n));
+  if (nombresTapa.length === 1 && nombres.some(n => !/^Tapa/i.test(n)))
+    return construirEscuadrasDePaso(nombres, offsetXesc);
   const box = bboxDePiezas(nombres);
   if (!box) return [];
   const centroGrupo = { x:(box.minX+box.maxX)/2, y:(box.minY+box.maxY)/2, z:(box.minZ+box.maxZ)/2 };
@@ -3414,9 +3567,9 @@ window.addEventListener("DOMContentLoaded", () => {
       $(id).value = el.value; recalcular();
     });
   }
-  for (const id of ["esc-color","esc-tapa","esc-caj-pos","esc-caj-n","esc-cpu","esc-pas-n","esc-pas-d",
+  for (const id of ["esc-color","esc-tapa","esc-caj-pos","esc-caj-n","esc-caj-tirador","esc-cpu","esc-pas-n","esc-pas-d",
                     "esc-elev","esc-forma","esc-uniones","esc-calidad",
-                    "rop-cuerpos","rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-estante-inf",
+                    "rop-cuerpos","rop-color","rop-puertas-tipo","rop-puertas-n","rop-cajones","rop-caj-n","rop-caj-tirador","rop-estante-inf",
                     "rop-uniones","rop-calidad"])
     $(id).addEventListener("change", recalcular);
 

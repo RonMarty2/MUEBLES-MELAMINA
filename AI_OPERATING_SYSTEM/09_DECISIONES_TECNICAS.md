@@ -969,6 +969,80 @@ Formato de cada entrada:
 
 ---
 
+## D-042 — Tornillos 3D del frente de cajón (EST-005) + selector de tirador (HER-002)
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** pedido de (a) "corregir" los tornillos del frente del cajón (decía que
+  apuntaban mal) y (b) un selector de tipo de tirador (manija / uñero / push).
+- **Verificación de (a) antes de tocar código:** el paso "Atornillá el frente del cajón" lista
+  SOLO `Frente cajón N` (una pieza), así que la detección genérica de uniones (necesita 2
+  piezas activas) no encontraba nada — el paso mostraba 0 marcadores 3D, solo un plano 2D. El
+  texto YA describía correctamente la unión real (tornillo desde adentro, atravesando el
+  frente interno, anclado sin perforar el frente del todo); no había ningún vector invertido
+  que corregir. Lo que faltaba era el dibujo 3D, no una corrección.
+- **Decisión (a):** `construirTornillosFrenteCajon` agrega el marcador 3D que faltaba: 4
+  tornillos (Tornillo 4×30, H-04) cerca de las 4 esquinas del "Frente interno", con la cabeza
+  en la cara INTERIOR (adentro del cajón) y la punta embebida en el Frente sin perforarlo
+  (mismo largo real, 30 mm). `construirTornillosDePaso` detecta este caso especial (paso de
+  una sola pieza `Frente cajón`) y delega acá en vez de devolver `[]`.
+  - Verificado antes/después: 0 → 4 marcadores en el paso, con captura confirmando posición y
+    profundidad correctas (no asoman por la cara visible).
+- **Decisión (b):** nuevo campo `cajonera.tipo_tirador` / `cajones.tipo_tirador` (`manija` |
+  `unero` | `push`, default `manija`) en ambos esquemas (Python + JS, D-010/D-011). "Manija"
+  agrega una malla de manija (`crearMallaManija`) sobre la cara EXTERIOR del frente (la cara
+  visible; hubo que corregir un error de signo en la primera pasada — la manija apareció del
+  lado de adentro). "Uñero" reemplaza `BoxGeometry` por `THREE.Shape`+`ExtrudeGeometry` con un
+  rebaje semicircular en el canto superior (`crearGeometriaFrenteUnero`), y anota el corte en
+  `notas` de la pieza (aparece en Cortes/CSV). "Push" deja el frente liso (el look default).
+  El conteo de compra del herraje "Tirador" (H-15/`tirador`) ahora depende del tipo: solo se
+  compra con "manija".
+- **Descartada:** duplicar la selección de corredera con un campo de "tipo" independiente de
+  `calidad.nivel` (ver HER-001 arriba) — no aplica acá porque el tirador SÍ es una decisión
+  distinta de la calidad (una elección estética/funcional propia), así que un campo nuevo es
+  correcto en este caso, a diferencia de HER-001.
+- **Consecuencias:** cambio aditivo + fix real (marcador 3D faltante) en `app_fuente.html`,
+  `despiece_escritorio.py`, `despiece_ropero.py`, `validador_escritorio.py`,
+  `validador_ropero.py`. 8 pruebas nuevas (128 Python en total) + 83 JS, 0 errores de consola.
+  EST-005/HER-002 documentados en `05_REGLAS_DE_CARPINTERIA.md`.
+
+---
+
+## D-043 — Escuadras 3D tapa↔apoyos (HER-003); EST-006 ya OK; EST-007 evaluado y descartado
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** pedido de (a) zócalo de 70 mm bajo la cajonera del escritorio, (b) 3 mm de
+  luz entre frentes de cajón, (c) escuadras 3D reales en la unión tapa↔apoyos.
+- **Verificación de (b) antes de tocar código:** se leyeron las posiciones reales de los 3
+  frentes de un escritorio de prueba — ya hay exactamente 3 mm de gap entre cada uno
+  (`altoFrente = (altoUtil-3n)/n`, con el `+3` ya sumado en cada `zF`). Nada que corregir.
+- **Decisión (a) — no implementado:** el escenario que describe (melamina raspando o
+  absorbiendo humedad del piso) ya está resuelto por los regatones (H-10): 4 por cajonera,
+  mismo criterio documentado que el zócalo del ropero (M-22, "no debe tocar el piso húmedo").
+  La cajonera del escritorio ES una de las dos patas del mueble (corre de piso a tapa, igual
+  que el lateral simple del otro lado) — levantarla 70 mm tipo zócalo de cocina dejaría esa
+  pata más corta que la otra, exigiendo repensar TODO el diseño de patas para no desnivelar
+  el escritorio. Es una alternativa de estilo válida (algunos escritorios sí tienen ese look),
+  no la corrección de un defecto — se documenta como evaluado y pendiente, no como bug.
+- **Decisión (c) — implementado, con un hallazgo real en el camino:** la unión tapa↔apoyos ya
+  tenía texto y compra de "Escuadra metálica 25 mm", pero el 3D no dibujaba nada ahí (0
+  marcadores). Al investigar por qué, la detección genérica de contactos
+  (`calcularMarcadoresTornillo`) tampoco la encontraba: cuando la tapa es doble (R-04), la
+  pieza que realmente TOCA a los apoyos es la capa INFERIOR oculta (18 mm por debajo de la
+  visible que lista el paso) — el contacto real no está entre las piezas nombradas en el
+  paso. `construirEscuadrasDePaso` busca la capa de contacto real a mano (capa inferior si
+  existe) y compara altura + solape contra cada apoyo directamente, sin depender del detector
+  genérico. Dibuja un cubo gris/plateado (no rojo — el rojo ya significa "guía de
+  perforación" desde D-039/D-041, reusarlo acá mezclaría los dos significados).
+  - Verificado: 0 → 4 marcadores en el paso, con captura confirmando la posición justo en el
+    borde donde cada pata/parante se encuentra con la tapa.
+- **Consecuencias:** cambio aditivo en `app_fuente.html` (`construirEscuadrasDePaso`, detección
+  especial en `construirTornillosDePaso`). Motores intactos (128 Python + 83 JS, 0 errores de
+  consola). EST-006/EST-007/HER-003 documentados en `05_REGLAS_DE_CARPINTERIA.md`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

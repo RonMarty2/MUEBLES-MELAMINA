@@ -519,6 +519,49 @@ prueba("presupuesto separa placa cruda de melamina",
        "crudo" in open("/tmp/esc_test/compras.md", encoding="utf-8").read().lower()
        if __import__("os").path.exists("/tmp/esc_test/compras.md") else True)
 
+# ---------------------------------------------------------------- HER-002: tipo de tirador
+r_manija, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                    "cajonera": {"cantidad_cajones": 2}})
+m_manija = despiece_escritorio(r_manija)
+prueba("manija (default): compra un tirador por frente",
+       any(h.codigo == "H-15" and h.cantidad == 2 for h in m_manija.herrajes))
+
+r_unero, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                   "cajonera": {"cantidad_cajones": 2, "tipo_tirador": "unero"}})
+m_unero = despiece_escritorio(r_unero)
+prueba("uñero: no compra tiradores", not any(h.codigo == "H-15" for h in m_unero.herrajes))
+prueba("uñero: la nota de corte queda en la pieza",
+       any("uñero" in p.notas.lower() for p in m_unero.piezas if p.nombre.startswith("Frente cajón")))
+
+r_push, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                                  "cajonera": {"cantidad_cajones": 2, "tipo_tirador": "push"}})
+m_push = despiece_escritorio(r_push)
+prueba("push: no compra tiradores", not any(h.codigo == "H-15" for h in m_push.herrajes))
+
+try:
+    normalizar_y_validar({"version": "1.0", "tipo_mueble": "escritorio_gamer",
+                          "cajonera": {"tipo_tirador": "manija_de_oro"}})
+    prueba("rechaza tipo_tirador inválido (escritorio)", False, "(no lanzó)")
+except RecetaInvalida as e:
+    prueba("rechaza tipo_tirador inválido (escritorio)", "HER-002" in str(e))
+
+r_rop_unero, _ = normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                                       "puertas": {"tipo": "ninguna"},
+                                       "cajones": {"incluir": True, "cantidad_cajones": 2,
+                                                   "tipo_tirador": "unero"}})
+m_rop_unero = despiece_ropero(r_rop_unero)
+prueba("ropero uñero: no compra tiradores (sin puertas)",
+       not any(h.codigo == "H-15" for h in m_rop_unero.herrajes))
+prueba("ropero uñero: la nota de corte queda en la pieza",
+       any("uñero" in p.notas.lower() for p in m_rop_unero.piezas if p.nombre.startswith("Frente cajón")))
+
+try:
+    normalizar_y_validar({"version": "1.0", "tipo_mueble": "ropero",
+                          "cajones": {"incluir": True, "tipo_tirador": "invalido"}})
+    prueba("rechaza tipo_tirador inválido (ropero)", False, "(no lanzó)")
+except RecetaInvalida as e:
+    prueba("rechaza tipo_tirador inválido (ropero)", "HER-002" in str(e))
+
 # ---------------------------------------------------------------- resultado
 print()
 if FALLAS:

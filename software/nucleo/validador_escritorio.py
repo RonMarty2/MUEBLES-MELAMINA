@@ -15,7 +15,8 @@ DEFECTOS = {
     "material": {"color": "Blanco", "espesor": 18, "espesor_fondo": 3},
     "uniones": {"tipo": "confirmat"},  # R-26: "excentrica" si se va a mover/mudar
     "calidad": {"nivel": "estandar"},  # D-018: economico | estandar | premium
-    "cajonera": {"posicion": "derecha", "ancho": 400, "cantidad_cajones": 3},
+    "cajonera": {"posicion": "derecha", "ancho": 400, "cantidad_cajones": 3,
+                 "tipo_tirador": "manija"},  # HER-002: manija | unero | push
     "soporte_cpu": {"incluir": True, "ancho": 250},
     "pasacables": {"cantidad": 2, "diametro": 60},
     "elevacion_monitor": {"incluir": False, "ancho": 800, "profundidad": 250},
@@ -44,6 +45,7 @@ OPCIONES = {
     ("uniones", "tipo"): (["confirmat", "excentrica"], "R-26"),
     ("calidad", "nivel"): (["economico", "estandar", "premium"], "D-018"),
     ("cajonera", "posicion"): (["derecha", "izquierda", "ninguna"], "R-14"),
+    ("cajonera", "tipo_tirador"): (["manija", "unero", "push"], "HER-002"),
     ("pasacables", "diametro"): ([60, 80], "H-06"),
     ("forma", "tipo"): (["recto", "L"], "R-31"),
     ("forma", "lado"): (["derecha", "izquierda"], "R-31"),
@@ -57,7 +59,7 @@ CAMPOS_CONOCIDOS = {
     "material": ["color", "espesor", "espesor_fondo"],
     "uniones": ["tipo"],
     "calidad": ["nivel"],
-    "cajonera": ["posicion", "ancho", "cantidad_cajones"],
+    "cajonera": ["posicion", "ancho", "cantidad_cajones", "tipo_tirador"],
     "soporte_cpu": ["incluir", "ancho"],
     "pasacables": ["cantidad", "diametro"],
     "elevacion_monitor": ["incluir", "ancho", "profundidad"],
