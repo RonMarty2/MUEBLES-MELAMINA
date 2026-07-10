@@ -142,6 +142,18 @@ motor son la misma idea: una tira de canto atornillada bajo la superficie que tr
   las cotas en NÚMEROS son la referencia real, no medir con regla sobre la pantalla/impresión.
   Implementado 100% en `app_fuente.html` (Vanilla JS + SVG), sin librerías externas, para
   mantener el archivo único de distribución.
+- **UX-001 — Aislar y rayos-X (D-039).** Modo OPCIONAL (botón "🔍 Aislar y rayos-X" dentro de
+  Armado): oculta por completo las piezas que no participan del paso activo — incluso las
+  que ya estaban armadas — y deja las del paso semitransparentes para ver el interior
+  (**VIS-002**). Es opt-in a propósito: por defecto sigue rigiendo el modo acumulativo (D-030)
+  donde lo ya armado queda sólido, porque ESO es lo que el usuario pidió ("ir viendo como
+  empieza con una tabla y terminamos en el mueble"); ocultarlo por defecto se lo hubiera
+  sacado.
+- **EST-002 — Guías de perforación en 3D.** Con el modo UX-001 activo, cada unión real del
+  paso (misma detección pasante/receptor de R-09/D-033) dibuja un cilindro rojo
+  semitransparente (`THREE.CylinderGeometry`, `0xff0000`, opacity 0.6) orientado con
+  `quaternion.setFromUnitVectors` en el ángulo exacto de entrada de la broca, con el largo
+  igual al espesor real de la pieza que se atraviesa (simula la profundidad de perforación).
 
 ## Documentos relacionados
 

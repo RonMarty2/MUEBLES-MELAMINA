@@ -895,6 +895,43 @@ Formato de cada entrada:
 
 ---
 
+## D-039 — Modo "Aislar y rayos-X" con guías de perforación 3D (EST-002/UX-001, reglas nuevas)
+
+**Fecha:** 2026-07-10 · **Estado:** vigente
+
+- **Contexto:** pedido de un "Armado Interactivo Guiado" que (a) oculte todas las piezas que
+  no participan del paso activo, (b) muestre las piezas activas en rayos-X, y (c) dibuje
+  guías de perforación con `THREE.CylinderGeometry` rojo semitransparente orientado con
+  `quaternion.setFromUnitVectors`. El pedido citaba reglas "EST-002" y "UX-001" (y "VIS-002")
+  como si ya existieran — se verificó el repo con `grep -rn` y NO existían; se documentan acá
+  como nuevas.
+- **Decisión:** se implementó tal cual se pidió, PERO como modo **opcional** (botón "🔍 Aislar
+  y rayos-X" dentro de Armado), no como comportamiento por defecto. Ocultar TODO lo que no es
+  del paso activo — incluso lo ya armado — por defecto habría deshecho el modo de
+  construcción acumulativo (D-030) que Ron pidió explícitamente antes en este mismo proyecto
+  ("ir viendo como empieza con una tabla y terminamos en el mueble, parte por parte"): con
+  hard-hide por defecto, cada paso mostraría solo 1-2 piezas sueltas flotando en el vacío, sin
+  ver el mueble crecer. El toggle da lo mejor de los dos: por defecto seguís viendo el mueble
+  armarse; si activás "Aislar", ves el paso aislado con rayos-X, tal como se pidió.
+  - `aplicarModoAislar(nombres)`: `visible=false` en toda pieza que no sea del paso; en las
+    del paso, `material.opacity=0.35` (revela el interior, VIS-002).
+  - `construirGuiasPerforacion`: reutiliza `calcularMarcadoresTornillo` (la MISMA detección
+    pasante/receptor de D-033/D-035 — no inventa uniones nuevas) y dibuja un cilindro rojo
+    (`CylinderGeometry`, `0xff0000`, opacity 0.6) por unión, con largo = espesor real de la
+    pieza pasante (simula la broca cruzando la melamina) y orientado con
+    `quaternion.setFromUnitVectors` hacia el ángulo real de entrada. Se omiten las uniones de
+    fondo clavado (≤3 mm): un clavo no se "perfora" con broca.
+  - Se integra al ciclo de vida existente (`aplicarResaltadoPaso`/`limpiarResaltado`): cambiar
+    de paso o de pestaña limpia y reconstruye todo automáticamente, sin estado colgado.
+- **Descartada:** ocultar por defecto (ver arriba); dibujar las guías incluso para clavos
+  (no aporta, un clavo no tiene "ángulo de broca").
+- **Consecuencias:** cambio aditivo en `app_fuente.html` (nuevo botón, `modoAislar`,
+  `aplicarModoAislar`, `construirGuiasPerforacion`, `orientarConQuaternion`). Motores intactos
+  (120 Python + 83 JS, 0 errores de consola). Reglas EST-002/UX-001/VIS-002 documentadas en
+  `05_REGLAS_DE_CARPINTERIA.md`.
+
+---
+
 ## Plantilla para nuevas decisiones
 
 ```

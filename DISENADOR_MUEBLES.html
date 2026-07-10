@@ -1910,6 +1910,7 @@ function actualizarIndicadorControles() {
 let mueble = null, recetaActual = null, precios = null;
 let pestanaActiva = "cortes";
 let pasoArmadoActivo = 0;
+let modoAislar = false;  // D-039: "Aislar y rayos-X" — opt-in, NO reemplaza el modo acumulativo (D-030)
 
 /* --------- Unidades (cm por defecto; el motor SIEMPRE trabaja en mm) --------- */
 let unidad = localStorage.getItem("unidad") || "cm";
@@ -1992,8 +1993,10 @@ function pintarArmado(c) {
         <span><span class="punto" style="background:#8d949c"></span> Clavo finito = fondo de 3 mm clavado</span>
         <span><span class="punto" style="background:#ff8c1a"></span> Canto con tapacanto (cinta de borde)</span>
         <span><span class="punto" style="background:#3b82f6"></span> Pieza nueva de este paso (aclarada; lo ya armado queda sólido)</span>
-        <button id="btn-ver-completo" class="btn-paso-grande" style="margin-left:auto">🎬 Ver armado completo</button>
+        <button id="btn-aislar-rayosx" class="btn-paso-grande ${modoAislar ? "" : "gris"}" style="margin-left:auto">🔍 Aislar y rayos-X${modoAislar ? " (activo)" : ""}</button>
+        <button id="btn-ver-completo" class="btn-paso-grande">🎬 Ver armado completo</button>
       </div>
+      ${modoAislar ? `<p class="nota" style="margin:6px 0 0">🔍 <b>Modo aislar:</b> se ocultan TODAS las demás piezas del mueble (incluso las ya armadas) y estas quedan semitransparentes (rayos-X) para ver el interior. Los puntos <b style="color:#c0392b">rojos</b> son guías de perforación: el cilindro apunta exactamente hacia dónde y en qué ángulo entra la broca, y su largo simula el espesor real que atraviesa.</p>` : ""}
     </div>
     <div class="armado-cols">
       <div class="armado-lista">${lista}</div>
@@ -2027,6 +2030,8 @@ function pintarArmado(c) {
   if (ant) ant.onclick = () => { reproduciendoTodo = false; pasoArmadoActivo--; pintarArmado(c); aplicarResaltadoPaso(); };
   const btnAnimar = $("btn-animar-paso");
   if (btnAnimar) btnAnimar.onclick = () => animarArmadoPaso(p.piezas, btnAnimar);
+  const btnAislar = $("btn-aislar-rayosx");
+  if (btnAislar) btnAislar.onclick = () => { modoAislar = !modoAislar; pintarArmado(c); };
   const btnSub = $("btn-animar-sub");
   if (btnSub) {
     btnSub.onclick = () => {
@@ -2130,6 +2135,68 @@ function aplicarVisibilidadAcumulada(nac, idx, nombresActuales) {
     if (m.userData.colorReal) m.material.color.copy(m.userData.colorReal);
   }
 }
+/* ------------------------------------------------ D-039: "Aislar y rayos-X" (opt-in)
+   A diferencia del modo acumulativo (D-030, que deja lo YA armado sólido para ver crecer el
+   mueble), este modo aísla el paso actual DE VERDAD: oculta (visible=false) todo lo demás —
+   incluso lo ya armado — y deja las piezas del paso semitransparentes (rayos-X) para ver el
+   interior. Es un toggle aparte porque ocultar todo por defecto le sacaría a Ron la vista de
+   "empezar con una tabla y terminar en el mueble" que ya pidió y que el modo acumulativo le
+   da. Además dibuja guías de perforación ROJAS: un cilindro por unión real, con el LARGO
+   igual al espesor de la pieza que se perfora de lado a lado (simula la broca cruzando la
+   melamina) y orientado con quaternion.setFromUnitVectors hacia el ángulo real de entrada. */
+function orientarConQuaternion(mesh, ejeMm, signo) {
+  const dir = direccionEjeScene(ejeMm, signo).normalize();
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
+}
+function aplicarModoAislar(nombres) {
+  for (const m of mallas) {
+    if (m.userData.pieza === undefined) continue;
+    const activo = nombres.some(n => m.userData.pieza.startsWith(n));
+    if (!activo) { m.visible = false; continue; }  // oculta TODO lo que no es de este paso
+    if (m.userData.esBorde || !m.material) continue;
+    m.material.transparent = true;
+    m.material.opacity = 0.35;  // rayos-X: revela el interior de la pieza activa
+    m.material.depthWrite = false;
+  }
+}
+let guiasAislarMeshes = [];
+function limpiarGuiasPerforacion() {
+  for (const g of guiasAislarMeshes) escena.remove(g);
+  guiasAislarMeshes = [];
+}
+function construirGuiasPerforacion(nombres, offsetXesc = 0) {
+  limpiarGuiasPerforacion();
+  if (!mueble) return;
+  const esc = 0.001;
+  const box = bboxDePiezas(nombres);
+  if (!box) return;
+  const centroGrupo = { x: (box.minX+box.maxX)/2, y: (box.minY+box.maxY)/2, z: (box.minZ+box.maxZ)/2 };
+  const IDX = { x: 0, y: 1, z: 2 };
+  for (const pt of calcularMarcadoresTornillo(nombres)) {
+    const piezaA = mueble.piezas.find(p => p.nombre === pt.piezaA);
+    const piezaB = mueble.piezas.find(p => p.nombre === pt.piezaB);
+    if (!piezaA || !piezaB) continue;
+    const i = IDX[pt.eje];
+    const [pas, rec] = piezaA.dim[i] <= piezaB.dim[i] ? [piezaA, piezaB] : [piezaB, piezaA];
+    if (pas.espesor <= 3) continue;  // el fondo clavado no se "perfora" con broca: ver clavos
+    const centroPas = pas.pos[i] + pas.dim[i]/2, centroRec = rec.pos[i] + rec.dim[i]/2;
+    const signo = Math.sign(centroPas - centroRec) || 1;
+    const v = vectorExplode(pas, centroGrupo);
+    const posMm = [pt.x, pt.y, pt.z];
+    posMm[i] += signo * pas.dim[i] / 2;  // CENTRO del espesor de la pasante: el cilindro la atraviesa entera
+    const destino = new THREE.Vector3(
+      (posMm[0] + v.x*EXPLODE_MM)*esc + offsetXesc,
+      (posMm[2] + v.z*EXPLODE_MM)*esc,
+      (posMm[1] + v.y*EXPLODE_MM)*esc);
+    const largo = Math.max(pas.dim[i]*esc, 0.006);
+    const geo = new THREE.CylinderGeometry(2.75*esc, 2.75*esc, largo, 14);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.6 });
+    const guia = new THREE.Mesh(geo, mat);
+    guia.position.copy(destino);
+    orientarConQuaternion(guia, pt.eje, signo);
+    escena.add(guia); guiasAislarMeshes.push(guia);
+  }
+}
 /* Sub-ensamble de extraíbles (cajones): Ron pidió armarlos APARTE por defecto, "mostrarme
    paso a paso cómo armar el cajón con todo", porque los rieles antes aparecían directo sobre
    el mueble. offMesadaEsc() es el desplazamiento a la mesada virtual (a la derecha del mueble,
@@ -2185,6 +2252,14 @@ function aplicarResaltadoPaso() {
     enfocarPiezas(nombres);
     pintarMarcadoresTornillo(nombres);
     pintarRieles(nombres, hayCorredera);
+  }
+  if (modoAislar) {
+    // se aplica DESPUÉS de la lógica normal (acumulativa/mesada) para poder ocultar todo
+    // lo que esa lógica hubiese dejado visible, incluso lo ya armado.
+    aplicarModoAislar(nombres);
+    construirGuiasPerforacion(nombres, (p && p.subEnsamble) ? offMesadaEsc() : 0);
+  } else {
+    limpiarGuiasPerforacion();
   }
 }
 /* ------------------------------------------------ reproducir el armado completo (D-030) */
@@ -2500,6 +2575,7 @@ function limpiarResaltado() {
   explotarPiezas([]);
   pintarMarcadoresTornillo([]);
   pintarRieles([], false);
+  limpiarGuiasPerforacion();
 }
 
 /* ------------------------------------------------ resaltado de cantos con tapacanto */
