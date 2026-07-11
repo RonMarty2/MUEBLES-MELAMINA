@@ -1,0 +1,35 @@
+# Copia este archivo como config.yaml y completalo (o corré setup_wizard.py
+# y te lo completa solo, respondiendo preguntas simples).
+# config.yaml NUNCA se sube a git (ya está en .gitignore) porque tiene tus
+# credenciales.
+
+jellyfin:
+  # Dirección de tu servidor Jellyfin. Ojo con el puerto (por defecto 8096).
+  url: "http://192.168.1.50:8096"
+  # La generás en: Panel de administración -> Avanzado -> API Keys -> Nueva.
+  api_key: ""
+
+ssh:
+  # Acceso SSH a tu Synology NAS. Si no lo activaste todavía, corré
+  # setup_wizard.py: te muestra paso a paso cómo prenderlo.
+  enabled: false
+  host: ""
+  port: 22
+  user: ""
+  # "key" = usa key_path de abajo. "password_prompt" = te pide la
+  # contraseña cada vez que corrés el diagnóstico (no se guarda en ningún lado).
+  auth_method: "key"
+  # Ruta a tu clave privada SSH. Si no existe, el wizard te ofrece crearla.
+  key_path: "~/.ssh/id_ed25519_jellyfin_diag"
+
+network:
+  # Rango de bitrate típico de tus archivos MKV H264/HEVC, en Mbps.
+  # Se usa para comparar contra la velocidad real medida.
+  bitrate_min_mbps: 4
+  bitrate_max_mbps: 15
+
+remote_access:
+  # "lan" = solo probás desde tu propia red.
+  # "tailscale" = a veces te conectás desde afuera vía Tailscale.
+  method: "lan"
+  tailscale_ip: ""

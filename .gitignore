@@ -10,3 +10,7 @@ __pycache__/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Diagnóstico Jellyfin (credenciales y logs personales, no se versionan)
+jellyfin-diagnostico/config.yaml
+jellyfin-diagnostico/logs/

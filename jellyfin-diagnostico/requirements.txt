@@ -1,0 +1,8 @@
+pyyaml>=6.0
+requests>=2.31
+paramiko>=3.4
+
+# Opcional: si lo instalás, el módulo de diagnóstico remoto puede medir la
+# velocidad de subida real de tu NAS (solo tiene sentido si tenés acceso SSH
+# y python3 disponible del lado del NAS). No es obligatorio.
+# speedtest-cli>=2.1
